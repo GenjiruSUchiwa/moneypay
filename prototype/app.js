@@ -66,13 +66,11 @@ const ICON_PATHS = {
   fork: '<path d="M7.2 3.8v5.4a2.2 2.2 0 0 0 4.4 0V3.8M9.4 3.8v16.4M15.4 13.6V4.2c1.8.8 2.8 3 2.8 5.6 0 1.8-.6 3-1.4 3.8h-1.4Zm0 0v6.6"/>',
   mega: '<path d="M4.4 10.2v3.6a1.4 1.4 0 0 0 1.4 1.4h2L13 19V5l-5.2 3.8h-2a1.4 1.4 0 0 0-1.4 1.4ZM16.2 9.4a3.6 3.6 0 0 1 0 5.2M18.6 7.4a6.6 6.6 0 0 1 0 9.2"/>',
   plane: '<path d="M10.4 13.6 4.6 11l1.6-1.6 6.8 1L17.4 6a1.6 1.6 0 0 1 2.3 2.3L15.3 12.7l1 6.8-1.6 1.6-2.6-5.8-3.2 3.2.3 2.3-1.3 1.2-1.6-3.4-3.4-1.6 1.2-1.3 2.3.3Z"/>',
-  grid: '<path d="M5.6 5.6h.01M12 5.6h.01M18.4 5.6h.01M5.6 12h.01M12 12h.01M18.4 12h.01M5.6 18.4h.01M12 18.4h.01M18.4 18.4h.01" stroke-width="2.8"/>'
+  grid: '<path d="M5.6 5.6h.01M12 5.6h.01M18.4 5.6h.01M5.6 12h.01M12 12h.01M18.4 12h.01M5.6 18.4h.01M12 18.4h.01M18.4 18.4h.01" stroke-width="2.8"/>',
+  calendar: '<rect x="3.8" y="5.4" width="16.4" height="14.4" rx="2.4"/><path d="M3.8 9.8h16.4M8.4 3.4v3.2M15.6 3.4v3.2"/>',
+  funnel: '<path d="M4.2 5.2h15.6l-6 7v5.4l-3.6 2.6v-8Z"/>'
 };
 function ico(name, size = 20, cls = "") {
-  const d = ICON_PATHS[name] || ICON_PATHS.dots;
-  return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-}
-function icoFill(name, size = 20, cls = "") {
   const d = ICON_PATHS[name] || ICON_PATHS.dots;
   return `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 }
@@ -279,6 +277,8 @@ const S = {
     { label: "mai",   m: 4,  xaf: 74900 }, { label: "juin",  m: 5,  xaf: 121300 },
     { label: "juil.", m: 6,  xaf: 96700 }, { label: "août",  m: 7,  xaf: 108500, current: true }
   ],
+  /* dépenses journalières d'août 2026 (jours 1 → 27, somme = 108 500) */
+  days: [12566, 0, 6907, 2400, 0, 4850, 1200, 0, 3600, 7300, 0, 7535, 2100, 0, 5400, 1800, 0, 9427, 3250, 0, 5593, 2900, 0, 15080, 9678, 3000, 3914],
   faq: [
     { q: "Pourquoi mon paiement a-t-il été refusé ?", a: "Le plus souvent, votre solde FCFA ne couvrait pas le montant converti au moment de l’autorisation. Rechargez puis réessayez. Chaque refus est facturé 220 F par le processeur." },
     { q: "Combien de temps pour recharger en Mobile Money ?", a: "MTN MoMo et Orange Money créditent votre wallet en quelques secondes. Un virement bancaire prend 1 à 2 jours ouvrés." },
@@ -323,6 +323,7 @@ function xafToUSD(xaf) { return Math.floor(xaf / (S.fx.rate * (1 + S.fx.margin))
 
 const MONTHS_FR = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 const DAYS_FR = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+const DAYS_ABBR = ["dim.","lun.","mar.","mer.","jeu.","ven.","sam."];
 function relDay(ts) {
   const d = new Date(ts), t = new Date();
   const day0 = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
@@ -360,11 +361,28 @@ function groupByDay(txs) {
     .map(([day, items]) => ({ day: +day, items: items.sort((a, b) => b.date - a.date) }));
 }
 function spendByCat() {
-  const res = {};
+  const res = {}, cats = F.insFCats || [], card = F.insFCard || null;
   for (const t of S.txs) {
-    if (t.xaf < 0 && t.status !== "declined") res[t.cat] = (res[t.cat] || 0) + (-t.xaf);
+    if (t.xaf >= 0 || t.status === "declined") continue;
+    if (cats.length && !cats.includes(t.cat)) continue;
+    if (card && t.card !== card) continue;
+    res[t.cat] = (res[t.cat] || 0) + (-t.xaf);
   }
   return Object.entries(res).map(([cat, xaf]) => ({ cat, xaf })).sort((a, b) => b.xaf - a.xaf);
+}
+/* fraction des dépenses retenue par les filtres actifs (1 = pas de filtre) */
+function insFilterCount() { return (F.insFCats || []).length + (F.insFCard ? 1 : 0); }
+function insFilterRatio() {
+  if (!insFilterCount()) return 1;
+  let all = 0, kept = 0;
+  for (const t of S.txs) {
+    if (t.xaf >= 0 || t.status === "declined") continue;
+    all += -t.xaf;
+    if ((F.insFCats || []).length && !F.insFCats.includes(t.cat)) continue;
+    if (F.insFCard && t.card !== F.insFCard) continue;
+    kept += -t.xaf;
+  }
+  return all ? kept / all : 1;
 }
 function monthTotals() {
   let inn = 0, out = 0;
@@ -1167,51 +1185,70 @@ function activityScreen() {
 }
 
 /* ---------------- Analyse --------------------------------------- */
-/* tranche de mois selon la période choisie */
-function insMonths() { return S.months.slice(-[6, 8, 12][F.insPeriod || 0]); }
-function insSelIdx(ms) { return Math.min(F.insSel != null ? F.insSel : ms.length - 1, ms.length - 1); }
+/* série selon la période : 0 = Semaine (7 derniers jours), 1 = Mois (jours d'août), 2 = Année */
+function insSeries() {
+  const p = F.insPeriod || 0, k = insFilterRatio();
+  if (p === 2) return S.months.map(m => ({
+    xaf: Math.round(m.xaf * k), label: m.label,
+    when: "en " + MONTHS_FR[m.m], short: MONTHS_FR[m.m]
+  }));
+  const off = p === 0 ? S.days.length - 7 : 0;
+  return S.days.slice(off).map((v, i) => {
+    const d = off + i + 1, wd = new Date(2026, 7, d).getDay();
+    return { xaf: Math.round(v * k), label: p === 0 ? DAYS_ABBR[wd] : String(d),
+      when: "le " + d + " août", short: d + " août" };
+  });
+}
+function insSelIdx(pts) { return Math.min(F.insSel != null ? F.insSel : pts.length - 1, pts.length - 1); }
+function niceMax(v) {
+  const p = Math.pow(10, Math.floor(Math.log10(v || 1)));
+  for (const m of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (m * p >= v) return m * p;
+  return 10 * p;
+}
+function tickK(v) { return v % 1000 === 0 ? v / 1000 + "k" : (v / 1000).toLocaleString("fr-FR") + "k"; }
 
-/* héro : mois sélectionné + delta vs mois précédent */
+/* héro : point sélectionné + delta vs point précédent */
 function insHeroHTML() {
-  const ms = insMonths(), sel = insSelIdx(ms);
-  const m = ms[sel];
-  const prev = S.months[S.months.length - ms.length + sel - 1];
-  const delta = prev ? Math.round((m.xaf - prev.xaf) / prev.xaf * 100) : null;
-  return `${eyebrow("Dépensé en " + MONTHS_FR[m.m])}
+  const pts = insSeries(), sel = insSelIdx(pts);
+  const m = pts[sel], prev = sel > 0 ? pts[sel - 1] : null;
+  const delta = prev && prev.xaf > 0 ? Math.round((m.xaf - prev.xaf) / prev.xaf * 100) : null;
+  return `${eyebrow("Dépensé " + m.when)}
     <div style="margin-top:8px" id="ins-amt">${moneyXAF(m.xaf, 38)}</div>
     <div style="margin-top:10px;min-height:26px">${delta == null ? "" :
-      `<span class="delta-chip ${delta >= 0 ? "up" : "down"}">${ico(delta >= 0 ? "arrUpR" : "arrDnL", 12)}<span class="tnum">${delta >= 0 ? "+" : ""}${delta}${NBSP}%</span><span class="dc-vs">vs ${MONTHS_FR[prev.m]}</span></span>`}</div>`;
+      `<span class="delta-chip ${delta >= 0 ? "up" : "down"}">${ico(delta >= 0 ? "arrUpR" : "arrDnL", 12)}<span class="tnum">${delta >= 0 ? "+" : ""}${delta}${NBSP}%</span><span class="dc-vs">vs ${prev.short}</span></span>`}</div>`;
 }
 
-/* histogramme (N mois variable, sélection par classes, réf. Revolut/Wise) */
+/* histogramme (N points variable, sélection par classes, réf. Revolut/Wise) */
 function insBarsHTML(anim) {
-  const ms = insMonths(), N = ms.length, sel = insSelIdx(ms);
+  const pts = insSeries(), N = pts.length, sel = insSelIdx(pts);
   const CW = 353, CH = 174, padT = 26, padB = 22, padL = 6, padR = 30;
   const innerW = CW - padL - padR, innerH = CH - padT - padB;
-  const maxV = 140000, slot = innerW / N, bw = Math.min(24, slot * .62), r = Math.min(5, bw / 2);
-  const grid = [70000, 140000].map(v => {
+  const maxV = niceMax(Math.max(...pts.map(p => p.xaf), 1));
+  const slot = innerW / N, bw = Math.min(24, slot * .62), r = Math.min(5, bw / 2);
+  const grid = [maxV / 2, maxV].map(v => {
     const y = CH - padB - v / maxV * innerH;
-    return `<line class="grid-line" x1="${padL}" x2="${padL + innerW}" y1="${y}" y2="${y}"/><text class="tick" x="${CW - 2}" y="${y + 3}" text-anchor="end">${v / 1000}k</text>`;
+    return `<line class="grid-line" x1="${padL}" x2="${padL + innerW}" y1="${y}" y2="${y}"/><text class="tick" x="${CW - 2}" y="${y + 3}" text-anchor="end">${tickK(v)}</text>`;
   }).join("") + `<line class="grid-base" x1="${padL}" x2="${padL + innerW}" y1="${CH - padB}" y2="${CH - padB}"/>`;
-  const bars = ms.map((m, i) => {
-    const h = Math.max(6, m.xaf / maxV * innerH);
+  const bars = pts.map((m, i) => {
+    const h = Math.max(m.xaf > 0 ? 6 : 2.5, m.xaf / maxV * innerH);
     const x = padL + slot * i + (slot - bw) / 2, y = CH - padB - h;
-    const lbl = N > 8 ? (i % 2 === (N - 1) % 2 ? m.label : "") : m.label;
+    const lbl = N > 12 ? ((i + 1) % 5 === 0 || i === 0 ? m.label : "")
+      : N > 8 ? (i % 2 === (N - 1) % 2 ? m.label : "") : m.label;
     return `<g class="bgrp ${i === sel ? "hot" : ""}" data-act="insSelect" data-arg="${i}" style="--i:${i}">
       <rect class="bhit" x="${padL + slot * i}" y="0" width="${slot}" height="${CH}"/>
       <path class="bar" d="M${x} ${CH - padB} v${-(h - r)} a${r} ${r} 0 0 1 ${r} -${r} h${bw - 2 * r} a${r} ${r} 0 0 1 ${r} ${r} v${h - r} Z"/>
-      <text class="cap-label" x="${x + bw / 2}" y="${y - 8}" text-anchor="middle">${Math.round(m.xaf / 1000)}k</text>
+      <text class="cap-label" x="${Math.min(Math.max(x + bw / 2, 16), CW - 16)}" y="${y - 8}" text-anchor="middle">${m.xaf >= 10000 ? Math.round(m.xaf / 1000) + "k" : grp(m.xaf)}</text>
       ${lbl ? `<text class="xlabel" x="${x + bw / 2}" y="${CH - 6}" text-anchor="middle">${lbl}</text>` : ""}
     </g>`;
   }).join("");
-  return `<div class="bars-chart chart-anim${anim ? " swap" : ""}"><svg class="bars-svg" viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Dépenses mensuelles">${grid}${bars}</svg></div>
-    <div class="gutter" style="margin-top:12px">${segments(["6 mois", "Cette année", "12 mois"], F.insPeriod || 0, "insPeriod")}</div>`;
+  return `<div class="bars-chart chart-anim${anim ? " swap" : ""}"><svg class="bars-svg" viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Dépenses">${grid}${bars}</svg></div>
+    <div class="gutter" style="margin-top:12px">${segments(["Semaine", "Mois", "Année"], F.insPeriod || 0, "insPeriod")}</div>`;
 }
 
 /* anneau par catégorie (réf. Revolut) — segments balayés, tap = détail au centre */
 function insDonutHTML(anim) {
   const cats = spendByCat(), total = cats.reduce((s, c) => s + c.xaf, 0) || 1;
-  const cx = 176.5, cy = 102, R = 64;
+  const cx = 176.5, cy = 118, R = 82;
   let acc = 0;
   const segs = cats.map((r, i) => {
     const len = Math.max(.4, r.xaf / total * 100 - 1.6);
@@ -1224,10 +1261,10 @@ function insDonutHTML(anim) {
   }).join("");
   const selR = cats.find(x => x.cat === F.insCat);
   return `<div class="donut-wrap chart-anim${anim ? " swap" : ""}">
-    <svg class="donut" viewBox="0 0 353 204" role="img" aria-label="Répartition des dépenses par catégorie">${segs}
-      <text class="dn-eyebrow" x="${cx}" y="${cy - 24}" text-anchor="middle">${selR ? CATEGORIES[selR.cat].label.toUpperCase() : "DÉPENSES"}</text>
+    <svg class="donut" viewBox="0 0 353 236" role="img" aria-label="Répartition des dépenses par catégorie">${segs}
+      <text class="dn-eyebrow" x="${cx}" y="${cy - 28}" text-anchor="middle">${selR ? CATEGORIES[selR.cat].label.toUpperCase() : "DÉPENSES"}</text>
       <text class="dn-amt" x="${cx}" y="${cy + 8}" text-anchor="middle">${grp(selR ? selR.xaf : total)}</text>
-      <text class="dn-sub" x="${cx}" y="${cy + 28}" text-anchor="middle">${selR ? Math.round(selR.xaf / total * 100) + NBSP + "% du total" : "FCFA · par catégorie"}</text>
+      <text class="dn-sub" x="${cx}" y="${cy + 32}" text-anchor="middle">${selR ? Math.round(selR.xaf / total * 100) + NBSP + "% du total" : "FCFA · par catégorie"}</text>
     </svg></div>`;
 }
 
@@ -1249,12 +1286,19 @@ function insightsScreen() {
   const total = cats.reduce((s, c) => s + c.xaf, 0) || 1;
   const maxCat = cats.length ? cats[0].xaf : 1;
   const catCount = {};
-  for (const t of S.txs) if (t.xaf < 0 && t.status !== "declined") catCount[t.cat] = (catCount[t.cat] || 0) + 1;
+  for (const t of S.txs) {
+    if (t.xaf >= 0 || t.status === "declined") continue;
+    if ((F.insFCats || []).length && !F.insFCats.includes(t.cat)) continue;
+    if (F.insFCard && t.card !== F.insFCard) continue;
+    catCount[t.cat] = (catCount[t.cat] || 0) + 1;
+  }
 
   return `${statusBar()}
   <div class="gutter" style="padding-top:6px;padding-bottom:13px;display:flex;align-items:center">
     <span class="t-page">Analyse</span>
     <span style="flex:1"></span>
+    <button type="button" class="hd-btn" data-act="openInsCal" aria-label="Calendrier">${ico("calendar", 16)}</button>
+    <button type="button" class="hd-btn ${insFilterCount() ? "flt-on" : ""}" data-act="openInsFilters" aria-label="Filtres">${ico("funnel", 16)}${insFilterCount() ? `<span class="flt-badge">${insFilterCount()}</span>` : ""}</button>
     <div class="chart-toggle" role="tablist">
       <button type="button" role="tab" aria-selected="${view === 0}" aria-label="Histogramme" class="ct ${view === 0 ? "on" : ""}" data-act="insView" data-arg="0">${ico("chart", 15)}</button>
       <button type="button" role="tab" aria-selected="${view === 1}" aria-label="Répartition" class="ct ${view === 1 ? "on" : ""}" data-act="insView" data-arg="1">${ico("donut", 15)}</button>
@@ -1270,7 +1314,7 @@ function insightsScreen() {
       ${cats.map(r => {
         const c = CATEGORIES[r.cat], n = catCount[r.cat] || 0;
         return `<div class="cat-row">
-          <span class="cr-tile" style="background:color-mix(in srgb, ${c.tint} 15%, var(--paper));color:${c.tint}">${ico(c.icon, 15)}</span>
+          <span class="cr-tile" style="background:${c.tint}">${ico(c.icon, 16)}</span>
           <div class="cr-body">
             <div class="cr-line"><span class="cr-name">${c.label}</span><span class="cr-val tnum">${grp(r.xaf)}</span></div>
             <div class="cr-line2"><span>${n} transaction${n > 1 ? "s" : ""}</span><span class="tnum">${Math.round(r.xaf / total * 100)}${NBSP}%</span></div>
@@ -1300,6 +1344,85 @@ function insightsScreen() {
   </div>
   ${tabbarHTML()}
   <div class="homebar"></div>`;
+}
+
+/* ---------------- Calendrier des dépenses (réf. Moniwa) --------- */
+function calYear(mi) { return S.months[mi].m >= 8 ? 2025 : 2026; }
+function calDaySpend(mi, d) {
+  if (mi === 11) return d <= S.days.length ? S.days[d - 1] : 0;
+  /* ponytail : motif pseudo-aléatoire stable pour les mois sans données journalières */
+  const h = (mi * 37 + d * 17) % 97;
+  return h > 52 ? 0 : Math.round(S.months[mi].xaf * (h + 6) / 1400);
+}
+function insCalSheet() {
+  const mi = F.calM != null ? F.calM : 11, mo = S.months[mi], y = calYear(mi);
+  const dim = new Date(y, mo.m + 1, 0).getDate();
+  const lead = (new Date(y, mo.m, 1).getDay() + 6) % 7;
+  const lastD = mi === 11 ? S.days.length : dim;
+  const spends = []; let maxD = 1;
+  for (let d = 1; d <= dim; d++) { spends[d] = calDaySpend(mi, d); if (spends[d] > maxD) maxD = spends[d]; }
+  const selD = F.calD && F.calD <= lastD ? F.calD : null;
+  const prev = S.months[mi - 1];
+  const delta = prev ? Math.round((mo.xaf - prev.xaf) / prev.xaf * 100) : null;
+  const capM = s => s[0].toUpperCase() + s.slice(1);
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push(`<span class="cal-day void"></span>`);
+  for (let d = 1; d <= dim; d++) {
+    const off = d > lastD, has = !off && spends[d] > 0;
+    cells.push(`<button type="button" class="cal-day ${off ? "off" : ""} ${selD === d ? "sel" : ""}" data-act="calDay" data-arg="${d}" ${off ? "disabled" : ""}>
+      <span class="cd-n tnum">${d}</span>
+      ${has ? `<span class="cd-dot" style="opacity:${(.35 + spends[d] / maxD * .65).toFixed(2)}"></span>` : ""}
+    </button>`);
+  }
+  return `<div class="sheet-grab"></div>
+  ${navBar({ close: "closeSheet", title: "Calendrier" })}
+  <div class="cal-strip" id="cal-strip">
+    ${S.months.map((m, i) => `<button type="button" class="cal-m ${i === mi ? "on" : ""}" data-act="calMonth" data-arg="${i}">${capM(MONTHS_FR[m.m])}</button>`).join("")}
+  </div>
+  <div class="rule"></div>
+  <div class="scroll">
+    <div class="gutter" style="padding-top:16px">
+      <div class="cal-head">${["L", "M", "M", "J", "V", "S", "D"].map(d => `<span>${d}</span>`).join("")}</div>
+      <div class="cal-grid">${cells.join("")}</div>
+    </div>
+    <div class="rule" style="margin:16px var(--gutter) 0"></div>
+    <div class="cal-sum gutter">
+      <div>
+        <div class="cs-t">${selD ? capM(DAYS_FR[new Date(y, mo.m, selD).getDay()]) + " " + selD + " " + MONTHS_FR[mo.m] : capM(MONTHS_FR[mo.m]) + " " + y}</div>
+        <div class="cs-s">${selD ? capM(MONTHS_FR[mo.m]) + " " + y : lastD < dim ? lastD + " jours suivis" : dim + " jours"}</div>
+      </div>
+      <span style="flex:1"></span>
+      <div style="text-align:right">
+        <div class="cs-amt tnum">${fmtXAF(selD ? spends[selD] : mo.xaf)}</div>
+        <div class="cs-d ${!selD && delta != null ? (delta >= 0 ? "up" : "down") : ""}">${selD ? "dépensés ce jour" : delta == null ? "dépenses" : `dépenses ${delta >= 0 ? "+" : ""}${delta}${NBSP}%`}</div>
+      </div>
+    </div>
+    <div style="height:14px"></div>
+  </div>`;
+}
+
+/* ---------------- Filtres d'analyse (réf. Moniwa) --------------- */
+function insFiltersSheet() {
+  if (!F.fltInit) { F.fltInit = 1; F.fltCats = (F.insFCats || []).slice(); F.fltCard = F.insFCard || null; }
+  const cats = F.fltCats, card = F.fltCard;
+  return `<div class="sheet-grab"></div>
+  ${navBar({ close: "closeSheet", title: "Filtres" })}
+  <div class="scroll">
+    <div class="gutter" style="padding-top:16px">${eyebrow("Catégories")}</div>
+    <div class="fchips gutter">
+      ${Object.entries(CATEGORIES).map(([k, c]) => `<button type="button" class="fchip ${cats.includes(k) ? "on" : ""}" data-act="fltCat" data-arg="${k}" style="--t:${c.tint}"><span class="fc-dot">${ico(c.icon, 12)}</span>${c.label}</button>`).join("")}
+    </div>
+    <div class="gutter" style="padding-top:20px">${eyebrow("Carte")}</div>
+    <div class="fchips gutter">
+      <button type="button" class="fchip ${!card ? "on" : ""}" data-act="fltCard" data-arg="">Toutes</button>
+      ${S.cards.map(c => `<button type="button" class="fchip ${card === c.id ? "on" : ""}" data-act="fltCard" data-arg="${c.id}">${esc(c.label)}</button>`).join("")}
+    </div>
+    <div class="note-row gutter" style="padding-top:22px">${ico("funnel", 15)}<span>Les filtres s’appliquent aux graphiques et à la répartition par catégorie.</span></div>
+  </div>
+  <div class="gutter" style="display:flex;gap:9px;padding:10px 20px 16px">
+    ${btn("Réinitialiser", "fltReset", { style: "quiet" })}
+    ${btn("Appliquer les filtres", "fltApply")}
+  </div>`;
 }
 
 /* ---------------- Profil ---------------------------------------- */
@@ -2205,7 +2328,7 @@ function authSheet() {
    Orchestration du rendu
    ================================================================ */
 let SHEET2 = null;
-const F_KEEP = ["cardScope","txFilter","txQuery","insPeriod","insView","insSel","insCat","faqOpen","revealed","slide","country","phoneDigits","methodId","sendQuery"];
+const F_KEEP = ["cardScope","txFilter","txQuery","insPeriod","insView","insSel","insCat","insFCats","insFCard","faqOpen","revealed","slide","country","phoneDigits","methodId","sendQuery"];
 
 /* redéfinition : conserve l'état d'interface hors flux */
 function openSheet(kind, params = {}) {
@@ -2277,6 +2400,8 @@ function sheetContent(kind) {
     case "controls": return controlsSheet();
     case "auth": return authSheet();
     case "methods": return methodsSheet();
+    case "insCal": return insCalSheet();
+    case "insFilters": return insFiltersSheet();
     case "countries": return countriesSheet();
   }
   return "";
@@ -2301,7 +2426,7 @@ function renderPhone(mode) {
     </div>`;
   }
   const shown1 = SHEET && SHEET.shown ? "show" : "";
-  if (SHEET) html += `<div class="sheet-dim dim1 ${shown1}" data-act="closeSheet"></div><div class="sheet s1 ${shown1}">${sheetContent(SHEET.kind)}</div>`;
+  if (SHEET) html += `<div class="sheet-dim dim1 ${shown1}" data-act="closeSheet"></div><div class="sheet s1 ${["insCal", "insFilters"].includes(SHEET.kind) ? "fit" : ""} ${shown1}">${sheetContent(SHEET.kind)}</div>`;
   const shown2 = SHEET2 && SHEET2.shown ? "show" : "";
   if (SHEET2) html += `<div class="sheet-dim dim2 ${shown2}" data-act="closeSheet2" style="z-index:110"></div><div class="sheet s2 ${shown2}" style="z-index:111;top:120px">${sheetContent(SHEET2.kind)}</div>`;
   html += `<div class="dialog-host"></div>`;
@@ -2372,7 +2497,7 @@ function renderPhone(mode) {
       && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
     const el = phone.querySelector("#ins-amt .money > span:first-child");
     if (el) {
-      const ms = insMonths(), target = ms[insSelIdx(ms)].xaf, t0 = performance.now(), dur = 640;
+      const ps = insSeries(), target = ps[insSelIdx(ps)].xaf, t0 = performance.now(), dur = 640;
       el.textContent = grp(0);
       const step = t => {
         if (!el.isConnected) return;
@@ -2382,6 +2507,13 @@ function renderPhone(mode) {
       };
       requestAnimationFrame(step);
     }
+  }
+
+  /* bande de mois du calendrier : garder le mois actif visible */
+  const calOn = phone.querySelector("#cal-strip .cal-m.on");
+  if (calOn) {
+    const strip = calOn.parentElement;
+    strip.scrollLeft = calOn.offsetLeft - strip.clientWidth / 2 + calOn.offsetWidth / 2;
   }
 
   /* carrousel d'habillages : centrage, inclinaison 3D, méta synchronisée */
@@ -2592,6 +2724,25 @@ const ACTIONS = {
     if (!gs.length) return renderPhone();
     gs.forEach((g, j) => g.classList.toggle("hot", j === +i));
     insSwapHero();
+  },
+  /* calendrier des dépenses */
+  openInsCal: () => openSheet("insCal"),
+  calMonth: i => { F.calM = +i; F.calD = null; renderPhone(); },
+  calDay: d => { F.calD = F.calD === +d ? null : +d; renderPhone(); },
+  /* filtres d'analyse */
+  openInsFilters: () => openSheet("insFilters"),
+  fltCat: k => {
+    const a = F.fltCats || (F.fltCats = []);
+    const i = a.indexOf(k);
+    i >= 0 ? a.splice(i, 1) : a.push(k);
+    renderPhone();
+  },
+  fltCard: id => { F.fltCard = id || null; renderPhone(); },
+  fltReset: () => { F.fltCats = []; F.fltCard = null; renderPhone(); },
+  fltApply: () => {
+    F.insFCats = (F.fltCats || []).slice(); F.insFCard = F.fltCard || null;
+    F.insSel = null; F.insCat = null;
+    closeSheet();
   },
   insCat: cat => {
     F.insCat = F.insCat === cat ? null : cat;

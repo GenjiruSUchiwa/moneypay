@@ -227,6 +227,9 @@ input:focus-visible{outline:none}
   box-shadow:var(--glass-edge),var(--shadow-sheet);
 }
 .sheet.show{transform:none}
+/* feuille à hauteur de contenu (calendrier, filtres) */
+.sheet.fit{top:auto;max-height:calc(100% - 14px)}
+.sheet.fit .scroll{flex:0 1 auto}
 .sheet-grab{width:36px;height:5px;border-radius:99px;background:var(--rule);margin:8px auto 0;flex-shrink:0}
 /* pas de verre sur verre : dans une feuille, les contrôles redeviennent des aplats */
 .sheet .nb-btn,.sheet .segments{
@@ -670,6 +673,12 @@ input:focus-visible{outline:none}
   display:flex;align-items:center;justify-content:center;
 }
 
+/* Analyse — boutons d'en-tête (calendrier, filtres) */
+.hd-btn{position:relative;width:34px;height:34px;border-radius:99px;background:var(--well);color:var(--ink-2);display:flex;align-items:center;justify-content:center;margin-right:8px;transition:transform .12s ease}
+.hd-btn:active{transform:scale(.93)}
+.hd-btn.flt-on{background:var(--green);color:#fff}
+.flt-badge{position:absolute;top:-3px;right:-3px;min-width:15px;height:15px;padding:0 3px;border-radius:99px;background:var(--pend);color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--paper)}
+
 /* Analyse — bascule de vue (histogramme / anneau) */
 .chart-toggle{display:flex;gap:2px;padding:3px;border-radius:99px;background:var(--well)}
 .chart-toggle .ct{width:34px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:99px;color:var(--ink-2);transition:transform .12s ease}
@@ -705,19 +714,51 @@ input:focus-visible{outline:none}
 .donut .segc{fill:none;stroke-width:21px;stroke-dasharray:var(--dl) var(--dg);cursor:pointer;transition:opacity .25s ease,stroke-width .25s ease}
 .donut .segc.dim{opacity:.22}
 .donut .segc.sel{stroke-width:25px}
-.donut .dn-eyebrow{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.1em;fill:var(--ink-3)}
-.donut .dn-amt{font-size:27px;font-weight:600;letter-spacing:-.02em;fill:var(--ink);font-variant-numeric:tabular-nums}
-.donut .dn-sub{font-size:11px;fill:var(--ink-2)}
+.donut .dn-eyebrow{font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.1em;fill:var(--ink-3)}
+.donut .dn-amt{font-size:29px;font-weight:600;letter-spacing:-.02em;fill:var(--ink);font-variant-numeric:tabular-nums}
+.donut .dn-sub{font-size:11.5px;fill:var(--ink-2)}
 
 /* catégorie */
 .cat-row{display:flex;gap:12px;align-items:flex-start;padding:11px 0}
-.cat-row .cr-tile{width:34px;height:34px;border-radius:99px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.cat-row .cr-tile{width:34px;height:34px;border-radius:99px;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.cat-row .cr-tile svg{stroke-width:2}
 .cat-row .cr-body{flex:1;min-width:0}
 .cat-row .cr-line{display:flex;align-items:baseline;gap:10px}
 .cat-row .cr-name{font-size:14px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cat-row .cr-val{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
 .cat-row .cr-line2{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-top:2px}
 .cat-row .meter{margin-top:8px}
+
+/* calendrier des dépenses (réf. Moniwa) */
+.cal-strip{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:6px var(--gutter) 12px;scroll-behavior:smooth}
+.cal-strip::-webkit-scrollbar{display:none}
+.cal-m{flex-shrink:0;padding:7px 13px;border-radius:99px;font-size:13.5px;font-weight:500;color:var(--ink-2);transition:transform .12s ease,background .15s ease,color .15s ease}
+.cal-m:active{transform:scale(.95)}
+.cal-m.on{background:var(--ink);color:var(--paper)}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:.06em;margin-bottom:6px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:3px}
+.cal-day{position:relative;height:42px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:background .15s ease,transform .12s ease}
+.cal-day:active{transform:scale(.92)}
+.cal-day .cd-n{font-size:14px;font-weight:500;color:var(--ink)}
+.cal-day.off .cd-n,.cal-day.void{color:var(--ink-3);opacity:.45}
+.cal-day .cd-dot{width:5px;height:5px;border-radius:99px;background:var(--green)}
+.cal-day.sel{background:var(--green)}
+.cal-day.sel .cd-n{color:#fff}
+.cal-day.sel .cd-dot{background:#fff;opacity:1}
+.cal-sum{display:flex;align-items:center;padding-top:15px}
+.cal-sum .cs-t{font-size:15px;font-weight:600}
+.cal-sum .cs-s{font-size:12px;color:var(--ink-3);margin-top:2px}
+.cal-sum .cs-amt{font-size:17px;font-weight:600}
+.cal-sum .cs-d{font-size:12px;color:var(--ink-3);margin-top:2px}
+.cal-sum .cs-d.up{color:var(--pend)}
+.cal-sum .cs-d.down{color:var(--credit)}
+
+/* filtres d'analyse — chips de catégories / cartes */
+.fchips{display:flex;flex-wrap:wrap;gap:8px;padding-top:11px}
+.fchip{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:99px;background:var(--well);font-size:13.5px;font-weight:500;color:var(--ink-2);transition:transform .12s ease,background .15s ease,color .15s ease,box-shadow .15s ease}
+.fchip:active{transform:scale(.95)}
+.fchip .fc-dot{width:20px;height:20px;border-radius:99px;background:var(--t,var(--ink-3));color:#fff;display:flex;align-items:center;justify-content:center;margin-left:-4px}
+.fchip.on{background:var(--ink);color:var(--paper)}
 
 /* autorisation temps réel */
 .auth-countbar{height:2.5px;background:var(--well-2);border-radius:99px;overflow:hidden;margin-top:12px}
