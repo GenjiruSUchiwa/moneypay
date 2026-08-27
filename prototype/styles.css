@@ -1,6 +1,6 @@
 /* ================================================================
    MoniPay — refonte v3
-   Clair & sombre · vert profond · vert vif · Google Sans Flex + Google Sans Code
+   Clair & sombre · vert profond · vert vif · Google Sans Flex
    ================================================================ */
 :root{
   --paper:#F4F5F7;
@@ -49,7 +49,7 @@
   color-scheme:light;
 
   --sans:"Google Sans Flex","Google Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
-  --mono:"Google Sans Code",ui-monospace,"SF Mono",Menlo,monospace;
+  --mono:var(--sans);  /* famille unique — les rôles « techniques » restent en Sans Flex */
 
   --gutter:20px;
   --r-panel:24px;
