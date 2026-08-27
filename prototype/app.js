@@ -1861,9 +1861,17 @@ function sendSheet() {
   </div>`;
 }
 
-/* ---------------- Nouvelle carte -------------------------------- */
+/* ---------------- Nouvelle carte — parcours en 4 étapes --------- */
 const LIMIT_PRESETS = [5000, 15000, 50000, null];
 const NAME_SUGGESTIONS = ["Abonnements", "Shopping", "Publicité", "Serveurs", "Voyage"];
+const CC_THEME_NOTES = {
+  sapin:  "Le vert signature, guilloché ton sur ton.",
+  encre:  "Un noir d’encre, sobre au quotidien.",
+  ivoire: "Clair et minéral, finition satinée.",
+  terre:  "Terre cuite chaleureuse, pleine de caractère.",
+  cobalt: "Un bleu nuit franc et électrique.",
+  ardoise:"Gris ardoise, tout en retenue."
+};
 function createCardSheet() {
   if (F.step === "created") {
     const c = cardById(F.createdId);
@@ -1884,58 +1892,79 @@ function createCardSheet() {
       </div>
     </div>`;
   }
+  const step = F.ccStep || 0;
+  const dir = F.ccDir || "fwd";
   const theme = F.ccTheme || "sapin";
   const network = F.ccNetwork || "mastercard";
   const label = F.ccLabel != null ? F.ccLabel : "";
   const limitIdx = F.ccLimit != null ? F.ccLimit : 1;
   const preview = { label: label || "Ma carte", theme, network, pan: "0000000000000000", frozen: false };
+  const progress = `<div class="seg-progress" style="margin:2px var(--gutter) 0;flex:none" role="progressbar" aria-valuenow="${step + 1}" aria-valuemin="1" aria-valuemax="4" aria-label="Étape ${step + 1} sur 4">${[0, 1, 2, 3].map(i => `<span class="sp ${i <= step ? "done" : ""}"></span>`).join("")}</div>`;
+  let body = "", cta = btn("Continuer", "ccNext");
+
+  if (step === 0) {
+    /* 1 — habillage : la carte en héros, une pastille par habillage */
+    const t = CARD_THEMES[theme];
+    body = `
+      <div style="max-width:300px;margin:16px auto 0;width:100%">${vcardHTML(preview)}</div>
+      <div style="text-align:center;margin-top:24px" class="gutter">
+        <div style="font-size:17px;font-weight:600">${t.label}</div>
+        <div style="font-size:13.5px;color:var(--ink-2);margin-top:5px;text-wrap:pretty">${CC_THEME_NOTES[theme]}</div>
+      </div>
+      <div style="display:flex;gap:14px;justify-content:center;margin-top:26px;padding:6px 0">
+        ${Object.entries(CARD_THEMES).map(([k, th]) => `<button type="button" class="dot-swatch ${theme === k ? "sel" : ""}" style="background:${th.fill}" data-act="ccTheme" data-arg="${k}" aria-label="${th.label}"></button>`).join("")}
+      </div>`;
+  } else if (step === 1) {
+    /* 2 — réseau */
+    body = `
+      <div style="max-width:240px;margin:16px auto 0;width:100%">${vcardHTML(preview, { compact: true })}</div>
+      <div class="gutter" style="margin-top:28px">
+        <div class="t-section">Choisissez le réseau</div>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px">
+          <button type="button" class="net-option ${network === "mastercard" ? "sel" : ""}" style="flex:none;width:100%;height:56px" data-act="ccNetwork" data-arg="mastercard">${netMark("mastercard", "var(--ink)", 17)}Mastercard<span style="margin-left:auto;color:var(--green)">${network === "mastercard" ? ico("check", 16) : ""}</span></button>
+          <button type="button" class="net-option ${network === "visa" ? "sel" : ""}" style="flex:none;width:100%;height:56px" data-act="ccNetwork" data-arg="visa">${netMark("visa", "var(--net-visa)", 16)}<span style="margin-left:auto;color:var(--green)">${network === "visa" ? ico("check", 16) : ""}</span></button>
+        </div>
+        <div class="note-micro" style="margin-top:14px">Les deux réseaux sont acceptés pour les paiements en ligne dans le monde entier.</div>
+      </div>`;
+  } else if (step === 2) {
+    /* 3 — nom */
+    body = `
+      <div class="gutter" style="margin-top:12px">
+        <div class="t-page" style="font-size:25px">Nommez votre carte</div>
+        <div style="font-size:14px;color:var(--ink-2);margin-top:7px;text-wrap:pretty">Visible uniquement par vous — jamais par le marchand.</div>
+        <label class="field" style="margin-top:20px"><input type="text" name="cardlabel" id="cc-label" maxlength="20" placeholder="Ex. Abonnements" value="${esc(label)}" aria-label="Nom de la carte"><span class="faint tnum" id="cc-count" style="font-size:12px">${label.length}/20</span></label>
+      </div>
+      <div class="chip-row" style="margin-top:12px">
+        ${NAME_SUGGESTIONS.map(s => `<button type="button" class="chip ${label === s ? "on" : ""}" data-act="ccSuggest" data-arg="${s}">${s}</button>`).join("")}
+      </div>`;
+  } else {
+    /* 4 — plafond & options */
+    body = `
+      <div class="gutter" style="margin-top:12px">
+        <div class="t-page" style="font-size:25px">Plafond mensuel</div>
+        <div style="font-size:14px;color:var(--ink-2);margin-top:7px;text-wrap:pretty">Au-delà, les paiements sont refusés. Modifiable à tout moment.</div>
+      </div>
+      <div class="chip-row" style="margin-top:18px">
+        ${LIMIT_PRESETS.map((v, i) => `<button type="button" class="chip ${limitIdx === i ? "on" : ""}" data-act="ccLimit" data-arg="${i}">${v ? fmtUSD(v) : "Illimité"}</button>`).join("")}
+      </div>
+      <div class="rule" style="margin:20px var(--gutter) 0"></div>
+      <div class="row static gutter">
+        <span class="icon-tile">${ico("one", 18)}</span>
+        <span class="r-body">
+          <span class="r-title"><span class="rt-text">Carte à usage unique</span></span>
+          <span class="r-sub" style="display:block">Se supprime après le premier paiement</span>
+        </span>
+        <button type="button" class="toggle ${F.ccSingle ? "on" : ""}" data-act="ccSingle" role="switch" aria-checked="${!!F.ccSingle}" aria-label="Carte à usage unique"></button>
+      </div>
+      <div class="note-micro gutter" style="padding-top:8px">Le numéro, la date d’expiration et le CVV sont générés par notre processeur au moment de la création.</div>`;
+    cta = btn(F.issuing ? "Émission en cours" : "Créer la carte", "ccIssue", { loading: !!F.issuing, disabled: !!F.issuing });
+  }
+
   return `<div class="sheet-grab"></div>
-  ${navBar({ close: "closeSheet", title: "Nouvelle carte" })}
-  <div class="scroll">
-    <div style="max-width:280px;margin:6px auto 0" class="gutter">${vcardHTML(preview)}</div>
-    <div class="rule" style="margin:24px var(--gutter) 0"></div>
-
-    ${eyebrow("Habillage", "gutter")}
-    <div class="gutter" style="display:flex;gap:12px;margin-top:12px;padding-top:5px;padding-bottom:5px">
-      ${Object.entries(CARD_THEMES).map(([k, t]) => `<button type="button" class="card-swatch ${theme === k ? "sel" : ""}" style="background:${t.fill}" data-act="ccTheme" data-arg="${k}" aria-label="${t.label}"></button>`).join("")}
-    </div>
-    <div class="rule" style="margin:18px var(--gutter) 0"></div>
-
-    ${eyebrow("Réseau", "gutter")}
-    <div class="gutter" style="display:flex;gap:8px;margin-top:12px">
-      <button type="button" class="net-option ${network === "mastercard" ? "sel" : ""}" data-act="ccNetwork" data-arg="mastercard">${netMark("mastercard", "var(--ink)", 17)}Mastercard</button>
-      <button type="button" class="net-option ${network === "visa" ? "sel" : ""}" data-act="ccNetwork" data-arg="visa">${netMark("visa", "var(--net-visa)", 16)}</button>
-    </div>
-    <div class="rule" style="margin:18px var(--gutter) 0"></div>
-
-    ${eyebrow("Nom de la carte", "gutter")}
-    <div class="gutter" style="margin-top:12px">
-      <label class="field"><input type="text" name="cardlabel" id="cc-label" placeholder="Ex. Abonnements" value="${esc(label)}" aria-label="Nom de la carte"></label>
-    </div>
-    <div class="chip-row" style="margin-top:10px">
-      ${NAME_SUGGESTIONS.map(s => `<button type="button" class="chip ${label === s ? "on" : ""}" data-act="ccSuggest" data-arg="${s}">${s}</button>`).join("")}
-    </div>
-    <div class="rule" style="margin:18px var(--gutter) 0"></div>
-
-    ${eyebrow("Plafond mensuel", "gutter")}
-    <div class="chip-row" style="margin-top:12px">
-      ${LIMIT_PRESETS.map((v, i) => `<button type="button" class="chip ${limitIdx === i ? "on" : ""}" data-act="ccLimit" data-arg="${i}">${v ? fmtUSD(v) : "Illimité"}</button>`).join("")}
-    </div>
-    <div class="rule" style="margin:18px var(--gutter) 0"></div>
-
-    <div class="row static gutter">
-      <span class="icon-tile">${ico("one", 18)}</span>
-      <span class="r-body">
-        <span class="r-title"><span class="rt-text">Carte à usage unique</span></span>
-        <span class="r-sub" style="display:block">Se supprime après le premier paiement</span>
-      </span>
-      <button type="button" class="toggle ${F.ccSingle ? "on" : ""}" data-act="ccSingle" role="switch" aria-checked="${!!F.ccSingle}" aria-label="Carte à usage unique"></button>
-    </div>
-    <div class="note-micro gutter" style="padding-top:8px;padding-bottom:14px">Le numéro, la date d’expiration et le CVV sont générés par notre processeur au moment de la création.</div>
-  </div>
-  <div class="gutter" style="padding:10px 20px 16px;border-top:1px solid var(--hairline)">
-    ${btn(F.issuing ? "Émission en cours" : "Créer la carte", "ccIssue", { loading: !!F.issuing, disabled: !!F.issuing })}
-  </div>`;
+  ${navBar({ back: step > 0 ? "ccBack" : null, close: "closeSheet", title: "Nouvelle carte", right: step === 2 ? `<button type="button" class="nb-text" data-act="ccSkipName">Passer</button>` : "" })}
+  ${progress}
+  <div class="scroll"><div class="cc-step ${dir}${step === 0 ? " center" : ""}">${body}<div style="height:16px"></div></div></div>
+  <div class="gutter" style="padding:10px 20px 16px;border-top:1px solid var(--hairline)">${cta}</div>`;
 }
 
 /* ---------------- Contrôles de carte ---------------------------- */
@@ -2076,10 +2105,12 @@ function openSheet(kind, params = {}) {
 }
 function closeSheet() {
   clearTimers();
+  const cur = SHEET;
   const el = phone.querySelector(".sheet.s1"); const dim = phone.querySelector(".dim1");
   if (el) {
     el.classList.remove("show"); if (dim) dim.classList.remove("show");
-    setTimeout(() => { SHEET = null; SHEET2 = null; renderPhone(); renderRail(); }, 270);
+    /* une sheet rouverte pendant la fermeture ne doit pas être balayée */
+    setTimeout(() => { if (SHEET !== cur) return; SHEET = null; SHEET2 = null; renderPhone(); renderRail(); }, 270);
   } else { SHEET = null; SHEET2 = null; renderPhone(); renderRail(); }
 }
 function openSheet2(kind) {
@@ -2095,7 +2126,8 @@ function closeSheet2() {
   const el = phone.querySelector(".sheet.s2"); const dim = phone.querySelector(".dim2");
   if (el) {
     el.classList.remove("show"); if (dim) dim.classList.remove("show");
-    setTimeout(() => { SHEET2 = null; renderPhone(); }, 270);
+    const cur2 = SHEET2;
+    setTimeout(() => { if (SHEET2 !== cur2) return; SHEET2 = null; renderPhone(); }, 270);
   } else { SHEET2 = null; renderPhone(); }
 }
 function rerenderSheet() { renderPhone(); }
@@ -2402,12 +2434,15 @@ const ACTIONS = {
   },
 
   /* nouvelle carte */
-  openCreateCard: () => openSheet("createCard", { ccTheme: "sapin", ccNetwork: "mastercard", ccLabel: "", ccLimit: 1 }),
+  openCreateCard: () => openSheet("createCard", { ccTheme: "sapin", ccNetwork: "mastercard", ccLabel: "", ccLimit: 1, ccStep: 0 }),
   ccTheme: k => { F.ccTheme = k; rerenderSheet(); },
   ccNetwork: k => { F.ccNetwork = k; rerenderSheet(); },
   ccSuggest: s => { F.ccLabel = s; rerenderSheet(); },
   ccLimit: i => { F.ccLimit = +i; rerenderSheet(); },
   ccSingle: () => { F.ccSingle = !F.ccSingle; rerenderSheet(); },
+  ccNext: () => { F.ccStep = Math.min(3, (F.ccStep || 0) + 1); F.ccDir = "fwd"; rerenderSheet(); },
+  ccBack: () => { F.ccStep = Math.max(0, (F.ccStep || 0) - 1); F.ccDir = "back"; rerenderSheet(); },
+  ccSkipName: () => { F.ccLabel = ""; F.ccStep = 3; F.ccDir = "fwd"; rerenderSheet(); },
   ccIssue: () => {
     if (F.issuing) return;
     F.issuing = true; rerenderSheet();
@@ -2505,6 +2540,8 @@ phone.addEventListener("input", e => {
     F.ccLabel = t.value;
     const lab = phone.querySelector(".sheet .vc-label");
     if (lab) lab.textContent = F.ccLabel || "Ma carte";
+    const cnt = phone.querySelector("#cc-count");
+    if (cnt) cnt.textContent = (F.ccLabel || "").length + "/20";
   }
 });
 
