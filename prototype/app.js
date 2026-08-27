@@ -644,10 +644,18 @@ function dialogHTML() {
   return `<div class="sheet-dim" data-act="dialogCancel" style="z-index:95"></div>
   <div class="action-sheet">
     <div class="as-box">
-      <div class="as-head"><div class="as-title">${d.title}</div>${d.message ? `<div class="as-msg">${d.message}</div>` : ""}</div>
-      ${d.actions.map((a, i) => `<button type="button" class="as-btn ${a.destructive ? "destructive" : ""}" data-act="dialogAction" data-arg="${i}">${a.label}</button>`).join("")}
+      <div class="as-grab"></div>
+      <div class="as-head">
+        <div class="as-title">${d.title}</div>
+        <button type="button" class="as-x" data-act="dialogCancel" aria-label="Fermer">${ico("x", 15)}</button>
+      </div>
+      ${d.message ? `<div class="as-msg">${d.message}</div>` : ""}
+      ${d.actions.map((a, i) => `<button type="button" class="as-item ${a.destructive ? "destructive" : ""}" data-act="dialogAction" data-arg="${i}">
+        <span class="ai-ico">${ico(a.icon || "chevR", 20)}</span>
+        <span class="ai-body"><span class="ai-t" style="display:block">${a.label}</span>${a.sub ? `<span class="ai-s" style="display:block">${a.sub}</span>` : ""}</span>
+        <span class="ai-chev">${ico("chevR", 15)}</span>
+      </button>`).join("")}
     </div>
-    <div class="as-cancel"><button type="button" class="as-btn" data-act="dialogCancel" style="color:var(--ink);font-weight:600">Annuler</button></div>
   </div>`;
 }
 
@@ -2428,6 +2436,8 @@ const ACTIONS = {
       message: c.frozen ? "Les autorisations reprendront immédiatement." : "Tant que la carte est gelée, chaque autorisation est refusée. Les abonnements rattachés échoueront.",
       actions: [{
         label: c.frozen ? "Dégeler" : "Geler",
+        icon: "snow",
+        sub: c.frozen ? "Réactiver les paiements de cette carte." : "Suspendre tous les paiements, réversible.",
         fn: () => { c.frozen = !c.frozen; showToast(c.frozen ? "Carte gelée" : "Carte dégelée", c.frozen ? "snow" : "check"); renderPhone(); renderRail(); }
       }]
     });
@@ -2436,7 +2446,7 @@ const ACTIONS = {
     showDialog({
       title: "Supprimer définitivement ?",
       message: "Les abonnements rattachés cesseront d’être prélevés.",
-      actions: [{ label: "Supprimer la carte", destructive: true, fn: () => { S.cards = S.cards.filter(x => x.id !== id); popScreen(); showToast("Carte supprimée", "trash"); } }]
+      actions: [{ label: "Supprimer la carte", icon: "trash", sub: "Action définitive, sans retour possible.", destructive: true, fn: () => { S.cards = S.cards.filter(x => x.id !== id); popScreen(); showToast("Carte supprimée", "trash"); } }]
     });
   },
   cardMenu: id => {
@@ -2444,10 +2454,10 @@ const ACTIONS = {
     showDialog({
       title: c.label,
       actions: [
-        { label: "Renommer la carte", fn: () => showToast("Bientôt disponible", "pencil") },
-        { label: "Ajouter à Apple Wallet", fn: () => showToast("Ajout à Apple Wallet simulé", "wallet") },
-        { label: "Voir le relevé", fn: () => showToast("Relevé en préparation", "doc") },
-        { label: "Supprimer la carte", destructive: true, fn: () => ACTIONS.cardDeleteAsk(id) }
+        { label: "Renommer la carte", icon: "pencil", sub: "Un nom clair par usage : abonnements, voyages…", fn: () => showToast("Bientôt disponible", "pencil") },
+        { label: "Ajouter à Apple Wallet", icon: "wallet", sub: "Payer sans contact avec cette carte.", fn: () => showToast("Ajout à Apple Wallet simulé", "wallet") },
+        { label: "Voir le relevé", icon: "doc", sub: "Opérations du mois, export PDF.", fn: () => showToast("Relevé en préparation", "doc") },
+        { label: "Supprimer la carte", icon: "trash", sub: "Les prélèvements rattachés cesseront.", destructive: true, fn: () => ACTIONS.cardDeleteAsk(id) }
       ]
     });
   },
