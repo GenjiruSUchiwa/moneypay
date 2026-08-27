@@ -678,23 +678,53 @@ input:focus-visible{outline:none}
   display:flex;align-items:center;justify-content:center;
 }
 
+/* Analyse — bascule de vue (histogramme / anneau) */
+.chart-toggle{display:flex;gap:2px;padding:3px;border-radius:99px;background:var(--well)}
+.chart-toggle .ct{width:34px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:99px;color:var(--ink-2);transition:transform .12s ease}
+.chart-toggle .ct:active{transform:scale(.93)}
+.chart-toggle .ct.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-1),inset 0 0 0 1px var(--hairline)}
+
+/* Analyse — chip d'évolution */
+.delta-chip{display:inline-flex;align-items:center;gap:4px;padding:4.5px 11px;border-radius:99px;font-size:12.5px;font-weight:500}
+.delta-chip.up{background:var(--pend-soft);color:var(--pend)}
+.delta-chip.down{background:var(--credit-soft);color:var(--credit)}
+.delta-chip .dc-vs{color:inherit;opacity:.75;font-weight:400}
+.ins-hero.swap > *{animation:metaSwap .28s cubic-bezier(.22,.9,.3,1) both}
+.ins-hero.swap > :nth-child(2){animation-delay:.04s}
+.ins-hero.swap > :nth-child(3){animation-delay:.08s}
+
 /* graphique barres */
 .bars-chart{padding:2px var(--gutter) 0}
 .bars-svg{width:100%;height:auto;display:block}
-.bars-svg .grid-line{stroke:var(--hairline);stroke-width:1}
+.bars-svg .grid-line{stroke:var(--hairline);stroke-width:1;stroke-dasharray:1.5 4.5}
+.bars-svg .grid-base{stroke:var(--rule);stroke-width:1}
 .bars-svg .tick{font-family:var(--mono);font-size:9.5px;fill:var(--ink-3)}
 .bars-svg .xlabel{font-family:var(--mono);font-size:9.5px;fill:var(--ink-2)}
-.bars-svg .bar{fill:var(--green);opacity:.26;cursor:pointer}
-.bars-svg .bar.hot{opacity:1}
-.bars-svg .cap-label{font-size:10.5px;font-weight:600;fill:var(--ink);font-variant-numeric:tabular-nums}
-.chart-caption{font-size:13px;color:var(--ink-2);padding:0 var(--gutter) 10px;font-variant-numeric:tabular-nums;min-height:29px}
+.bars-svg .bgrp{cursor:pointer}
+.bars-svg .bhit{fill:transparent}
+.bars-svg .bar{fill:var(--ink);opacity:.13;transition:fill .25s ease,opacity .25s ease}
+.bars-svg .bgrp.hot .bar{fill:var(--green);opacity:1}
+.bars-svg .cap-label{font-size:10.5px;font-weight:600;fill:var(--ink);font-variant-numeric:tabular-nums;opacity:0;transition:opacity .2s ease}
+.bars-svg .bgrp.hot .cap-label{opacity:1}
+
+/* anneau par catégorie */
+.donut-wrap{padding:2px var(--gutter) 0}
+.donut{width:100%;height:auto;display:block}
+.donut .segc{fill:none;stroke-width:21px;stroke-dasharray:var(--dl) var(--dg);cursor:pointer;transition:opacity .25s ease,stroke-width .25s ease}
+.donut .segc.dim{opacity:.22}
+.donut .segc.sel{stroke-width:25px}
+.donut .dn-eyebrow{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.1em;fill:var(--ink-3)}
+.donut .dn-amt{font-size:27px;font-weight:600;letter-spacing:-.02em;fill:var(--ink);font-variant-numeric:tabular-nums}
+.donut .dn-sub{font-size:11px;fill:var(--ink-2)}
 
 /* catégorie */
-.cat-row{padding:9px 0}
-.cat-row .cr-line{display:flex;align-items:center;gap:10px}
-.cat-row .cr-tile{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.cat-row .cr-name{font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-row{display:flex;gap:12px;align-items:flex-start;padding:11px 0}
+.cat-row .cr-tile{width:34px;height:34px;border-radius:99px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.cat-row .cr-body{flex:1;min-width:0}
+.cat-row .cr-line{display:flex;align-items:baseline;gap:10px}
+.cat-row .cr-name{font-size:14px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cat-row .cr-val{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
+.cat-row .cr-line2{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-top:2px}
 .cat-row .meter{margin-top:8px}
 
 /* autorisation temps réel */
@@ -896,15 +926,16 @@ input:focus-visible{outline:none}
 .anim .tab-in .scroll > :nth-child(6){animation-delay:.17s}
 .anim .tab-in .scroll > :nth-child(n+7){animation-delay:.2s}
 
-/* barres du graphique : pousse depuis la ligne de base */
-.anim .tab-in .bars-svg .bar{transform-box:fill-box;transform-origin:center bottom;animation:barUp .5s cubic-bezier(.25,.9,.3,1) both}
-.anim .tab-in .bars-svg .bar:nth-of-type(2){animation-delay:.05s}
-.anim .tab-in .bars-svg .bar:nth-of-type(3){animation-delay:.1s}
-.anim .tab-in .bars-svg .bar:nth-of-type(4){animation-delay:.15s}
-.anim .tab-in .bars-svg .bar:nth-of-type(5){animation-delay:.2s}
-.anim .tab-in .bars-svg .bar:nth-of-type(6){animation-delay:.25s}
+/* barres du graphique : pousse depuis la base (entrée d'onglet OU bascule de vue) */
+.anim .tab-in .chart-anim .bar,.anim .chart-anim.swap .bar{transform-box:fill-box;transform-origin:center bottom;animation:barUp .5s cubic-bezier(.25,.9,.3,1) both;animation-delay:calc(var(--i,0)*.04s)}
 @keyframes barUp{from{transform:scaleY(0)}}
-.anim .tab-in .bars-svg .cap-label{animation:riseIn .3s .4s both}
+.anim .tab-in .chart-anim .bgrp.hot .cap-label,.anim .chart-anim.swap .bgrp.hot .cap-label{animation:riseIn .3s .5s both}
+
+/* anneau : balayage radial des segments + fondu du centre */
+.anim .tab-in .chart-anim .segc,.anim .chart-anim.swap .segc{animation:donutIn .8s cubic-bezier(.3,.8,.3,1) both;animation-delay:calc(var(--i,0)*.08s)}
+@keyframes donutIn{from{stroke-dasharray:0 100}}
+.anim .tab-in .chart-anim .donut text,.anim .chart-anim.swap .donut text{animation:capFade .5s .35s both}
+@keyframes capFade{from{opacity:0}}
 
 /* jauges de catégories : remplissage à l'entrée */
 .anim .tab-in .meter .m-fill{animation:meterIn .8s cubic-bezier(.25,.9,.3,1) both}
@@ -1011,6 +1042,7 @@ const ICON_PATHS = {
   card: '<rect x="3.2" y="5.8" width="17.6" height="12.4" rx="2.6"/><path d="M3.2 9.8h17.6M6.6 14.6h4"/>',
   list: '<path d="M8.6 6.4h11M8.6 12h11M8.6 17.6h11"/><path d="M4.4 6.4h.01M4.4 12h.01M4.4 17.6h.01" stroke-width="2.6"/>',
   chart: '<path d="M5.4 19.5v-6.2M12 19.5V4.8M18.6 19.5v-9.6"/>',
+  donut: '<circle cx="12" cy="12" r="7.6"/><path d="M12 12V4.4M12 12h7.6"/>',
   user: '<circle cx="12" cy="8.2" r="3.6"/><path d="M4.9 19.6c.9-3.4 3.7-5.1 7.1-5.1s6.2 1.7 7.1 5.1"/>',
   bell: '<path d="M12 4.4a5.3 5.3 0 0 1 5.3 5.3c0 3.1.8 4.6 1.6 5.6H5.1c.8-1 1.6-2.5 1.6-5.6A5.3 5.3 0 0 1 12 4.4Z"/><path d="M10 18.6a2.1 2.1 0 0 0 4 0"/>',
   chevL: '<path d="m14.5 5.5-6 6.5 6 6.5"/>',
@@ -1275,8 +1307,12 @@ const S = {
     { name: "DigitalOcean", logo: "digitalocean", usd: 2400, day: "le 24 de chaque mois", active: false }
   ],
   months: [
-    { label: "mars",  xaf: 62400 }, { label: "avr.",  xaf: 88100 }, { label: "mai",   xaf: 74900 },
-    { label: "juin",  xaf: 121300 },{ label: "juil.", xaf: 96700 }, { label: "août",  xaf: 108500, current: true }
+    { label: "sept.", m: 8,  xaf: 54200 }, { label: "oct.",  m: 9,  xaf: 71800 },
+    { label: "nov.",  m: 10, xaf: 83600 }, { label: "déc.",  m: 11, xaf: 132400 },
+    { label: "janv.", m: 0,  xaf: 67300 }, { label: "févr.", m: 1,  xaf: 58900 },
+    { label: "mars",  m: 2,  xaf: 62400 }, { label: "avr.",  m: 3,  xaf: 88100 },
+    { label: "mai",   m: 4,  xaf: 74900 }, { label: "juin",  m: 5,  xaf: 121300 },
+    { label: "juil.", m: 6,  xaf: 96700 }, { label: "août",  m: 7,  xaf: 108500, current: true }
   ],
   faq: [
     { q: "Pourquoi mon paiement a-t-il été refusé ?", a: "Le plus souvent, votre solde FCFA ne couvrait pas le montant converti au moment de l’autorisation. Rechargez puis réessayez. Chaque refus est facturé 220 F par le processeur." },
@@ -2166,71 +2202,115 @@ function activityScreen() {
 }
 
 /* ---------------- Analyse --------------------------------------- */
-function insightsScreen() {
-  const period = F.insPeriod || 0;
-  const showTable = !!F.insTable;
-  const sel = F.insSel != null ? F.insSel : 5;
-  const months = S.months;
-  const cur = months[5].xaf, prev = months[4].xaf;
-  const delta = Math.round((cur - prev) / prev * 100);
-  const cats = spendByCat();
-  const maxCat = cats.length ? cats[0].xaf : 1;
+/* tranche de mois selon la période choisie */
+function insMonths() { return S.months.slice(-[6, 8, 12][F.insPeriod || 0]); }
+function insSelIdx(ms) { return Math.min(F.insSel != null ? F.insSel : ms.length - 1, ms.length - 1); }
 
-  /* barres : ≤24px d'épaisseur, bout arrondi 4px côté donnée, base carrée */
-  const CW = 353, CH = 168, padL = 34, padB = 22, padT = 16;
-  const maxV = 140000, innerW = CW - padL - 6, innerH = CH - padB - padT;
-  const bw = 22, slot = innerW / 6;
-  const bars = months.map((m, i) => {
-    const h = Math.max(6, m.xaf / maxV * innerH);
-    const x = padL + slot * i + (slot - bw) / 2;
-    const y = CH - padB - h;
-    const hot = i === sel;
-    return `<path class="bar ${hot ? "hot" : ""}" data-act="insSelect" data-arg="${i}" d="M${x} ${CH - padB} v${-(h - 4)} a4 4 0 0 1 4 -4 h${bw - 8} a4 4 0 0 1 4 4 v${h - 4} Z"/>
-      ${hot ? `<text class="cap-label" x="${x + bw / 2}" y="${y - 6}" text-anchor="middle">${Math.round(m.xaf / 1000)}k</text>` : ""}
-      <text class="xlabel" x="${x + bw / 2}" y="${CH - 7}" text-anchor="middle">${m.label}</text>`;
-  }).join("");
-  const gridLines = [0, 70000, 140000].map(v => {
+/* héro : mois sélectionné + delta vs mois précédent */
+function insHeroHTML() {
+  const ms = insMonths(), sel = insSelIdx(ms);
+  const m = ms[sel];
+  const prev = S.months[S.months.length - ms.length + sel - 1];
+  const delta = prev ? Math.round((m.xaf - prev.xaf) / prev.xaf * 100) : null;
+  return `${eyebrow("Dépensé en " + MONTHS_FR[m.m])}
+    <div style="margin-top:8px" id="ins-amt">${moneyXAF(m.xaf, 38)}</div>
+    <div style="margin-top:10px;min-height:26px">${delta == null ? "" :
+      `<span class="delta-chip ${delta >= 0 ? "up" : "down"}">${ico(delta >= 0 ? "arrUpR" : "arrDnL", 12)}<span class="tnum">${delta >= 0 ? "+" : ""}${delta}${NBSP}%</span><span class="dc-vs">vs ${MONTHS_FR[prev.m]}</span></span>`}</div>`;
+}
+
+/* histogramme (N mois variable, sélection par classes, réf. Revolut/Wise) */
+function insBarsHTML(anim) {
+  const ms = insMonths(), N = ms.length, sel = insSelIdx(ms);
+  const CW = 353, CH = 174, padT = 26, padB = 22, padL = 6, padR = 30;
+  const innerW = CW - padL - padR, innerH = CH - padT - padB;
+  const maxV = 140000, slot = innerW / N, bw = Math.min(24, slot * .62), r = Math.min(5, bw / 2);
+  const grid = [70000, 140000].map(v => {
     const y = CH - padB - v / maxV * innerH;
-    return `<line class="grid-line" x1="${padL}" x2="${CW - 4}" y1="${y}" y2="${y}"/><text class="tick" x="${padL - 6}" y="${y + 3}" text-anchor="end">${v / 1000}k</text>`;
+    return `<line class="grid-line" x1="${padL}" x2="${padL + innerW}" y1="${y}" y2="${y}"/><text class="tick" x="${CW - 2}" y="${y + 3}" text-anchor="end">${v / 1000}k</text>`;
+  }).join("") + `<line class="grid-base" x1="${padL}" x2="${padL + innerW}" y1="${CH - padB}" y2="${CH - padB}"/>`;
+  const bars = ms.map((m, i) => {
+    const h = Math.max(6, m.xaf / maxV * innerH);
+    const x = padL + slot * i + (slot - bw) / 2, y = CH - padB - h;
+    const lbl = N > 8 ? (i % 2 === (N - 1) % 2 ? m.label : "") : m.label;
+    return `<g class="bgrp ${i === sel ? "hot" : ""}" data-act="insSelect" data-arg="${i}" style="--i:${i}">
+      <rect class="bhit" x="${padL + slot * i}" y="0" width="${slot}" height="${CH}"/>
+      <path class="bar" d="M${x} ${CH - padB} v${-(h - r)} a${r} ${r} 0 0 1 ${r} -${r} h${bw - 2 * r} a${r} ${r} 0 0 1 ${r} ${r} v${h - r} Z"/>
+      <text class="cap-label" x="${x + bw / 2}" y="${y - 8}" text-anchor="middle">${Math.round(m.xaf / 1000)}k</text>
+      ${lbl ? `<text class="xlabel" x="${x + bw / 2}" y="${CH - 6}" text-anchor="middle">${lbl}</text>` : ""}
+    </g>`;
   }).join("");
-  const selM = months[sel];
+  return `<div class="bars-chart chart-anim${anim ? " swap" : ""}"><svg class="bars-svg" viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Dépenses mensuelles">${grid}${bars}</svg></div>
+    <div class="gutter" style="margin-top:12px">${segments(["6 mois", "Cette année", "12 mois"], F.insPeriod || 0, "insPeriod")}</div>`;
+}
+
+/* anneau par catégorie (réf. Revolut) — segments balayés, tap = détail au centre */
+function insDonutHTML(anim) {
+  const cats = spendByCat(), total = cats.reduce((s, c) => s + c.xaf, 0) || 1;
+  const cx = 176.5, cy = 102, R = 64;
+  let acc = 0;
+  const segs = cats.map((r, i) => {
+    const len = Math.max(.4, r.xaf / total * 100 - 1.6);
+    const rot = acc / total * 360 - 90;
+    acc += r.xaf;
+    const cls = F.insCat ? (F.insCat === r.cat ? "sel" : "dim") : "";
+    return `<circle class="segc ${cls}" data-act="insCat" data-arg="${r.cat}" cx="${cx}" cy="${cy}" r="${R}" pathLength="100"
+      style="--dl:${len.toFixed(2)};--dg:${(100 - len).toFixed(2)};--i:${i};stroke:${CATEGORIES[r.cat].tint}"
+      transform="rotate(${rot.toFixed(2)} ${cx} ${cy})"/>`;
+  }).join("");
+  const selR = cats.find(x => x.cat === F.insCat);
+  return `<div class="donut-wrap chart-anim${anim ? " swap" : ""}">
+    <svg class="donut" viewBox="0 0 353 204" role="img" aria-label="Répartition des dépenses par catégorie">${segs}
+      <text class="dn-eyebrow" x="${cx}" y="${cy - 24}" text-anchor="middle">${selR ? CATEGORIES[selR.cat].label.toUpperCase() : "DÉPENSES"}</text>
+      <text class="dn-amt" x="${cx}" y="${cy + 8}" text-anchor="middle">${grp(selR ? selR.xaf : total)}</text>
+      <text class="dn-sub" x="${cx}" y="${cy + 28}" text-anchor="middle">${selR ? Math.round(selR.xaf / total * 100) + NBSP + "% du total" : "FCFA · par catégorie"}</text>
+    </svg></div>`;
+}
+
+function insChartHTML(anim) { return (F.insView || 0) === 0 ? insBarsHTML(anim) : insDonutHTML(anim); }
+
+/* rejoue le fondu du héro après une sélection */
+function insSwapHero() {
+  const h = phone.querySelector("#ins-hero");
+  if (!h) return;
+  h.innerHTML = insHeroHTML();
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    h.classList.remove("swap"); void h.offsetWidth; h.classList.add("swap");
+  }
+}
+
+function insightsScreen() {
+  const view = F.insView || 0;
+  const cats = spendByCat();
+  const total = cats.reduce((s, c) => s + c.xaf, 0) || 1;
+  const maxCat = cats.length ? cats[0].xaf : 1;
+  const catCount = {};
+  for (const t of S.txs) if (t.xaf < 0 && t.status !== "declined") catCount[t.cat] = (catCount[t.cat] || 0) + 1;
 
   return `${statusBar()}
-  <div class="gutter" style="padding-top:6px;padding-bottom:13px">
+  <div class="gutter" style="padding-top:6px;padding-bottom:13px;display:flex;align-items:center">
     <span class="t-page">Analyse</span>
-    <div style="margin-top:13px">${segments(["6 mois", "Cette année", "Tout"], period, "insPeriod")}</div>
+    <span style="flex:1"></span>
+    <div class="chart-toggle" role="tablist">
+      <button type="button" role="tab" aria-selected="${view === 0}" aria-label="Histogramme" class="ct ${view === 0 ? "on" : ""}" data-act="insView" data-arg="0">${ico("chart", 15)}</button>
+      <button type="button" role="tab" aria-selected="${view === 1}" aria-label="Répartition" class="ct ${view === 1 ? "on" : ""}" data-act="insView" data-arg="1">${ico("donut", 15)}</button>
+    </div>
   </div>
   <div class="rule"></div>
   <div class="scroll">
-    <div class="gutter" style="padding-top:20px">
-      ${eyebrow("Dépensé en août")}
-      <div style="margin-top:8px">${moneyXAF(cur, 36)}</div>
-      <div style="display:flex;align-items:center;gap:5px;margin-top:8px;font-size:13.5px;color:${delta >= 0 ? "var(--pend)" : "var(--credit)"}">
-        ${ico(delta >= 0 ? "arrUpR" : "arrDnL", 13)}<span class="tnum">${delta >= 0 ? "+" : ""}${delta}${NBSP}% par rapport à juillet</span>
-      </div>
-    </div>
-
-    <div class="section-head gutter" style="padding-top:26px">
-      <span class="t-section">Par mois</span><span class="sh-fill"></span>
-      <button type="button" class="sh-link" data-act="insToggleTable">${showTable ? "Graphique" : "Tableau"}</button>
-    </div>
-    ${showTable
-      ? `<div>${months.slice().reverse().map((m, i) => `${i > 0 ? `<div class="rule" style="margin:0 var(--gutter)"></div>` : ""}
-          <div class="kv gutter"><span class="kv-l" style="color:var(--ink)">${m.label[0].toUpperCase() + m.label.slice(1)}</span><span class="kv-fill"></span><span class="kv-v ${m.current ? "strong" : ""}">${grp(m.xaf)}</span></div>`).join("")}</div>`
-      : `<div class="chart-caption">${selM ? `${selM.label[0].toUpperCase() + selM.label.slice(1)} · ${fmtXAF(selM.xaf)}` : "Touchez une barre pour le détail"}</div>
-        <div class="bars-chart"><svg class="bars-svg" viewBox="0 0 ${CW} ${CH}" role="img" aria-label="Dépenses mensuelles sur six mois">${gridLines}${bars}</svg></div>`}
+    <div class="gutter ins-hero" id="ins-hero" style="padding-top:20px">${insHeroHTML()}</div>
+    <div id="ins-block" style="margin-top:14px">${insChartHTML(false)}</div>
 
     ${sectionHead("Par catégorie", { count: "FCFA" })}
     <div class="gutter">
       ${cats.map(r => {
-        const c = CATEGORIES[r.cat];
+        const c = CATEGORIES[r.cat], n = catCount[r.cat] || 0;
         return `<div class="cat-row">
-          <div class="cr-line">
-            <span class="cr-tile" style="background:color-mix(in srgb, ${c.tint} 14%, var(--paper));color:${c.tint}">${ico(c.icon, 14)}</span>
-            <span class="cr-name">${c.label}</span>
-            <span class="cr-val">${grp(r.xaf)}</span>
+          <span class="cr-tile" style="background:color-mix(in srgb, ${c.tint} 15%, var(--paper));color:${c.tint}">${ico(c.icon, 15)}</span>
+          <div class="cr-body">
+            <div class="cr-line"><span class="cr-name">${c.label}</span><span class="cr-val tnum">${grp(r.xaf)}</span></div>
+            <div class="cr-line2"><span>${n} transaction${n > 1 ? "s" : ""}</span><span class="tnum">${Math.round(r.xaf / total * 100)}${NBSP}%</span></div>
+            <div class="meter"><div class="m-fill" style="width:${Math.max(2, r.xaf / maxCat * 100)}%;background:${c.tint}"></div></div>
           </div>
-          ${meter(r.xaf / maxCat)}
         </div>`;
       }).join("")}
     </div>
@@ -3160,7 +3240,7 @@ function authSheet() {
    Orchestration du rendu
    ================================================================ */
 let SHEET2 = null;
-const F_KEEP = ["cardScope","txFilter","txQuery","insPeriod","insTable","insSel","faqOpen","revealed","slide","country","phoneDigits","methodId","sendQuery"];
+const F_KEEP = ["cardScope","txFilter","txQuery","insPeriod","insView","insSel","insCat","faqOpen","revealed","slide","country","phoneDigits","methodId","sendQuery"];
 
 /* redéfinition : conserve l'état d'interface hors flux */
 function openSheet(kind, params = {}) {
@@ -3311,6 +3391,23 @@ function renderPhone(mode) {
     const el = phone.querySelector(".hp-balance .money > span:first-child");
     if (el) {
       const target = S.balance, t0 = performance.now(), dur = 640;
+      el.textContent = grp(0);
+      const step = t => {
+        if (!el.isConnected) return;
+        const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+        el.textContent = grp(Math.round(target * e));
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+  }
+
+  /* compteur du montant dépensé (arrivée sur l'Analyse) */
+  if (mode === "tab" && PHASE === "main" && TAB === "insights" && !STACKS.insights.length
+      && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const el = phone.querySelector("#ins-amt .money > span:first-child");
+    if (el) {
+      const ms = insMonths(), target = ms[insSelIdx(ms)].xaf, t0 = performance.now(), dur = 640;
       el.textContent = grp(0);
       const step = t => {
         if (!el.isConnected) return;
@@ -3506,9 +3603,45 @@ const ACTIONS = {
   /* activité & analyse */
   openTx: id => pushScreen("txDetail", { id }),
   txFilter: i => { F.txFilter = +i; renderPhone(); },
-  insPeriod: i => { F.insPeriod = +i; renderPhone(); },
-  insSelect: i => { F.insSel = +i; renderPhone(); },
-  insToggleTable: () => { F.insTable = !F.insTable; renderPhone(); },
+  /* Analyse : mises à jour ciblées pour préserver les transitions */
+  insPeriod: i => {
+    F.insPeriod = +i; F.insSel = null;
+    const b = phone.querySelector("#ins-block");
+    if (!b) return renderPhone();
+    b.innerHTML = insChartHTML(true);
+    insSwapHero();
+  },
+  insView: v => {
+    F.insView = +v; F.insCat = null;
+    const b = phone.querySelector("#ins-block");
+    if (!b) return renderPhone();
+    phone.querySelectorAll(".chart-toggle .ct").forEach((el, i) => {
+      el.classList.toggle("on", i === +v);
+      el.setAttribute("aria-selected", String(i === +v));
+    });
+    b.innerHTML = insChartHTML(true);
+  },
+  insSelect: i => {
+    F.insSel = +i;
+    const gs = phone.querySelectorAll("#ins-block .bgrp");
+    if (!gs.length) return renderPhone();
+    gs.forEach((g, j) => g.classList.toggle("hot", j === +i));
+    insSwapHero();
+  },
+  insCat: cat => {
+    F.insCat = F.insCat === cat ? null : cat;
+    const svg = phone.querySelector("#ins-block .donut");
+    if (!svg) return;
+    svg.querySelectorAll(".segc").forEach(el => {
+      el.classList.toggle("sel", F.insCat === el.dataset.arg);
+      el.classList.toggle("dim", !!F.insCat && F.insCat !== el.dataset.arg);
+    });
+    const cats = spendByCat(), total = cats.reduce((s, c) => s + c.xaf, 0) || 1;
+    const r = cats.find(x => x.cat === F.insCat);
+    svg.querySelector(".dn-eyebrow").textContent = r ? CATEGORIES[r.cat].label.toUpperCase() : "DÉPENSES";
+    svg.querySelector(".dn-amt").textContent = grp(r ? r.xaf : total);
+    svg.querySelector(".dn-sub").textContent = r ? Math.round(r.xaf / total * 100) + NBSP + "% du total" : "FCFA · par catégorie";
+  },
 
   /* profil */
   pushSub: key => pushScreen("sub", { key }),

@@ -670,23 +670,53 @@ input:focus-visible{outline:none}
   display:flex;align-items:center;justify-content:center;
 }
 
+/* Analyse — bascule de vue (histogramme / anneau) */
+.chart-toggle{display:flex;gap:2px;padding:3px;border-radius:99px;background:var(--well)}
+.chart-toggle .ct{width:34px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:99px;color:var(--ink-2);transition:transform .12s ease}
+.chart-toggle .ct:active{transform:scale(.93)}
+.chart-toggle .ct.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-1),inset 0 0 0 1px var(--hairline)}
+
+/* Analyse — chip d'évolution */
+.delta-chip{display:inline-flex;align-items:center;gap:4px;padding:4.5px 11px;border-radius:99px;font-size:12.5px;font-weight:500}
+.delta-chip.up{background:var(--pend-soft);color:var(--pend)}
+.delta-chip.down{background:var(--credit-soft);color:var(--credit)}
+.delta-chip .dc-vs{color:inherit;opacity:.75;font-weight:400}
+.ins-hero.swap > *{animation:metaSwap .28s cubic-bezier(.22,.9,.3,1) both}
+.ins-hero.swap > :nth-child(2){animation-delay:.04s}
+.ins-hero.swap > :nth-child(3){animation-delay:.08s}
+
 /* graphique barres */
 .bars-chart{padding:2px var(--gutter) 0}
 .bars-svg{width:100%;height:auto;display:block}
-.bars-svg .grid-line{stroke:var(--hairline);stroke-width:1}
+.bars-svg .grid-line{stroke:var(--hairline);stroke-width:1;stroke-dasharray:1.5 4.5}
+.bars-svg .grid-base{stroke:var(--rule);stroke-width:1}
 .bars-svg .tick{font-family:var(--mono);font-size:9.5px;fill:var(--ink-3)}
 .bars-svg .xlabel{font-family:var(--mono);font-size:9.5px;fill:var(--ink-2)}
-.bars-svg .bar{fill:var(--green);opacity:.26;cursor:pointer}
-.bars-svg .bar.hot{opacity:1}
-.bars-svg .cap-label{font-size:10.5px;font-weight:600;fill:var(--ink);font-variant-numeric:tabular-nums}
-.chart-caption{font-size:13px;color:var(--ink-2);padding:0 var(--gutter) 10px;font-variant-numeric:tabular-nums;min-height:29px}
+.bars-svg .bgrp{cursor:pointer}
+.bars-svg .bhit{fill:transparent}
+.bars-svg .bar{fill:var(--ink);opacity:.13;transition:fill .25s ease,opacity .25s ease}
+.bars-svg .bgrp.hot .bar{fill:var(--green);opacity:1}
+.bars-svg .cap-label{font-size:10.5px;font-weight:600;fill:var(--ink);font-variant-numeric:tabular-nums;opacity:0;transition:opacity .2s ease}
+.bars-svg .bgrp.hot .cap-label{opacity:1}
+
+/* anneau par catégorie */
+.donut-wrap{padding:2px var(--gutter) 0}
+.donut{width:100%;height:auto;display:block}
+.donut .segc{fill:none;stroke-width:21px;stroke-dasharray:var(--dl) var(--dg);cursor:pointer;transition:opacity .25s ease,stroke-width .25s ease}
+.donut .segc.dim{opacity:.22}
+.donut .segc.sel{stroke-width:25px}
+.donut .dn-eyebrow{font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.1em;fill:var(--ink-3)}
+.donut .dn-amt{font-size:27px;font-weight:600;letter-spacing:-.02em;fill:var(--ink);font-variant-numeric:tabular-nums}
+.donut .dn-sub{font-size:11px;fill:var(--ink-2)}
 
 /* catégorie */
-.cat-row{padding:9px 0}
-.cat-row .cr-line{display:flex;align-items:center;gap:10px}
-.cat-row .cr-tile{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.cat-row .cr-name{font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-row{display:flex;gap:12px;align-items:flex-start;padding:11px 0}
+.cat-row .cr-tile{width:34px;height:34px;border-radius:99px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.cat-row .cr-body{flex:1;min-width:0}
+.cat-row .cr-line{display:flex;align-items:baseline;gap:10px}
+.cat-row .cr-name{font-size:14px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cat-row .cr-val{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
+.cat-row .cr-line2{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-top:2px}
 .cat-row .meter{margin-top:8px}
 
 /* autorisation temps réel */
@@ -888,15 +918,16 @@ input:focus-visible{outline:none}
 .anim .tab-in .scroll > :nth-child(6){animation-delay:.17s}
 .anim .tab-in .scroll > :nth-child(n+7){animation-delay:.2s}
 
-/* barres du graphique : pousse depuis la ligne de base */
-.anim .tab-in .bars-svg .bar{transform-box:fill-box;transform-origin:center bottom;animation:barUp .5s cubic-bezier(.25,.9,.3,1) both}
-.anim .tab-in .bars-svg .bar:nth-of-type(2){animation-delay:.05s}
-.anim .tab-in .bars-svg .bar:nth-of-type(3){animation-delay:.1s}
-.anim .tab-in .bars-svg .bar:nth-of-type(4){animation-delay:.15s}
-.anim .tab-in .bars-svg .bar:nth-of-type(5){animation-delay:.2s}
-.anim .tab-in .bars-svg .bar:nth-of-type(6){animation-delay:.25s}
+/* barres du graphique : pousse depuis la base (entrée d'onglet OU bascule de vue) */
+.anim .tab-in .chart-anim .bar,.anim .chart-anim.swap .bar{transform-box:fill-box;transform-origin:center bottom;animation:barUp .5s cubic-bezier(.25,.9,.3,1) both;animation-delay:calc(var(--i,0)*.04s)}
 @keyframes barUp{from{transform:scaleY(0)}}
-.anim .tab-in .bars-svg .cap-label{animation:riseIn .3s .4s both}
+.anim .tab-in .chart-anim .bgrp.hot .cap-label,.anim .chart-anim.swap .bgrp.hot .cap-label{animation:riseIn .3s .5s both}
+
+/* anneau : balayage radial des segments + fondu du centre */
+.anim .tab-in .chart-anim .segc,.anim .chart-anim.swap .segc{animation:donutIn .8s cubic-bezier(.3,.8,.3,1) both;animation-delay:calc(var(--i,0)*.08s)}
+@keyframes donutIn{from{stroke-dasharray:0 100}}
+.anim .tab-in .chart-anim .donut text,.anim .chart-anim.swap .donut text{animation:capFade .5s .35s both}
+@keyframes capFade{from{opacity:0}}
 
 /* jauges de catégories : remplissage à l'entrée */
 .anim .tab-in .meter .m-fill{animation:meterIn .8s cubic-bezier(.25,.9,.3,1) both}
