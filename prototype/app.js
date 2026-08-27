@@ -1877,9 +1877,24 @@ function amountEntry(digits, unit, sub, { warn = false } = {}) {
   const has = digits.length > 0;
   const val = has ? grp(parseInt(digits, 10)) : "0";
   return `<div class="amount-entry">
-    <div class="ae-value display ${has ? "" : "empty"}">${val}<span style="font-size:17px;font-weight:500;color:var(--ink-2);margin-left:7px;letter-spacing:0">${unit}</span></div>
+    <div class="ae-value display ${has ? "" : "empty"} ${consumeBump() ? "bump" : ""}">${val}<span style="font-size:17px;font-weight:500;color:var(--ink-2);margin-left:7px;letter-spacing:0">${unit}</span></div>
     <div class="ae-sub ${warn ? "warn" : ""}">${sub}</div>
   </div>`;
+}
+
+/* transition d'étape : la direction est consommée au rendu pour ne jouer qu'une fois */
+function flowWrap(inner) {
+  const dir = F.dir || ""; F.dir = "";
+  return `<div class="flow ${dir}">${inner}</div>`;
+}
+function consumeBump() { const b = F.bump; F.bump = false; return b; }
+
+const AV_TINTS = ["var(--cat-streaming)", "var(--cat-travel)", "var(--cat-ads)", "var(--cat-shopping)", "var(--cat-transport)"];
+function contactAvatar(c, size = 40, fontSize = 13.5) {
+  const i = Math.max(0, S.contacts.indexOf(c));
+  const tint = AV_TINTS[i % AV_TINTS.length];
+  const initials = c.name.split(" ").slice(0, 2).map(w => w[0]).join("");
+  return `<span class="avatar round" style="width:${size}px;height:${size}px;font-size:${fontSize}px;font-weight:500;background:color-mix(in srgb, ${tint} 14%, var(--paper));color:${tint}">${initials}</span>`;
 }
 
 /* ---------------- Recharger ------------------------------------- */
@@ -1894,12 +1909,12 @@ function topupSheet() {
 
   if (step === "done") {
     return `<div class="sheet-grab"></div>
-    <div style="flex:1;display:flex;flex-direction:column;min-height:0" class="gutter">
+    ${flowWrap(`<div style="flex:1;display:flex;flex-direction:column;min-height:0" class="gutter">
       <div style="flex:1"></div>
       <span class="success-mark">${ico("check", 24)}</span>
       <div class="t-page" style="font-size:26px;margin-top:22px">Rechargement effectué</div>
       <div style="font-size:15px;color:var(--ink-2);margin-top:8px" class="tnum">${fmtXAF(credited)} ajoutés à votre solde.</div>
-      <div style="margin-top:22px">
+      <div style="margin-top:22px" class="receipt">
         <div class="rule"></div>
         <div class="kv"><span class="kv-l">Nouveau solde</span><span class="kv-fill"></span><span class="kv-v strong">${fmtXAF(S.balance)}</span></div>
         <div class="rule"></div>
@@ -1913,53 +1928,53 @@ function topupSheet() {
         ${btn("Partager le reçu", "toastReceipt", { style: "quiet", icon: "share" })}
         ${btn("Terminé", "closeSheet")}
       </div>
-    </div>`;
+    </div>`)}`;
   }
 
   if (step === "confirm") {
     return `<div class="sheet-grab"></div>
     ${navBar({ back: "topupBackAmount", title: "Confirmer" })}
-    <div class="scroll">
+    ${flowWrap(`<div class="scroll">
       <div class="gutter" style="padding-top:6px">
         ${moneyXAF(amount, 36)}
         <div style="font-size:13.5px;color:var(--ink-2);margin-top:5px">depuis ${m.name}</div>
       </div>
-      <div class="rule" style="margin:24px var(--gutter) 0"></div>
-      ${kvRow("Montant", fmtXAF(amount))}
-      <div class="rule" style="margin:0 var(--gutter)"></div>
-      ${kvRow("Frais · " + (m.fee * 100).toLocaleString("fr-FR") + NBSP + "%", fee === 0 ? "Offerts" : "− " + fmtXAF(fee), { tint: fee === 0 ? "var(--credit)" : "var(--pend)" })}
-      <div class="rule" style="margin:0 var(--gutter)"></div>
-      ${kvRow("Crédité sur le wallet", fmtXAF(credited), { strong: true })}
-      <div class="rule" style="margin:0 var(--gutter)"></div>
-      ${kvRow("Nouveau solde", fmtXAF(S.balance + credited))}
-      <div class="rule" style="margin:0 var(--gutter)"></div>
-      ${kvRow("Délai", m.instant ? "Immédiat" : "1 à 2 jours ouvrés")}
-      <div class="rule" style="margin:0 var(--gutter)"></div>
+      <div class="receipt">
+        <div class="rule" style="margin:24px var(--gutter) 0"></div>
+        ${kvRow("Montant", fmtXAF(amount))}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+        ${kvRow("Frais · " + (m.fee * 100).toLocaleString("fr-FR") + NBSP + "%", fee === 0 ? "Offerts" : "− " + fmtXAF(fee), { tint: fee === 0 ? "var(--credit)" : "var(--pend)" })}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+        ${kvRow("Crédité sur le wallet", fmtXAF(credited), { strong: true })}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+        ${kvRow("Nouveau solde", fmtXAF(S.balance + credited))}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+        ${kvRow("Délai", m.instant ? "Immédiat" : "1 à 2 jours ouvrés")}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+      </div>
       <div class="note-row gutter" style="padding-top:18px">${ico("phone", 15)}<span>Vous allez recevoir une demande de confirmation sur votre téléphone. Validez-la avec votre code ${m.id === "mtn" ? "MoMo" : "opérateur"}.</span></div>
     </div>
-    <div class="gutter" style="padding:10px 20px 16px">${btn("Confirmer le rechargement", "topupConfirm")}</div>`;
+    <div class="gutter" style="padding:10px 20px 16px">${btn("Confirmer le rechargement", "topupConfirm")}</div>`)}`;
   }
 
   return `<div class="sheet-grab"></div>
   ${navBar({ close: "closeSheet", title: "Recharger" })}
-  <div style="flex:1"></div>
+  ${flowWrap(`<div style="flex:1"></div>
   ${amountEntry(digits, "FCFA", amount > 0 ? `≈ ${fmtUSD(xafToUSD(credited))} dépensables en carte` : `Minimum 1${NBSP}000${NBSP}F`)}
   <div style="flex:1"></div>
-  <div class="chip-row" style="margin-bottom:16px">
+  <div class="chip-row" style="margin-bottom:14px">
     ${[10000, 25000, 50000, 100000].map(v => `<button type="button" class="chip ${amount === v ? "on" : ""}" data-act="topupPreset" data-arg="${v}">${grp(v)}</button>`).join("")}
   </div>
-  <div class="rule" style="margin:0 var(--gutter)"></div>
-  <button type="button" class="row gutter" data-act="openMethods">
+  <button type="button" class="method-card" data-act="openMethods">
     ${m.logo ? logoTile(m.logo, 38) : `<span class="icon-tile">${ico(m.icon, 18)}</span>`}
-    <span class="r-body">
-      <span class="r-title"><span class="rt-text">${m.name}</span></span>
-      <span class="r-sub" style="display:block">${m.detail}</span>
+    <span style="flex:1;min-width:0">
+      <span class="mc-name">${m.name}</span>
+      <span class="mc-sub">${m.detail}</span>
     </span>
     <span style="font-size:13.5px;font-weight:500;color:var(--accent)">Changer</span>
   </button>
-  <div class="rule" style="margin:0 var(--gutter)"></div>
   ${keypad("topupKey")}
-  <div class="gutter" style="padding:8px 20px 16px">${btn("Continuer", "topupToConfirm", { disabled: !valid })}</div>`;
+  <div class="gutter" style="padding:8px 20px 16px">${btn("Continuer", "topupToConfirm", { disabled: !valid })}</div>`)}`;
 }
 
 function methodsSheet() {
@@ -1998,51 +2013,81 @@ function countriesSheet() {
 
 /* ---------------- Convertir ------------------------------------- */
 function convertSheet() {
-  if (F.step === "done") {
-    const xaf = parseInt(F.digits || "0", 10);
-    return `<div class="sheet-grab"></div>
-    <div style="flex:1;display:flex;flex-direction:column;min-height:0" class="gutter">
-      <div style="flex:1"></div>
-      <span class="success-mark">${ico("check", 24)}</span>
-      <div class="t-page" style="font-size:26px;margin-top:22px">Conversion effectuée</div>
-      <div style="font-size:15px;color:var(--ink-2);margin-top:8px" class="tnum">${fmtXAF(xaf)} convertis en ${fmtUSD(xafToUSD(xaf))}.</div>
-      <div style="flex:1"></div>
-      <div style="padding-bottom:16px">${btn("Terminé", "closeSheet")}</div>
-    </div>`;
-  }
   const digits = F.digits || "";
   const xaf = parseInt(digits || "0", 10);
   const usd = xafToUSD(xaf);
-  const market = Math.floor(xaf / S.fx.rate * 100);
   const marginXAF = Math.round(xaf * S.fx.margin / (1 + S.fx.margin));
   const over = xaf > S.balance;
   const valid = xaf >= 1000 && !over;
+
+  if (F.step === "done") {
+    return `<div class="sheet-grab"></div>
+    ${flowWrap(`<div style="flex:1;display:flex;flex-direction:column;min-height:0" class="gutter">
+      <div style="flex:1"></div>
+      <span class="success-mark">${ico("check", 24)}</span>
+      <div class="t-page" style="font-size:26px;margin-top:22px">Conversion effectuée</div>
+      <div style="font-size:15px;color:var(--ink-2);margin-top:8px" class="tnum">${fmtXAF(xaf)} convertis en ${fmtUSD(usd)}.</div>
+      <div style="margin-top:22px" class="receipt">
+        <div class="rule"></div>
+        <div class="kv"><span class="kv-l">Solde FCFA</span><span class="kv-fill"></span><span class="kv-v strong">${fmtXAF(S.balance)}</span></div>
+        <div class="rule"></div>
+        <div class="kv"><span class="kv-l">Taux appliqué</span><span class="kv-fill"></span><span class="kv-v mono">1${NBSP}USD = ${grp(Math.round(S.fx.rate * (1 + S.fx.margin)))}${NBSP}F</span></div>
+        <div class="rule"></div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="padding-bottom:16px">${btn("Terminé", "closeSheet")}</div>
+    </div>`)}`;
+  }
+
+  if (F.step === "confirm") {
+    return `<div class="sheet-grab"></div>
+    ${navBar({ back: "convertBackAmount", title: "Confirmer" })}
+    ${flowWrap(`<div class="scroll">
+      <div class="gutter" style="padding-top:6px">
+        ${moneyUSD(usd, 36)}
+        <div style="font-size:13.5px;color:var(--ink-2);margin-top:5px">ajoutés à votre solde carte</div>
+      </div>
+      <div class="receipt">
+        <div class="rule" style="margin:24px var(--gutter) 0"></div>
+        ${kvRow("Vous convertissez", fmtXAF(xaf))}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+        ${kvRow("Taux interbancaire", "1" + NBSP + "USD = 610" + NBSP + "F", { mono: true })}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+        ${kvRow("Marge MoniPay · 3" + NBSP + "%", "− " + fmtXAF(marginXAF), { tint: "var(--pend)" })}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+        ${kvRow("Vous recevez", fmtUSD(usd), { strong: true })}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+        ${kvRow("Solde FCFA après", fmtXAF(S.balance - xaf))}
+        <div class="rule" style="margin:0 var(--gutter)"></div>
+      </div>
+      <div class="note-row gutter" style="padding-top:18px">${ico("swap", 15)}<span>Le taux affiché est garanti à la confirmation. La conversion est immédiate et sans autre frais.</span></div>
+    </div>
+    <div class="gutter" style="padding:10px 20px 16px">${btn("Confirmer la conversion", "convertConfirm")}</div>`)}`;
+  }
+
   return `<div class="sheet-grab"></div>
   ${navBar({ close: "closeSheet", title: "Convertir" })}
-  <div class="gutter">
-    <div class="fx-leg">
-      ${flagDisc("CM", 30)}
-      <span><span class="fl-code" style="display:block">FCFA</span><span class="fl-note tnum" style="display:block">Disponible : ${fmtXAF(S.balance)}</span></span>
-      <span class="fl-value ${digits ? "" : "dim"}">${digits ? grp(xaf) : "0"}</span>
-    </div>
-    <div class="fx-swap"><span class="fs-disc">${ico("arrDn", 14)}</span></div>
-    <div class="fx-leg">
-      ${flagDisc("US", 30)}
-      <span><span class="fl-code" style="display:block">USD</span><span class="fl-note" style="display:block">Utilisable sur toutes vos cartes</span></span>
-      <span class="fl-value dim">${fmtUSD(usd).replace(NBSP + "$", "")}</span>
-    </div>
+  ${flowWrap(`<div class="gutter" style="padding-top:2px">
+    <span class="pill neutral no-ico tnum">1${NBSP}$ = ${grp(Math.round(S.fx.rate * (1 + S.fx.margin)))}${NBSP}F, marge incluse</span>
   </div>
-  <div class="rule" style="margin:0 var(--gutter)"></div>
-  ${kvRow("Taux interbancaire", "1" + NBSP + "USD = 610" + NBSP + "F", { mono: true })}
-  <div class="rule" style="margin:0 var(--gutter)"></div>
-  ${kvRow("Marge MoniPay · 3" + NBSP + "%", marginXAF > 0 ? "− " + fmtXAF(marginXAF) : "—", { tint: "var(--pend)" })}
-  <div class="rule" style="margin:0 var(--gutter)"></div>
-  ${kvRow("Vous recevez", fmtUSD(usd), { strong: true })}
-  <div class="rule" style="margin:0 var(--gutter)"></div>
-  ${market > 0 ? `<div class="note-micro gutter tnum" style="padding-top:12px">Au taux interbancaire pur, vous auriez ${fmtUSD(market)}.</div>` : ""}
+  ${(() => { const bump = consumeBump(); return `<div class="fx-stack">
+    <div class="fx-card">
+      ${flagDisc("CM", 34)}
+      <span><span class="fl-code" style="display:block">FCFA</span><span class="fl-note tnum" style="display:block">Solde : ${fmtXAF(S.balance)}</span></span>
+      <span class="fl-amt ${over ? "warn" : digits ? "" : "dim"} ${bump ? "bump" : ""}">${digits ? "−" + NBSP + grp(xaf) : "0"}<span class="fx-caret"></span></span>
+    </div>
+    <span class="fx-mid">${ico("arrDn", 15)}</span>
+    <div class="fx-card">
+      ${flagDisc("US", 34)}
+      <span><span class="fl-code" style="display:block">USD</span><span class="fl-note" style="display:block">Sur toutes vos cartes</span></span>
+      <span class="fl-amt ${usd > 0 ? "credit" : "dim"} ${bump ? "bump" : ""}">${usd > 0 ? "+" + NBSP : ""}${fmtUSD(usd).replace(NBSP + "$", "")}</span>
+    </div>
+  </div>`; })()}
+  ${over ? `<div class="note-micro gutter tnum" style="padding-top:12px;color:var(--debit)">Solde insuffisant : il vous manque ${fmtXAF(xaf - S.balance)}.</div>`
+         : marginXAF > 0 ? `<div class="note-micro gutter tnum" style="padding-top:12px">Dont marge MoniPay 3${NBSP}% : ${fmtXAF(marginXAF)}.</div>` : ""}
   <div style="flex:1"></div>
   ${keypad("convertKey")}
-  <div class="gutter" style="padding:8px 20px 16px">${btn(over ? "Solde insuffisant" : "Convertir", "convertDo", { disabled: !valid })}</div>`;
+  <div class="gutter" style="padding:8px 20px 16px">${btn(over ? "Solde insuffisant" : "Vérifier la conversion", "convertToConfirm", { disabled: !valid })}</div>`)}`;
 }
 
 /* ---------------- Envoyer --------------------------------------- */
@@ -2050,26 +2095,34 @@ function sendSheet() {
   const step = F.step || "pick";
   if (step === "done") {
     const amount = parseInt(F.digits || "0", 10);
+    const first = F.recipient.name.split(" ")[0];
     return `<div class="sheet-grab"></div>
-    <div style="flex:1;display:flex;flex-direction:column;min-height:0" class="gutter">
+    ${flowWrap(`<div style="flex:1;display:flex;flex-direction:column;min-height:0" class="gutter">
       <div style="flex:1"></div>
       <span class="success-mark">${ico("check", 24)}</span>
       <div class="t-page" style="font-size:26px;margin-top:22px">Argent envoyé</div>
       <div style="font-size:15px;color:var(--ink-2);margin-top:8px" class="tnum">${fmtXAF(amount)} envoyés à ${esc(F.recipient.name)}.</div>
+      <div class="tl" style="margin-top:24px">
+        <div class="tl-row" style="animation-delay:.35s"><span class="tl-disc">${ico("check", 13)}</span><span><span class="tl-t" style="display:block">Transfert créé</span><span class="tl-s" style="display:block">À l’instant</span></span></div>
+        <div class="tl-row" style="animation-delay:.55s"><span class="tl-disc">${ico("check", 13)}</span><span><span class="tl-t" style="display:block">Débité de votre solde</span><span class="tl-s" style="display:block">Sans frais</span></span><span class="tl-v tnum">− ${fmtXAF(amount)}</span></div>
+        <div class="tl-row" style="animation-delay:.75s"><span class="tl-disc">${ico("check", 13)}</span><span><span class="tl-t" style="display:block">Reçu par ${esc(first)}</span><span class="tl-s" style="display:block">Instantané, notifié par SMS</span></span></div>
+      </div>
       <div style="flex:1"></div>
-      <div style="padding-bottom:16px">${btn("Terminé", "closeSheet")}</div>
-    </div>`;
+      <div style="display:flex;flex-direction:column;gap:9px;padding-bottom:16px">
+        ${btn("Partager le reçu", "toastReceipt", { style: "quiet", icon: "share" })}
+        ${btn("Terminé", "closeSheet")}
+      </div>
+    </div>`)}`;
   }
   if (step === "amount") {
     const c = F.recipient;
     const digits = F.digits || "";
     const amount = parseInt(digits || "0", 10);
-    const initials = c.name.split(" ").slice(0, 2).map(w => w[0]).join("");
     const valid = amount >= 500 && amount <= S.balance;
     return `<div class="sheet-grab"></div>
     ${navBar({ back: "sendBackPick" })}
-    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-      <span class="avatar round" style="width:52px;height:52px;font-size:17px;font-weight:500">${initials}</span>
+    ${flowWrap(`<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      ${contactAvatar(c, 52, 17)}
       <span style="font-size:15px;font-weight:600">${esc(c.name)}</span>
       <span class="tnum" style="font-size:13px;color:var(--ink-2)">${c.phone}</span>
     </div>
@@ -2078,32 +2131,36 @@ function sendSheet() {
     <div style="flex:1"></div>
     <div class="gutter"><label class="field" style="height:44px"><span class="f-ico">${ico("chat", 16)}</span><input type="text" name="note" placeholder="Ajouter une note" aria-label="Ajouter une note"></label></div>
     ${keypad("sendKey")}
-    <div class="gutter" style="padding:8px 20px 16px">${btn(amount >= 500 && !((amount > S.balance)) ? "Envoyer " + fmtXAF(amount) : "Envoyer", "sendDo", { disabled: !valid })}</div>`;
+    <div class="gutter" style="padding:8px 20px 16px">${btn(amount >= 500 && !((amount > S.balance)) ? "Envoyer " + fmtXAF(amount) : "Envoyer", "sendDo", { disabled: !valid })}</div>`)}`;
   }
   const q = (F.sendQuery || "").toLowerCase();
   const list = S.contacts.filter(c => !q || c.name.toLowerCase().includes(q));
   return `<div class="sheet-grab"></div>
   ${navBar({ close: "closeSheet", title: "Envoyer" })}
-  <div class="gutter"><label class="field" style="height:44px"><span class="f-ico">${ico("search", 16)}</span><input type="search" name="sendsearch" id="send-search" placeholder="Nom ou numéro MoniPay" value="${esc(F.sendQuery || "")}" aria-label="Rechercher un contact"></label></div>
+  ${flowWrap(`<div class="gutter"><label class="field" style="height:44px"><span class="f-ico">${ico("search", 16)}</span><input type="search" name="sendsearch" id="send-search" placeholder="Nom ou numéro MoniPay" value="${esc(F.sendQuery || "")}" aria-label="Rechercher un contact"></label></div>
   <div class="scroll">
-    ${eyebrow("Récents", "gutter")}
+    ${q ? "" : `${eyebrow("Récents", "gutter")}
+    <div class="recents">
+      ${S.contacts.slice(0, 4).map(c => `<button type="button" class="recent" data-act="sendPick" data-arg="${c.name}">
+        ${contactAvatar(c, 52, 16)}
+        <span class="rc-name">${esc(c.name.split(" ")[0])}</span>
+      </button>`).join("")}
+    </div>`}
+    ${eyebrow("Tous les contacts", "gutter")}
     <div style="margin-top:-2px">
-      ${list.map((c, i) => {
-        const initials = c.name.split(" ").slice(0, 2).map(w => w[0]).join("");
-        return `${i > 0 ? rule(true) : ""}
+      ${list.map((c, i) => `${i > 0 ? rule(true) : ""}
         <button type="button" class="row gutter" data-act="sendPick" data-arg="${c.name}">
-          <span class="avatar round" style="width:40px;height:40px;font-size:13.5px;font-weight:500">${initials}</span>
+          ${contactAvatar(c, 40, 13.5)}
           <span class="r-body">
             <span class="r-title"><span class="rt-text">${esc(c.name)}</span></span>
             <span class="r-sub tnum" style="display:block">${c.phone}</span>
           </span>
           <span class="r-chevron">${ico("chevR", 15)}</span>
-        </button>`;
-      }).join("")}
+        </button>`).join("")}
       ${list.length === 0 ? emptyNote("Aucun contact", "Essayez un autre nom.") : ""}
     </div>
     <div style="height:16px"></div>
-  </div>`;
+  </div>`)}`;
 }
 
 /* ---------------- Nouvelle carte — parcours en 4 étapes --------- */
@@ -2789,10 +2846,10 @@ const ACTIONS = {
 
   /* recharger */
   openTopUp: () => openSheet("topup", { step: "amount", digits: "" }),
-  topupKey: k => { F.digits = digitsAction(k, F.digits || "", 8); rerenderSheet(); },
-  topupPreset: v => { F.digits = String(v); rerenderSheet(); },
-  topupToConfirm: () => { F.step = "confirm"; rerenderSheet(); },
-  topupBackAmount: () => { F.step = "amount"; rerenderSheet(); },
+  topupKey: k => { F.digits = digitsAction(k, F.digits || "", 8); F.bump = true; rerenderSheet(); },
+  topupPreset: v => { F.digits = String(v); F.bump = true; rerenderSheet(); },
+  topupToConfirm: () => { F.step = "confirm"; F.dir = "fwd"; rerenderSheet(); },
+  topupBackAmount: () => { F.step = "amount"; F.dir = "back"; rerenderSheet(); },
   openMethods: () => openSheet2("methods"),
   pickMethod: id => { F.methodId = id; closeSheet2(); },
   topupConfirm: () => {
@@ -2803,24 +2860,32 @@ const ACTIONS = {
     S.balance += credited;
     S.txs.unshift({ id: uid(), merchant: m.name, logo: m.logo || null, icon: m.icon, kind: "topUp", cat: "other", status: m.instant ? "approved" : "pending", date: Date.now(), usd: 0, xaf: credited, card: null });
     S.notifs.unshift({ id: uid(), title: "Rechargement reçu", body: `${fmtXAF(credited)} reçus depuis ${m.name}`, date: Date.now(), icon: "arrDn", cls: "credit", unread: true });
-    F.step = "done"; rerenderSheet();
+    F.step = "done"; F.dir = "fwd"; rerenderSheet();
   },
 
   /* convertir */
-  openConvert: () => openSheet("convert", { digits: "" }),
-  convertKey: k => { F.digits = digitsAction(k, F.digits || "", 8); rerenderSheet(); },
-  convertDo: () => { F.step = "done"; rerenderSheet(); },
+  openConvert: () => openSheet("convert", { step: "amount", digits: "" }),
+  convertKey: k => { F.digits = digitsAction(k, F.digits || "", 8); F.bump = true; rerenderSheet(); },
+  convertToConfirm: () => { F.step = "confirm"; F.dir = "fwd"; rerenderSheet(); },
+  convertBackAmount: () => { F.step = "amount"; F.dir = "back"; rerenderSheet(); },
+  convertConfirm: () => {
+    const xaf = parseInt(F.digits || "0", 10);
+    const usd = xafToUSD(xaf);
+    S.balance -= xaf;
+    S.txs.unshift({ id: uid(), merchant: "Conversion FCFA → USD", logo: null, icon: "swap", kind: "conversion", cat: "other", status: "approved", date: Date.now(), usd, xaf: -xaf, card: null });
+    F.step = "done"; F.dir = "fwd"; rerenderSheet();
+  },
 
   /* envoyer */
   openSend: () => openSheet("send", { step: "pick", digits: "" }),
-  sendPick: name => { F.recipient = S.contacts.find(c => c.name === name); F.step = "amount"; F.digits = ""; rerenderSheet(); },
-  sendBackPick: () => { F.step = "pick"; rerenderSheet(); },
-  sendKey: k => { F.digits = digitsAction(k, F.digits || "", 8); rerenderSheet(); },
+  sendPick: name => { F.recipient = S.contacts.find(c => c.name === name); F.step = "amount"; F.digits = ""; F.dir = "fwd"; rerenderSheet(); },
+  sendBackPick: () => { F.step = "pick"; F.dir = "back"; rerenderSheet(); },
+  sendKey: k => { F.digits = digitsAction(k, F.digits || "", 8); F.bump = true; rerenderSheet(); },
   sendDo: () => {
     const amount = parseInt(F.digits || "0", 10);
     S.balance -= amount;
     S.txs.unshift({ id: uid(), merchant: F.recipient.name, logo: null, icon: "arrUpR", kind: "transfer", cat: "other", status: "approved", date: Date.now(), usd: 0, xaf: -amount, card: null });
-    F.step = "done"; rerenderSheet();
+    F.step = "done"; F.dir = "fwd"; rerenderSheet();
   },
 
   /* nouvelle carte */
