@@ -370,6 +370,33 @@ function spendByCat() {
   }
   return Object.entries(res).map(([cat, xaf]) => ({ cat, xaf })).sort((a, b) => b.xaf - a.xaf);
 }
+/* répartition selon le regroupement choisi : 0 = catégorie, 1 = marchand, 2 = carte */
+function spendGroups() {
+  const g = F.insGroup || 0, map = new Map();
+  for (const t of S.txs) {
+    if (t.xaf >= 0 || t.status === "declined") continue;
+    if ((F.insFCats || []).length && !F.insFCats.includes(t.cat)) continue;
+    if (F.insFCard && t.card !== F.insFCard) continue;
+    const key = g === 1 ? t.merchant : g === 2 ? (t.card || "wallet") : t.cat;
+    const e = map.get(key) || { key, xaf: 0, n: 0, t };
+    e.xaf += -t.xaf; e.n++; map.set(key, e);
+  }
+  return [...map.values()].sort((a, b) => b.xaf - a.xaf).map(e => {
+    if (g === 1) {
+      const c = CATEGORIES[e.t.cat];
+      return { ...e, label: e.t.merchant, tint: c.tint,
+        tile: e.t.logo ? logoTile(e.t.logo, 34) : `<span class="cr-tile" style="background:${c.tint}">${ico(e.t.icon || c.icon, 16)}</span>` };
+    }
+    if (g === 2) {
+      const c = cardById(e.key);
+      return { ...e, label: c ? c.label : "Wallet", tint: "var(--green)",
+        tile: `<span class="cr-tile cr-flat">${c ? miniCardChip(c) : ico("wallet", 16)}</span>` };
+    }
+    const c = CATEGORIES[e.key];
+    return { ...e, label: c.label, tint: c.tint, tile: `<span class="cr-tile" style="background:${c.tint}">${ico(c.icon, 16)}</span>` };
+  });
+}
+
 /* fraction des dépenses retenue par les filtres actifs (1 = pas de filtre) */
 function insFilterCount() { return (F.insFCats || []).length + (F.insFCard ? 1 : 0); }
 function insFilterRatio() {
@@ -463,7 +490,7 @@ function navBar({ back = null, close = null, title = "", right = "" } = {}) {
 function sectionHead(title, { count = null, link = null, act = null, chev = false } = {}) {
   return `<div class="section-head gutter" ${act ? `data-act="${act}" role="button"` : ""}>
     <span class="t-section">${title}</span>
-    ${chev ? `<span class="sh-chev">${ico("chevR", 15)}</span>` : ""}
+    ${chev ? `<span class="sh-chev">${ico(chev === true ? "chevR" : chev, 15)}</span>` : ""}
     <span class="sh-fill"></span>
     ${count != null ? `<span class="sh-count">${count}</span>` : ""}
     ${link ? `<span class="sh-link">${link}</span>` : ""}
@@ -1282,16 +1309,9 @@ function insSwapHero() {
 
 function insightsScreen() {
   const view = F.insView || 0;
-  const cats = spendByCat();
-  const total = cats.reduce((s, c) => s + c.xaf, 0) || 1;
-  const maxCat = cats.length ? cats[0].xaf : 1;
-  const catCount = {};
-  for (const t of S.txs) {
-    if (t.xaf >= 0 || t.status === "declined") continue;
-    if ((F.insFCats || []).length && !F.insFCats.includes(t.cat)) continue;
-    if (F.insFCard && t.card !== F.insFCard) continue;
-    catCount[t.cat] = (catCount[t.cat] || 0) + 1;
-  }
+  const groups = spendGroups();
+  const total = groups.reduce((s, c) => s + c.xaf, 0) || 1;
+  const maxG = groups.length ? groups[0].xaf : 1;
 
   return `${statusBar()}
   <div class="gutter" style="padding-top:6px;padding-bottom:13px;display:flex;align-items:center">
@@ -1309,19 +1329,17 @@ function insightsScreen() {
     <div class="gutter ins-hero" id="ins-hero" style="padding-top:20px">${insHeroHTML()}</div>
     <div id="ins-block" style="margin-top:14px">${insChartHTML(false)}</div>
 
-    ${sectionHead("Par catégorie", { count: "FCFA" })}
+    ${sectionHead(["Par catégorie", "Par marchand", "Par carte"][F.insGroup || 0], { count: "FCFA", act: "insGroupMenu", chev: "chevD" })}
     <div class="gutter">
-      ${cats.map(r => {
-        const c = CATEGORIES[r.cat], n = catCount[r.cat] || 0;
-        return `<div class="cat-row">
-          <span class="cr-tile" style="background:${c.tint}">${ico(c.icon, 16)}</span>
+      ${groups.map(r => `<div class="cat-row">
+          ${r.tile}
           <div class="cr-body">
-            <div class="cr-line"><span class="cr-name">${c.label}</span><span class="cr-val tnum">${grp(r.xaf)}</span></div>
-            <div class="cr-line2"><span>${n} transaction${n > 1 ? "s" : ""}</span><span class="tnum">${Math.round(r.xaf / total * 100)}${NBSP}%</span></div>
-            <div class="meter"><div class="m-fill" style="width:${Math.max(2, r.xaf / maxCat * 100)}%;background:${c.tint}"></div></div>
+            <div class="cr-line"><span class="cr-name">${esc(r.label)}</span><span class="cr-val tnum">${grp(r.xaf)}</span></div>
+            <div class="cr-line2"><span>${r.n} transaction${r.n > 1 ? "s" : ""}</span><span class="tnum">${Math.round(r.xaf / total * 100)}${NBSP}%</span></div>
+            <div class="meter"><div class="m-fill" style="width:${Math.max(2, r.xaf / maxG * 100)}%;background:${r.tint}"></div></div>
           </div>
-        </div>`;
-      }).join("")}
+        </div>`).join("")}
+      ${groups.length === 0 ? emptyNote("Aucune dépense", "Ajustez vos filtres pour voir la répartition.") : ""}
     </div>
 
     ${sectionHead("Coût réel du mois", { count: "FCFA" })}
@@ -1335,11 +1353,6 @@ function insightsScreen() {
       ${kvRow("Total des frais", "4" + NBSP + "951" + NBSP + "F", { strong: true, tint: "var(--pend)" })}
     </div>
 
-    ${sectionHead("Par carte", {})}
-    <div>
-      ${S.cards.map((c, i) => `${i > 0 ? rule(true) : ""}
-        ${listRow({ lead: miniCardChip(c), title: esc(c.label), sub: "••" + NBSP + c.pan.slice(-4), value: fmtUSD(c.spent), act: "openCard", arg: c.id })}`).join("")}
-    </div>
     <div style="height:20px"></div>
   </div>
   ${tabbarHTML()}
@@ -2328,7 +2341,7 @@ function authSheet() {
    Orchestration du rendu
    ================================================================ */
 let SHEET2 = null;
-const F_KEEP = ["cardScope","txFilter","txQuery","insPeriod","insView","insSel","insCat","insFCats","insFCard","faqOpen","revealed","slide","country","phoneDigits","methodId","sendQuery"];
+const F_KEEP = ["cardScope","txFilter","txQuery","insPeriod","insView","insSel","insCat","insGroup","insFCats","insFCard","faqOpen","revealed","slide","country","phoneDigits","methodId","sendQuery"];
 
 /* redéfinition : conserve l'état d'interface hors flux */
 function openSheet(kind, params = {}) {
@@ -2725,6 +2738,15 @@ const ACTIONS = {
     gs.forEach((g, j) => g.classList.toggle("hot", j === +i));
     insSwapHero();
   },
+  /* regroupement de la répartition */
+  insGroupMenu: () => showDialog({
+    title: "Regrouper par",
+    actions: [
+      { label: "Catégorie", icon: "grid",  sub: "Type de dépense", fn: () => { F.insGroup = 0; renderPhone(); } },
+      { label: "Marchand",  icon: "store", sub: "Netflix, OpenAI, Uber…", fn: () => { F.insGroup = 1; renderPhone(); } },
+      { label: "Carte",     icon: "card",  sub: "Par carte virtuelle", fn: () => { F.insGroup = 2; renderPhone(); } }
+    ]
+  }),
   /* calendrier des dépenses */
   openInsCal: () => openSheet("insCal"),
   calMonth: i => { F.calM = +i; F.calD = null; renderPhone(); },

@@ -722,6 +722,8 @@ input:focus-visible{outline:none}
 .cat-row{display:flex;gap:12px;align-items:flex-start;padding:11px 0}
 .cat-row .cr-tile{width:34px;height:34px;border-radius:99px;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
 .cat-row .cr-tile svg{stroke-width:2}
+.cat-row .cr-tile.cr-flat{background:none;width:36px;color:var(--ink-2)}
+.cat-row .cr-tile.cr-flat svg{stroke-width:1.8}
 .cat-row .cr-body{flex:1;min-width:0}
 .cat-row .cr-line{display:flex;align-items:baseline;gap:10px}
 .cat-row .cr-name{font-size:14px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
