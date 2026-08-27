@@ -812,10 +812,17 @@ input:focus-visible{outline:none}
 /* bascule de thème : fondu croisé bref (classe posée par JS) */
 .theme-anim,.theme-anim *{transition:background-color .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease,stroke .3s ease!important}
 
-/* assistant nouvelle carte : pastilles rondes & transition d'étape */
-.dot-swatch{width:30px;height:30px;border-radius:99px;position:relative;flex-shrink:0;box-shadow:inset 0 0 0 1px var(--edge);transition:transform .15s ease}
-.dot-swatch:active{transform:scale(.9)}
-.dot-swatch.sel::after{content:"";position:absolute;inset:-6px;border-radius:99px;border:1.8px solid var(--ink)}
+/* assistant nouvelle carte : carrousel portrait coverflow & transition d'étape */
+.cardsel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;perspective:1100px;padding:18px 0 10px;margin-top:12px}
+.cardsel .cs-spacer{flex:0 0 calc(50% - 108px)}
+.cardsel .cs-slide{flex:0 0 216px;scroll-snap-align:center;display:flex;justify-content:center}
+.cs-rot{width:182px;height:289px;position:relative}
+.cs-tilt{width:100%;height:100%;transform-style:preserve-3d;will-change:transform}
+.cs-tilt .vcard{position:absolute;width:289px;height:182px;aspect-ratio:auto;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg)}
+.cs-meta.swap{animation:metaSwap .3s cubic-bezier(.22,.9,.3,1)}
+@keyframes metaSwap{from{opacity:0;transform:translateY(7px)}}
+.vc-art{position:absolute;inset:0;pointer-events:none}
+.vc-art svg{width:100%;height:100%;display:block}
 .cc-step{min-height:100%;display:flex;flex-direction:column}
 .cc-step.center{justify-content:center;padding-bottom:26px}
 @keyframes stepFwd{from{opacity:0;transform:translateX(26px)}}

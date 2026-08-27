@@ -820,10 +820,17 @@ input:focus-visible{outline:none}
 /* bascule de thème : fondu croisé bref (classe posée par JS) */
 .theme-anim,.theme-anim *{transition:background-color .3s ease,color .3s ease,border-color .3s ease,box-shadow .3s ease,fill .3s ease,stroke .3s ease!important}
 
-/* assistant nouvelle carte : pastilles rondes & transition d'étape */
-.dot-swatch{width:30px;height:30px;border-radius:99px;position:relative;flex-shrink:0;box-shadow:inset 0 0 0 1px var(--edge);transition:transform .15s ease}
-.dot-swatch:active{transform:scale(.9)}
-.dot-swatch.sel::after{content:"";position:absolute;inset:-6px;border-radius:99px;border:1.8px solid var(--ink)}
+/* assistant nouvelle carte : carrousel portrait coverflow & transition d'étape */
+.cardsel{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;perspective:1100px;padding:18px 0 10px;margin-top:12px}
+.cardsel .cs-spacer{flex:0 0 calc(50% - 108px)}
+.cardsel .cs-slide{flex:0 0 216px;scroll-snap-align:center;display:flex;justify-content:center}
+.cs-rot{width:182px;height:289px;position:relative}
+.cs-tilt{width:100%;height:100%;transform-style:preserve-3d;will-change:transform}
+.cs-tilt .vcard{position:absolute;width:289px;height:182px;aspect-ratio:auto;top:50%;left:50%;transform:translate(-50%,-50%) rotate(90deg)}
+.cs-meta.swap{animation:metaSwap .3s cubic-bezier(.22,.9,.3,1)}
+@keyframes metaSwap{from{opacity:0;transform:translateY(7px)}}
+.vc-art{position:absolute;inset:0;pointer-events:none}
+.vc-art svg{width:100%;height:100%;display:block}
 .cc-step{min-height:100%;display:flex;flex-direction:column}
 .cc-step.center{justify-content:center;padding-bottom:26px}
 @keyframes stepFwd{from{opacity:0;transform:translateX(26px)}}
@@ -1033,7 +1040,44 @@ const CARD_THEMES = {
   ivoire: { fill: "#E7E9EC", ink: "#171C22", accent: false, label: "Argent", light: true  },
   terre:  { fill: "#9E4A2E", ink: "#F7EDE4", accent: false, label: "Terre",  light: false },
   cobalt: { fill: "#1E3C72", ink: "#EAEFF8", accent: false, label: "Cobalt", light: false },
-  ardoise:{ fill: "#44525A", ink: "#EEF2F1", accent: false, label: "Ardoise",light: false }
+  ardoise:{ fill: "#44525A", ink: "#EEF2F1", accent: false, label: "Ardoise",light: false },
+  ndop:   { fill: "#23307C", ink: "#FFFFFF", accent: false, art: "ndop",    label: "Ndop",    light: false },
+  bogolan:{ fill: "#26190E", ink: "#F0E4CE", accent: false, art: "bogolan", label: "Bogolan", light: false },
+  wax:    { fill: "#0D5F52", ink: "#FFF6E4", accent: false, art: "wax",     label: "Wax",     light: false }
+}
+
+/* collections d'habillages (sélecteur de carte) */
+const CARD_COLLECTIONS = [
+  { key: "orig",     label: "Originales", themes: ["sapin", "encre", "ivoire", "terre", "cobalt", "ardoise"] },
+  { key: "heritage", label: "Héritage",   themes: ["ndop", "bogolan", "wax"] }
+];
+
+/* motifs pleine carte (SVG, ton sur ton) */
+function cardArt(kind) {
+  if (kind === "ndop") return `<svg viewBox="0 0 200 126" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><pattern id="pa-ndop" width="28" height="28" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="1.6">
+        <path d="M0 14 14 0l14 14-14 14Z"/><path d="M7 14l7-7 7 7-7 7Z"/>
+        <path d="M0 0h4M24 0h4M0 28h4M24 28h4" stroke-opacity=".1"/>
+      </g></pattern></defs>
+    <rect width="200" height="126" fill="url(#pa-ndop)"/></svg>`;
+  if (kind === "bogolan") return `<svg viewBox="0 0 200 126" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><pattern id="pa-bogo" width="30" height="24" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#E8D6AE" stroke-opacity=".2" stroke-width="1.5">
+        <path d="M0 6l7.5-5 7.5 5 7.5-5 7.5 5"/><path d="M0 18l7.5-5 7.5 5 7.5-5 7.5 5"/>
+      </g>
+      <circle cx="7.5" cy="11.5" r="1.1" fill="#E8D6AE" fill-opacity=".22"/>
+      <circle cx="22.5" cy="23" r="1.1" fill="#E8D6AE" fill-opacity=".22"/>
+    </pattern></defs>
+    <rect width="200" height="126" fill="url(#pa-bogo)"/></svg>`;
+  if (kind === "wax") return `<svg viewBox="0 0 200 126" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><pattern id="pa-wax" width="44" height="44" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke-width="1.6">
+        <g stroke="#FFD98A" stroke-opacity=".2"><circle cx="11" cy="11" r="4"/><circle cx="11" cy="11" r="8.5"/></g>
+        <g stroke="#FF9A5C" stroke-opacity=".16"><circle cx="33" cy="33" r="4"/><circle cx="33" cy="33" r="8.5"/><circle cx="33" cy="33" r="13"/></g>
+      </g></pattern></defs>
+    <rect width="200" height="126" fill="url(#pa-wax)"/></svg>`;
+  return "";
 };
 
 const CATEGORIES = {
@@ -1244,7 +1288,7 @@ function vcardHTML(card, { compact = false, revealed = false, holder = null } = 
       </div>
     </div>`;
   const frozen = card.frozen ? `<div class="vc-frozen">${ico("snow", 20)}Gelée</div>` : "";
-  const gl = th.accent ? `<div class="vc-guilloche">${guilloche("rgba(60,221,155,.13)")}</div>` : "";
+  const gl = th.art ? `<div class="vc-art">${cardArt(th.art)}</div>` : th.accent ? `<div class="vc-guilloche">${guilloche("rgba(60,221,155,.13)")}</div>` : "";
   return `<div class="vcard ${th.light ? "light-art" : ""}" style="background:${th.fill};border-radius:${compact ? 12 : 16}px">${gl}${front}${frozen}</div>`;
 }
 /* dos de carte pour la révélation */
@@ -2748,7 +2792,10 @@ const CC_THEME_NOTES = {
   ivoire: "Clair et minéral, finition satinée.",
   terre:  "Terre cuite chaleureuse, pleine de caractère.",
   cobalt: "Un bleu nuit franc et électrique.",
-  ardoise:"Gris ardoise, tout en retenue."
+  ardoise:"Gris ardoise, tout en retenue.",
+  ndop:   "L’indigo royal des Grassfields, motifs ndop.",
+  bogolan:"Terres et ocres, tracés bogolan.",
+  wax:    "Les cercles wax, l’éclat des marchés."
 };
 function createCardSheet() {
   if (F.step === "created") {
@@ -2781,16 +2828,22 @@ function createCardSheet() {
   let body = "", cta = btn("Continuer", "ccNext");
 
   if (step === 0) {
-    /* 1 — habillage : la carte en héros, une pastille par habillage */
+    /* 1 — habillage : carrousel portrait par collection, effet coverflow */
+    const coll = CARD_COLLECTIONS.find(c => c.key === F.ccColl) ||
+                 CARD_COLLECTIONS.find(c => c.themes.includes(theme)) || CARD_COLLECTIONS[0];
     const t = CARD_THEMES[theme];
     body = `
-      <div style="max-width:300px;margin:16px auto 0;width:100%">${vcardHTML(preview)}</div>
-      <div style="text-align:center;margin-top:24px" class="gutter">
-        <div style="font-size:17px;font-weight:600">${t.label}</div>
-        <div style="font-size:13.5px;color:var(--ink-2);margin-top:5px;text-wrap:pretty">${CC_THEME_NOTES[theme]}</div>
+      <div style="display:flex;gap:7px;justify-content:center;margin-top:2px">
+        ${CARD_COLLECTIONS.map(c => `<button type="button" class="chip ${c.key === coll.key ? "on" : ""}" data-act="ccColl" data-arg="${c.key}">${c.label}</button>`).join("")}
       </div>
-      <div style="display:flex;gap:14px;justify-content:center;margin-top:26px;padding:6px 0">
-        ${Object.entries(CARD_THEMES).map(([k, th]) => `<button type="button" class="dot-swatch ${theme === k ? "sel" : ""}" style="background:${th.fill}" data-act="ccTheme" data-arg="${k}" aria-label="${th.label}"></button>`).join("")}
+      <div class="cardsel" id="cardsel" aria-label="Choix de l’habillage">
+        <div class="cs-spacer"></div>
+        ${coll.themes.map(k => `<div class="cs-slide" data-theme="${k}"><div class="cs-rot"><div class="cs-tilt">${vcardHTML({ label: label || "Ma carte", theme: k, network, pan: "0000000000000000", frozen: false })}</div></div></div>`).join("")}
+        <div class="cs-spacer"></div>
+      </div>
+      <div class="cs-meta" id="cs-meta" style="text-align:center;margin-top:2px;min-height:64px;padding:0 46px">
+        <div style="font-size:17px;font-weight:600" id="cs-name">${t.label}</div>
+        <div style="font-size:13.5px;color:var(--ink-2);margin-top:5px;text-wrap:pretty" id="cs-note">${CC_THEME_NOTES[theme]}</div>
       </div>`;
   } else if (step === 1) {
     /* 2 — réseau */
@@ -3126,6 +3179,41 @@ function renderPhone(mode) {
       requestAnimationFrame(step);
     }
   }
+
+  /* carrousel d'habillages : centrage, inclinaison 3D, méta synchronisée */
+  const csel = phone.querySelector("#cardsel");
+  if (csel) {
+    const slidesEls = [...csel.querySelectorAll(".cs-slide")];
+    const rm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const update = () => {
+      const mid = csel.scrollLeft + csel.clientWidth / 2;
+      let best = null, bestD = 1e9;
+      for (const s of slidesEls) {
+        const r = (s.offsetLeft + s.offsetWidth / 2 - mid) / s.offsetWidth;
+        if (!rm) s.firstElementChild.firstElementChild.style.transform =
+          `rotateY(${(-r * 46).toFixed(1)}deg) scale(${(1 - Math.min(.16, Math.abs(r) * .18)).toFixed(3)})`;
+        const d = Math.abs(r);
+        if (d < bestD) { bestD = d; best = s; }
+      }
+      if (best && best.dataset.theme !== F.ccTheme) {
+        F.ccTheme = best.dataset.theme;
+        const nm = phone.querySelector("#cs-name"), nt = phone.querySelector("#cs-note"), meta = phone.querySelector("#cs-meta");
+        if (nm) nm.textContent = CARD_THEMES[F.ccTheme].label;
+        if (nt) nt.textContent = CC_THEME_NOTES[F.ccTheme];
+        if (meta && !rm) { meta.classList.remove("swap"); void meta.offsetWidth; meta.classList.add("swap"); }
+      }
+    };
+    const cur = F.ccTheme || "sapin";
+    const sel = slidesEls.find(s => s.dataset.theme === cur) || slidesEls[0];
+    if (sel) csel.scrollLeft = sel.offsetLeft + sel.offsetWidth / 2 - csel.clientWidth / 2;
+    update();
+    let csTick = false;
+    csel.addEventListener("scroll", () => {
+      if (csTick) return;
+      csTick = true;
+      requestAnimationFrame(() => { csTick = false; update(); });
+    }, { passive: true });
+  }
 }
 
 /* ================================================================
@@ -3314,6 +3402,12 @@ const ACTIONS = {
   /* nouvelle carte */
   openCreateCard: () => openSheet("createCard", { ccTheme: "sapin", ccNetwork: "mastercard", ccLabel: "", ccLimit: 1, ccStep: 0 }),
   ccTheme: k => { F.ccTheme = k; rerenderSheet(); },
+  ccColl: k => {
+    F.ccColl = k;
+    const c = CARD_COLLECTIONS.find(x => x.key === k);
+    if (!c.themes.includes(F.ccTheme)) F.ccTheme = c.themes[0];
+    rerenderSheet();
+  },
   ccNetwork: k => { F.ccNetwork = k; rerenderSheet(); },
   ccSuggest: s => { F.ccLabel = s; rerenderSheet(); },
   ccLimit: i => { F.ccLimit = +i; rerenderSheet(); },
