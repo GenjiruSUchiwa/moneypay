@@ -101,7 +101,7 @@ function logoTile(key, size = 40, cls = "logo-tile") {
   return "";
 }
 
-/* logo MoneyPay (paramétrable) */
+/* logo MoniPay (paramétrable) */
 function logoMark(size = 34, bg = "var(--green)", glyph = "#FFFFFF", r = 0.28) {
   return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="${40 * r}" fill="${bg}"/><path d="M12 27V13.4L20 22l8-8.6V27" fill="none" stroke="${glyph}" stroke-width="3.1" stroke-linejoin="miter" stroke-linecap="square"/></svg>`;
 }
@@ -207,14 +207,14 @@ const S = {
     { id: "mtn",   name: "MTN Mobile Money",  detail: "•• 34 56 · instantané",           logo: "mtn",    fee: 0.015, instant: true },
     { id: "om",    name: "Orange Money",      detail: "•• 78 90 · instantané",           logo: "orange", fee: 0.015, instant: true },
     { id: "bank",  name: "Virement bancaire", detail: "Afriland First Bank · 1 à 2 jours", icon: "bank",  fee: 0,     instant: false },
-    { id: "agent", name: "Agent MoneyPay",    detail: "Dépôt en espèces · instantané",   icon: "store",  fee: 0.02,  instant: true }
+    { id: "agent", name: "Agent MoniPay",    detail: "Dépôt en espèces · instantané",   icon: "store",  fee: 0.02,  instant: true }
   ],
   notifs: [
     { id: "n1", title: "Paiement autorisé",  body: "Netflix · 10,99 $ débités de « Abonnements »",                    date: now - 3 * H,  icon: "check", cls: "credit", unread: true },
     { id: "n2", title: "Rechargement reçu",  body: "98 500 F reçus depuis MTN Mobile Money",                          date: now - 6 * H,  icon: "arrDn", cls: "credit", unread: true },
     { id: "n3", title: "Paiement refusé",    body: "Amazon · solde insuffisant. 2 refus restants avant blocage.",     date: now - 26 * H, icon: "x",     cls: "debit",  unread: true },
     { id: "n4", title: "Carte gelée",        body: "« Serveurs & outils » a été gelée depuis l’application.",         date: now - 40 * H, icon: "snow",  cls: "neutral",unread: false },
-    { id: "n5", title: "Taux du jour",       body: "1 USD = 610 F · marge MoneyPay 3 %",                              date: now - 70 * H, icon: "swap",  cls: "neutral",unread: false }
+    { id: "n5", title: "Taux du jour",       body: "1 USD = 610 F · marge MoniPay 3 %",                              date: now - 70 * H, icon: "swap",  cls: "neutral",unread: false }
   ],
   contacts: [
     { name: "Nadège Ateba",  phone: "+237 6 77 21 09 44" },
@@ -238,7 +238,7 @@ const S = {
     { q: "Pourquoi mon paiement a-t-il été refusé ?", a: "Le plus souvent, votre solde FCFA ne couvrait pas le montant converti au moment de l’autorisation. Rechargez puis réessayez. Chaque refus est facturé 220 F par le processeur." },
     { q: "Combien de temps pour recharger en Mobile Money ?", a: "MTN MoMo et Orange Money créditent votre wallet en quelques secondes. Un virement bancaire prend 1 à 2 jours ouvrés." },
     { q: "Ma carte marche-t-elle sur tous les sites ?", a: "Partout où Visa et Mastercard sont acceptés en ligne. Les marchands qui exigent une empreinte de caution — location de voiture, hôtels — refusent les cartes virtuelles." },
-    { q: "Quel taux de change est appliqué ?", a: "Le taux interbancaire du jour, majoré de 3 % de marge MoneyPay. Le détail est affiché avant chaque conversion et sur chaque reçu." },
+    { q: "Quel taux de change est appliqué ?", a: "Le taux interbancaire du jour, majoré de 3 % de marge MoniPay. Le détail est affiché avant chaque conversion et sur chaque reçu." },
     { q: "Que se passe-t-il si je gèle une carte ?", a: "Toutes les autorisations sont refusées immédiatement. Les abonnements en cours échoueront tant que la carte reste gelée. Vous pouvez la dégeler à tout moment." }
   ]
 };
@@ -354,7 +354,7 @@ function vcardHTML(card, { compact = false, revealed = false, holder = null } = 
       <div class="vc-top">
         <span class="vc-brand" style="font-size:${13 * fs + 1}px;color:${th.ink}">
           ${logoMark(compact ? 15 : 19, th.accent ? "rgba(60,221,155,.16)" : (th.light ? "rgba(18,22,28,.08)" : "rgba(255,255,255,.1)"), accentInk, 0.3)}
-          MoneyPay
+          MoniPay
         </span>
         <span class="vc-virtual" style="font-size:${8.4 * fs + .8}px;color:${th.ink}">Virtuelle</span>
       </div>
@@ -651,7 +651,7 @@ function splashScreen() {
     ${statusBar(true)}
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
       ${logoMark(60, "rgba(255,255,255,.12)", "#FFFFFF", 0.26)}
-      <div class="display" style="font-size:23px;color:var(--deep-ink)">MoneyPay</div>
+      <div class="display" style="font-size:23px;color:var(--deep-ink)">MoniPay</div>
     </div>
     <div style="text-align:center;padding-bottom:46px;font-size:12px;color:rgba(255,255,255,.45)">Établissement de paiement agréé · zone CEMAC</div>
     <div class="homebar on-dark"></div>
@@ -668,7 +668,7 @@ function welcomeScreen() {
   return `<div class="layer">
     ${statusBar()}
     <div class="navbar" style="padding:0 var(--gutter)">
-      <span style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:-.01em">${logoMark(24, "var(--green)", "#FFFFFF")}MoneyPay</span>
+      <span style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:-.01em">${logoMark(24, "var(--green)", "#FFFFFF")}MoniPay</span>
       <span class="nb-spacer"></span>
       <button type="button" class="nb-text" data-act="goLock">Se connecter</button>
     </div>
@@ -724,7 +724,7 @@ function signupPhone() {
     <div style="flex:1"></div>
     ${keypad("phoneKey")}
     <div style="padding:8px 0 6px">${btn("Recevoir le code", "signupNext", { disabled: !valid })}</div>
-    <div class="note-micro" style="padding-bottom:8px">En continuant, vous acceptez les conditions générales et la politique de confidentialité de MoneyPay.</div>
+    <div class="note-micro" style="padding-bottom:8px">En continuant, vous acceptez les conditions générales et la politique de confidentialité de MoniPay.</div>
   </div>`;
 }
 
@@ -1253,7 +1253,7 @@ function profileScreen() {
     `)}
     ${listRow({ icon: "logout", title: "Se déconnecter", destructive: true, act: "goLockFromApp" })}
     <div class="rule" style="margin:0 var(--gutter)"></div>
-    <div class="note-micro gutter" style="padding-top:18px;padding-bottom:22px">MoneyPay · maquette de refonte.<br>Aucune donnée réelle n’est traitée.</div>
+    <div class="note-micro gutter" style="padding-top:18px;padding-bottom:22px">MoniPay · maquette de refonte.<br>Aucune donnée réelle n’est traitée.</div>
   </div>
   ${tabbarHTML()}
   <div class="homebar"></div>`;
@@ -1297,7 +1297,7 @@ function cardDetailScreen(params) {
         <div class="rule" style="margin:0 var(--gutter)"></div>
         ${kvRow("CVV", c.cvv, { mono: true, copy: c.cvv })}
       </div>
-      <div class="note-micro gutter" style="padding-bottom:16px">MoneyPay ne vous demandera jamais ces informations.</div>
+      <div class="note-micro gutter" style="padding-bottom:16px">MoniPay ne vous demandera jamais ces informations.</div>
       <div class="rule" style="margin:0 var(--gutter)"></div>` : ""}
 
     <div class="gutter" style="padding-top:22px;display:flex;align-items:baseline">
@@ -1361,7 +1361,7 @@ function txDetailScreen(params) {
       ${t.status === "declined" ? `
         <div class="alert-card" style="margin-top:20px">
           ${ico("warn", 16)}
-          <span><span class="ac-t" style="display:block">${esc(t.reason || "Autorisation refusée par MoneyPay.")}</span>
+          <span><span class="ac-t" style="display:block">${esc(t.reason || "Autorisation refusée par MoniPay.")}</span>
           <span class="ac-s" style="display:block">Un refus est facturé 220${NBSP}F par le processeur.</span></span>
         </div>` : ""}
     </div>
@@ -1790,7 +1790,7 @@ function convertSheet() {
   <div class="rule" style="margin:0 var(--gutter)"></div>
   ${kvRow("Taux interbancaire", "1" + NBSP + "USD = 610" + NBSP + "F", { mono: true })}
   <div class="rule" style="margin:0 var(--gutter)"></div>
-  ${kvRow("Marge MoneyPay · 3" + NBSP + "%", marginXAF > 0 ? "− " + fmtXAF(marginXAF) : "—", { tint: "var(--pend)" })}
+  ${kvRow("Marge MoniPay · 3" + NBSP + "%", marginXAF > 0 ? "− " + fmtXAF(marginXAF) : "—", { tint: "var(--pend)" })}
   <div class="rule" style="margin:0 var(--gutter)"></div>
   ${kvRow("Vous recevez", fmtUSD(usd), { strong: true })}
   <div class="rule" style="margin:0 var(--gutter)"></div>
@@ -1829,7 +1829,7 @@ function sendSheet() {
       <span class="tnum" style="font-size:13px;color:var(--ink-2)">${c.phone}</span>
     </div>
     <div style="flex:1"></div>
-    ${amountEntry(digits, "FCFA", amount > S.balance ? "Solde insuffisant" : `Transfert MoneyPay instantané, sans frais`, { warn: amount > S.balance })}
+    ${amountEntry(digits, "FCFA", amount > S.balance ? "Solde insuffisant" : `Transfert MoniPay instantané, sans frais`, { warn: amount > S.balance })}
     <div style="flex:1"></div>
     <div class="gutter"><label class="field" style="height:44px"><span class="f-ico">${ico("chat", 16)}</span><input type="text" name="note" placeholder="Ajouter une note" aria-label="Ajouter une note"></label></div>
     ${keypad("sendKey")}
@@ -1839,7 +1839,7 @@ function sendSheet() {
   const list = S.contacts.filter(c => !q || c.name.toLowerCase().includes(q));
   return `<div class="sheet-grab"></div>
   ${navBar({ close: "closeSheet", title: "Envoyer" })}
-  <div class="gutter"><label class="field" style="height:44px"><span class="f-ico">${ico("search", 16)}</span><input type="search" name="sendsearch" id="send-search" placeholder="Nom ou numéro MoneyPay" value="${esc(F.sendQuery || "")}" aria-label="Rechercher un contact"></label></div>
+  <div class="gutter"><label class="field" style="height:44px"><span class="f-ico">${ico("search", 16)}</span><input type="search" name="sendsearch" id="send-search" placeholder="Nom ou numéro MoniPay" value="${esc(F.sendQuery || "")}" aria-label="Rechercher un contact"></label></div>
   <div class="scroll">
     ${eyebrow("Récents", "gutter")}
     <div style="margin-top:-2px">
