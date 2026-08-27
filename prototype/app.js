@@ -984,11 +984,27 @@ const TABS = [
   { id: "insights", label: "Analyse",  icon: "chart" },
   { id: "profile",  label: "Profil",   icon: "user" }
 ];
+const WIDGET_TILES = [
+  { icon: "plus",   label: "Recharger",  act: "openTopUp" },
+  { icon: "swap",   label: "Convertir",  act: "openConvert" },
+  { icon: "card",   label: "Nouvelle carte", act: "openCreateCard" },
+  { icon: "arrUpR", label: "Envoyer",    act: "openSend" }
+];
 function tabbarHTML() {
-  return `<div class="tabbar" role="tablist">${TABS.map(t =>
-    `<button type="button" role="tab" aria-selected="${TAB === t.id}" class="tb ${TAB === t.id ? "on" : ""}" data-act="switchTab" data-arg="${t.id}">
-      ${ico(t.icon, 23)}<span class="tb-label">${t.label}</span>
-    </button>`).join("")}</div>`;
+  return `<div class="tabwrap ${F.widgets ? "wm-open" : ""}">
+    <div class="wm-scrim" data-act="toggleWidgets"></div>
+    <div class="tabbar" role="tablist">${TABS.map(t =>
+      `<button type="button" role="tab" aria-selected="${TAB === t.id}" class="tb ${TAB === t.id ? "on" : ""}" data-act="switchTab" data-arg="${t.id}">
+        ${ico(t.icon, 23)}<span class="tb-label">${t.label}</span>
+      </button>`).join("")}</div>
+    <div class="widget-menu">${WIDGET_TILES.map(w =>
+      `<button type="button" class="wm-tile" data-act="${w.act}">
+        <span class="wm-ico">${ico(w.icon, 23)}</span><span class="wm-label">${w.label}</span>
+      </button>`).join("")}</div>
+    <button type="button" class="tab-widget" data-act="toggleWidgets" aria-label="Raccourcis" aria-expanded="${!!F.widgets}">
+      <span class="tw-grid">${ico("grid", 20)}</span><span class="tw-x">${ico("x", 20)}</span>
+    </button>
+  </div>`;
 }
 
 function homeScreen() {
@@ -2422,6 +2438,15 @@ const ACTIONS = {
 
   /* accueil */
   toggleHidden: () => { S.hidden = !S.hidden; renderPhone(); },
+  toggleWidgets: () => {
+    F.widgets = !F.widgets;
+    const w = phone.querySelector(".tabwrap");
+    if (w) {
+      w.classList.toggle("wm-open", !!F.widgets);
+      const b = w.querySelector(".tab-widget");
+      if (b) b.setAttribute("aria-expanded", String(!!F.widgets));
+    }
+  },
   openNotifs: () => pushScreen("notifs"),
   notifsReadAll: () => { S.notifs.forEach(n => n.unread = false); renderPhone(); },
 
