@@ -54,7 +54,7 @@ The app supports a screenshot shortcut — launch it with `-screen <key>` to ope
 from the `Gallery` package's screen catalog:
 
 ```sh
-xcrun simctl launch --console booted com.moneypay.app -screen home
+xcrun simctl launch --console booted com.monipay.app -screen home
 ```
 
 ## iOS: test

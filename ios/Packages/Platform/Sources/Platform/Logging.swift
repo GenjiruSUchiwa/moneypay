@@ -14,7 +14,7 @@ public protocol Logging: Sendable {
 public struct OSLogging: Logging {
     private let logger: Logger
 
-    public init(subsystem: String = "com.moneypay.app", category: String) {
+    public init(subsystem: String = "com.monipay.app", category: String) {
         self.logger = Logger(subsystem: subsystem, category: category)
     }
 
