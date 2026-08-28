@@ -1,0 +1,544 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0281AA2911A36B08F9375DF6 /* Money.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FAA0AB38C60C241CE4BE4C1 /* Money.swift */; };
+		0D9031F91A6FDD2C121FC47D /* Keypad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E0979F924BC8F95F7AECD4F /* Keypad.swift */; };
+		0E1EA496B00CF944BD0F5669 /* CardArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312C357600709AC527D847CB /* CardArt.swift */; };
+		1374F8A53E95B939B908AF66 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E51DC8C315AD996B9EB3D1E /* MainTabView.swift */; };
+		1A09EB4ADC666182CBF46218 /* KYCFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CF1202F9F34872185C89A7 /* KYCFlow.swift */; };
+		1D94F0C34CC07CF436037F27 /* Wallet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E02B4D5DAF49F1F62E3D9608 /* Wallet.swift */; };
+		20BC53CDAF657AB97298AAC7 /* TopUpFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62998C49B5C8A42CAF839CEE /* TopUpFlow.swift */; };
+		2390EA18B8EADDDAB9E0C9F9 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB6B74550C43247EB777DDD8 /* SplashView.swift */; };
+		393766EE74C4833CCEEE1B37 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E292282D34FDB07D44DEBE /* HomeView.swift */; };
+		3CCA719502BE1F943B9D3DC9 /* ScreenCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F306F70729121BD577D1128 /* ScreenCatalog.swift */; };
+		56080056063880180E634AB6 /* CreateCardFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818C79B01126337E7DFD650B /* CreateCardFlow.swift */; };
+		630A7B8D6C718057AA156ED0 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22727B9078AF0772CF8CA62 /* Components.swift */; };
+		6323C1B78ECA7CA9A8E70E27 /* SignUpFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6DC7E9E16987F39306F8D91 /* SignUpFlow.swift */; };
+		75E7C8C4F7918293148FB42D /* TransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC9C69C9958531FF12A9BCE /* TransactionsView.swift */; };
+		7A05B608043849C0E3B9B8D7 /* AuthorizationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B1A7E5920CC64980584C357 /* AuthorizationSheet.swift */; };
+		7F319BF338CE506DD1ABC400 /* MoneyPayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71E5C12CD55E2E05929ACE33 /* MoneyPayApp.swift */; };
+		82BFF36407E08A51F751292A /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78396D3263515202782575D4 /* GalleryView.swift */; };
+		8EA8A5413A4D1880A5A8E99A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F09FB5BB5673A6A4A74CBB1E /* Theme.swift */; };
+		BD6A08CCDCFE7C4C56E11937 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5197B66CDA1F88840523DF3A /* Models.swift */; };
+		C8C87D42D9F9377758D27E0F /* CardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7FAFA952AF3604FFE62956A /* CardDetailView.swift */; };
+		CDB76041CD3FE5DF822BB9A2 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12279A3D74A7E238296FFC61 /* WelcomeView.swift */; };
+		D580D97E8CAA20E1C28DC0D7 /* CardsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77A204DA58B3E7CC6E6B6EA3 /* CardsListView.swift */; };
+		DA878A1B22C214AFDE9B9DE7 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF0FB70B01E2BB493F8951E /* InsightsView.swift */; };
+		DD124DCFA5232DF62B9819E7 /* SubScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037711136F2715990D8D7D33 /* SubScreens.swift */; };
+		E45B9BBAE52E3136BAB7C292 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92A15F6B59EC45C5B6200B38 /* SettingsView.swift */; };
+		E89DF900C75D2C1775FEE764 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5262A09887205C7A3A9BC25B /* RootView.swift */; };
+		ECA6779DDB3686147FF3132D /* Viz.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8EEFDA2B905B70B4235843F /* Viz.swift */; };
+		EE897AA091E43C5850DCD912 /* ConvertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C57EE107BE0F090709DE372 /* ConvertView.swift */; };
+		F20D045FF8D3C9DF75E122FC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 42654E6EE93B4DB4506EED23 /* Assets.xcassets */; };
+		F68A2EB84F95E723A1A3ECFA /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC848545A60A83D972FD5D71 /* Store.swift */; };
+		F815FC8F443C7E1992C7D254 /* CardControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECED44711F3EE5D2EF26F94C /* CardControlsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		037711136F2715990D8D7D33 /* SubScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubScreens.swift; sourceTree = "<group>"; };
+		12279A3D74A7E238296FFC61 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		1E51DC8C315AD996B9EB3D1E /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		2FAA0AB38C60C241CE4BE4C1 /* Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Money.swift; sourceTree = "<group>"; };
+		312C357600709AC527D847CB /* CardArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardArt.swift; sourceTree = "<group>"; };
+		42654E6EE93B4DB4506EED23 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4B1A7E5920CC64980584C357 /* AuthorizationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationSheet.swift; sourceTree = "<group>"; };
+		4C57EE107BE0F090709DE372 /* ConvertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvertView.swift; sourceTree = "<group>"; };
+		5197B66CDA1F88840523DF3A /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		5262A09887205C7A3A9BC25B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		5F306F70729121BD577D1128 /* ScreenCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCatalog.swift; sourceTree = "<group>"; };
+		62998C49B5C8A42CAF839CEE /* TopUpFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopUpFlow.swift; sourceTree = "<group>"; };
+		71E5C12CD55E2E05929ACE33 /* MoneyPayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyPayApp.swift; sourceTree = "<group>"; };
+		77A204DA58B3E7CC6E6B6EA3 /* CardsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsListView.swift; sourceTree = "<group>"; };
+		78396D3263515202782575D4 /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
+		818C79B01126337E7DFD650B /* CreateCardFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateCardFlow.swift; sourceTree = "<group>"; };
+		84CF1202F9F34872185C89A7 /* KYCFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KYCFlow.swift; sourceTree = "<group>"; };
+		92A15F6B59EC45C5B6200B38 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		9CC9C69C9958531FF12A9BCE /* TransactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsView.swift; sourceTree = "<group>"; };
+		9E0979F924BC8F95F7AECD4F /* Keypad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keypad.swift; sourceTree = "<group>"; };
+		B2E292282D34FDB07D44DEBE /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		B7FAFA952AF3604FFE62956A /* CardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDetailView.swift; sourceTree = "<group>"; };
+		BC848545A60A83D972FD5D71 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		C22727B9078AF0772CF8CA62 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		C6DC7E9E16987F39306F8D91 /* SignUpFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpFlow.swift; sourceTree = "<group>"; };
+		CDF0FB70B01E2BB493F8951E /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
+		D646D78515FF61A5E731F0C4 /* MoneyPay.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MoneyPay.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E02B4D5DAF49F1F62E3D9608 /* Wallet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wallet.swift; sourceTree = "<group>"; };
+		EB6B74550C43247EB777DDD8 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		ECED44711F3EE5D2EF26F94C /* CardControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardControlsView.swift; sourceTree = "<group>"; };
+		F09FB5BB5673A6A4A74CBB1E /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		F8EEFDA2B905B70B4235843F /* Viz.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Viz.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		07FA68B1FA183D9DD5B830A7 = {
+			isa = PBXGroup;
+			children = (
+				F2D0AC42AEDD4D377F01247C /* MoneyPay */,
+				1E6D0086F26740D890DCB5C8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		0A0CE24F3C59B42384797668 /* Transactions */ = {
+			isa = PBXGroup;
+			children = (
+				9CC9C69C9958531FF12A9BCE /* TransactionsView.swift */,
+			);
+			path = Transactions;
+			sourceTree = "<group>";
+		};
+		1E6D0086F26740D890DCB5C8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D646D78515FF61A5E731F0C4 /* MoneyPay.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		32018CD3FBAF20B2F3DBC8A2 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				42654E6EE93B4DB4506EED23 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		53D71B3CBD263D9839351BC0 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				9C9AC6055FA58BB178F43EBE /* Cards */,
+				812DD9B65C6E7D946D2EFF01 /* Convert */,
+				622BC3A8CB77FF408D09E7ED /* Gallery */,
+				D90516F5B8AE216F5077DA87 /* Home */,
+				78EE6F14C721C4C3B3FF7094 /* KYC */,
+				935AA72B238A0CD34F9A1A66 /* Onboarding */,
+				AF6F6935F9E4FFF84C80288B /* Settings */,
+				BFAD31890960D994B52C5542 /* TopUp */,
+				0A0CE24F3C59B42384797668 /* Transactions */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		5DBDB4B978DBAFE292C0B35A /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				312C357600709AC527D847CB /* CardArt.swift */,
+				C22727B9078AF0772CF8CA62 /* Components.swift */,
+				9E0979F924BC8F95F7AECD4F /* Keypad.swift */,
+				F09FB5BB5673A6A4A74CBB1E /* Theme.swift */,
+				F8EEFDA2B905B70B4235843F /* Viz.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		622BC3A8CB77FF408D09E7ED /* Gallery */ = {
+			isa = PBXGroup;
+			children = (
+				78396D3263515202782575D4 /* GalleryView.swift */,
+				5F306F70729121BD577D1128 /* ScreenCatalog.swift */,
+			);
+			path = Gallery;
+			sourceTree = "<group>";
+		};
+		78EE6F14C721C4C3B3FF7094 /* KYC */ = {
+			isa = PBXGroup;
+			children = (
+				84CF1202F9F34872185C89A7 /* KYCFlow.swift */,
+			);
+			path = KYC;
+			sourceTree = "<group>";
+		};
+		811ECBF59D0F4FAA51935774 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				1E51DC8C315AD996B9EB3D1E /* MainTabView.swift */,
+				71E5C12CD55E2E05929ACE33 /* MoneyPayApp.swift */,
+				5262A09887205C7A3A9BC25B /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		812DD9B65C6E7D946D2EFF01 /* Convert */ = {
+			isa = PBXGroup;
+			children = (
+				4C57EE107BE0F090709DE372 /* ConvertView.swift */,
+			);
+			path = Convert;
+			sourceTree = "<group>";
+		};
+		935AA72B238A0CD34F9A1A66 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				C6DC7E9E16987F39306F8D91 /* SignUpFlow.swift */,
+				EB6B74550C43247EB777DDD8 /* SplashView.swift */,
+				12279A3D74A7E238296FFC61 /* WelcomeView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		9C9AC6055FA58BB178F43EBE /* Cards */ = {
+			isa = PBXGroup;
+			children = (
+				ECED44711F3EE5D2EF26F94C /* CardControlsView.swift */,
+				B7FAFA952AF3604FFE62956A /* CardDetailView.swift */,
+				77A204DA58B3E7CC6E6B6EA3 /* CardsListView.swift */,
+				818C79B01126337E7DFD650B /* CreateCardFlow.swift */,
+			);
+			path = Cards;
+			sourceTree = "<group>";
+		};
+		9C9CD2E795452C709304BA13 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				5197B66CDA1F88840523DF3A /* Models.swift */,
+				2FAA0AB38C60C241CE4BE4C1 /* Money.swift */,
+				BC848545A60A83D972FD5D71 /* Store.swift */,
+				E02B4D5DAF49F1F62E3D9608 /* Wallet.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		AF6F6935F9E4FFF84C80288B /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				92A15F6B59EC45C5B6200B38 /* SettingsView.swift */,
+				037711136F2715990D8D7D33 /* SubScreens.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		BFAD31890960D994B52C5542 /* TopUp */ = {
+			isa = PBXGroup;
+			children = (
+				62998C49B5C8A42CAF839CEE /* TopUpFlow.swift */,
+			);
+			path = TopUp;
+			sourceTree = "<group>";
+		};
+		D90516F5B8AE216F5077DA87 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				4B1A7E5920CC64980584C357 /* AuthorizationSheet.swift */,
+				B2E292282D34FDB07D44DEBE /* HomeView.swift */,
+				CDF0FB70B01E2BB493F8951E /* InsightsView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		F2D0AC42AEDD4D377F01247C /* MoneyPay */ = {
+			isa = PBXGroup;
+			children = (
+				811ECBF59D0F4FAA51935774 /* App */,
+				5DBDB4B978DBAFE292C0B35A /* DesignSystem */,
+				9C9CD2E795452C709304BA13 /* Domain */,
+				53D71B3CBD263D9839351BC0 /* Features */,
+				32018CD3FBAF20B2F3DBC8A2 /* Resources */,
+			);
+			path = MoneyPay;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E274765C28FF0BCF78ACE326 /* MoneyPay */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0094464B3E1419480761DFD7 /* Build configuration list for PBXNativeTarget "MoneyPay" */;
+			buildPhases = (
+				DD79EFDE10E8E2DDB5CE4D1A /* Sources */,
+				065D369A7FD74751A06592A1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoneyPay;
+			packageProductDependencies = (
+			);
+			productName = MoneyPay;
+			productReference = D646D78515FF61A5E731F0C4 /* MoneyPay.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6DFCD68788DFF2A2C473AB6F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					E274765C28FF0BCF78ACE326 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 2678E763A283DC0A3B0AE461 /* Build configuration list for PBXProject "MoneyPay" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 07FA68B1FA183D9DD5B830A7;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E274765C28FF0BCF78ACE326 /* MoneyPay */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		065D369A7FD74751A06592A1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F20D045FF8D3C9DF75E122FC /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DD79EFDE10E8E2DDB5CE4D1A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7A05B608043849C0E3B9B8D7 /* AuthorizationSheet.swift in Sources */,
+				0E1EA496B00CF944BD0F5669 /* CardArt.swift in Sources */,
+				F815FC8F443C7E1992C7D254 /* CardControlsView.swift in Sources */,
+				C8C87D42D9F9377758D27E0F /* CardDetailView.swift in Sources */,
+				D580D97E8CAA20E1C28DC0D7 /* CardsListView.swift in Sources */,
+				630A7B8D6C718057AA156ED0 /* Components.swift in Sources */,
+				EE897AA091E43C5850DCD912 /* ConvertView.swift in Sources */,
+				56080056063880180E634AB6 /* CreateCardFlow.swift in Sources */,
+				82BFF36407E08A51F751292A /* GalleryView.swift in Sources */,
+				393766EE74C4833CCEEE1B37 /* HomeView.swift in Sources */,
+				DA878A1B22C214AFDE9B9DE7 /* InsightsView.swift in Sources */,
+				1A09EB4ADC666182CBF46218 /* KYCFlow.swift in Sources */,
+				0D9031F91A6FDD2C121FC47D /* Keypad.swift in Sources */,
+				1374F8A53E95B939B908AF66 /* MainTabView.swift in Sources */,
+				BD6A08CCDCFE7C4C56E11937 /* Models.swift in Sources */,
+				0281AA2911A36B08F9375DF6 /* Money.swift in Sources */,
+				7F319BF338CE506DD1ABC400 /* MoneyPayApp.swift in Sources */,
+				E89DF900C75D2C1775FEE764 /* RootView.swift in Sources */,
+				3CCA719502BE1F943B9D3DC9 /* ScreenCatalog.swift in Sources */,
+				E45B9BBAE52E3136BAB7C292 /* SettingsView.swift in Sources */,
+				6323C1B78ECA7CA9A8E70E27 /* SignUpFlow.swift in Sources */,
+				2390EA18B8EADDDAB9E0C9F9 /* SplashView.swift in Sources */,
+				F68A2EB84F95E723A1A3ECFA /* Store.swift in Sources */,
+				DD124DCFA5232DF62B9819E7 /* SubScreens.swift in Sources */,
+				8EA8A5413A4D1880A5A8E99A /* Theme.swift in Sources */,
+				20BC53CDAF657AB97298AAC7 /* TopUpFlow.swift in Sources */,
+				75E7C8C4F7918293148FB42D /* TransactionsView.swift in Sources */,
+				ECA6779DDB3686147FF3132D /* Viz.swift in Sources */,
+				1D94F0C34CC07CF436037F27 /* Wallet.swift in Sources */,
+				CDB76041CD3FE5DF822BB9A2 /* WelcomeView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0207C3D2C4972C49D37A60FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		520B24AE129D2B333F14AD03 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MoneyPay;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.moneypay.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		75192C9A164E018D71D989B0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = MoneyPay;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.moneypay.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		F2DE0D012DE3B1B05E9D437C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0094464B3E1419480761DFD7 /* Build configuration list for PBXNativeTarget "MoneyPay" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				520B24AE129D2B333F14AD03 /* Debug */,
+				75192C9A164E018D71D989B0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2678E763A283DC0A3B0AE461 /* Build configuration list for PBXProject "MoneyPay" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F2DE0D012DE3B1B05E9D437C /* Debug */,
+				0207C3D2C4972C49D37A60FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6DFCD68788DFF2A2C473AB6F /* Project object */;
+}
