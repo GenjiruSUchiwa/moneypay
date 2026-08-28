@@ -20,13 +20,17 @@ to tell you about a missing comma.
 cd ios
 
 # 1. The package you touched: compiling IS the type check. Seconds, not minutes.
-swift build --package-path Packages/Money
+#    `swift build` runs on the macOS host, so it only works for the UIKit-free
+#    Platform and ApiClient; anything that imports DesignSystem builds through
+#    its own scheme on the simulator, from its package directory.
+swift build --package-path Packages/Platform
+(cd Packages/Money && xcodebuild -scheme Money -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build -quiet)
 
 # 2. Its tests.
-swift test --package-path Packages/Money
+(cd Packages/Money && xcodebuild -scheme Money -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test -quiet)
 
 # 3. The packages that depend on it (Money → WalletStore → features).
-swift test --package-path Packages/WalletStore
+(cd Packages/WalletStore && xcodebuild -scheme WalletStore -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test -quiet)
 
 # 4. Lint (the linter catches what the compiler lets through).
 swiftlint --strict
@@ -38,7 +42,7 @@ xcodebuild build -project MoniPay.xcodeproj -scheme MoniPay \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4' -quiet
 ```
 
-Steps 1–4 need no Xcode project and no simulator. Step 5 is what CI's main tier runs, and it is the
+Steps 1–4 need no generated Xcode project (a package scheme comes from `Package.swift` itself). Step 5 is what CI's main tier runs, and it is the
 only step that proves the composition root still links.
 
 **Warnings are build failures.** The project builds in Swift 6 language mode with

@@ -139,7 +139,9 @@ xcodebuild -scheme MoniPay \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 xcodebuild -scheme MoniPay \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test
-swift test --package-path Packages/Money            # fastest loop: test one package alone
+swift test --package-path Packages/Platform         # fastest loop — UIKit-free packages only (Platform, ApiClient)
+xcodebuild -scheme Money \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test   # from Packages/Money: any package that imports DesignSystem
 swiftlint                                           # lint (swiftlint --fix to autocorrect)
 ```
 
@@ -158,7 +160,7 @@ node poc/server.js                                  # the Node POC backend on :8
 
 ### Always do
 
-- Run `swift test --package-path Packages/<Name>` for the package you touched — it is far faster than the app scheme
+- Run the package you touched on its own — it is far faster than the app scheme. `swift test --package-path Packages/<Name>` works only for the UIKit-free packages (`Platform`, `ApiClient`): the host `swift` toolchain builds for macOS, and `DesignSystem` imports UIKit. Every other package (`Money` included) is tested with `xcodebuild test -scheme <Name> -destination '…'` run from `Packages/<Name>`, exactly as CI does
 - Run `dotnet test server/MoniPay.slnx` for a backend change, and `dotnet format --verify-no-changes` before pushing
 - Build before concluding a change compiles
 - Run `swiftlint` before pushing an iOS change
@@ -701,7 +703,9 @@ targets:
 ```
 
 Finally run `xcodegen generate` from `ios/` and wire the entry point in `ios/App/`. Test the
-package on its own with `swift test --package-path Packages/Referral` — no simulator needed.
+package on its own from `Packages/Referral` with
+`xcodebuild -scheme Referral -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test` —
+it imports `DesignSystem`, so the macOS-hosted `swift test` cannot build it.
 
 ### Add a domain model
 
@@ -868,7 +872,7 @@ func authorizationIsIdempotent() async {
 - [ ] `xcodegen generate` run (from `ios/`) if a package or app-target file was added
 - [ ] No `.xcodeproj` file in the diff — it is git-ignored
 - [ ] **iOS zero-warnings gate**: builds for the simulator with **no warnings at all** (`SWIFT_TREAT_WARNINGS_AS_ERRORS`) and `swiftlint --strict` passes
-- [ ] Package tests pass (`swift test --package-path Packages/<Name>`), plus the app scheme if the composition root changed
+- [ ] Package tests pass (`swift test --package-path` for `Platform` / `ApiClient`, `xcodebuild test -scheme <Name>` from `Packages/<Name>` for the rest), plus the app scheme if the composition root changed
 - [ ] No new sideways dependency between feature packages or between `MoniPay.<Module>` projects
 - [ ] No component re-created in a feature, no inline styling, no colour / spacing / font literal outside `DesignSystem/Tokens/`
 - [ ] A new or changed component has variants as an enum, an accessibility label, a `#Preview` of all variants, and a `Gallery` entry

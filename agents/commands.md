@@ -35,7 +35,8 @@ From `ios/`:
 - `xcodebuild -scheme MoniPay -configuration Release -destination 'generic/platform=iOS' build` — release build
 - `xcodebuild -scheme MoniPay clean` — clean build products
 - `xcodebuild -list -project MoniPay.xcodeproj` — list schemes, targets and configurations
-- `swift build --package-path Packages/<Name>` — compile one package without Xcode (fastest check)
+- `swift build --package-path Packages/<Name>` — compile one package without Xcode (fastest check; `Platform` and `ApiClient` only — every other package imports `DesignSystem`, which imports UIKit, and the host toolchain builds for macOS)
+- `cd Packages/<Name> && xcodebuild -scheme <Name> -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build` — compile one UIKit-dependent package on its own
 
 Add `-quiet` to keep the output readable, and pipe through `xcbeautify` if it is installed.
 
@@ -62,13 +63,18 @@ Tests use **Swift Testing** (`@Test` / `#expect`). Package logic is tested **ins
 package** (`ios/Packages/<Name>/Tests/<Name>Tests/`); `ios/Tests/` holds app-target tests for
 the composition root only.
 
-### Per package — the normal loop, no simulator needed
+### Per package — the normal loop
 
-- `swift test --package-path Packages/Money` — run one package's suite
-- `swift test --package-path Packages/WalletStore --filter WalletTests` — one suite
-- `swift test --package-path Packages/WalletStore --filter WalletTests.authorizationIsIdempotent` — one test
-- `swift test --package-path Packages/Money --parallel` — parallel execution
-- `for p in Packages/*/; do swift test --package-path "$p" || break; done` — every package in turn
+`swift test` runs on the macOS host, where UIKit does not exist. It therefore works only for the
+two UIKit-free packages; everything that imports `DesignSystem` (that is every other package,
+`Money` included) is tested through its own scheme on the simulator, run from the package directory —
+the same command CI's *Test packages* step uses.
+
+- `swift test --package-path Packages/Platform` — a UIKit-free package (`Platform`, `ApiClient`)
+- `swift test --package-path Packages/Platform --filter PlatformTests` — one suite
+- `cd Packages/WalletStore && xcodebuild -scheme WalletStore -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test` — one UIKit-dependent package
+- `xcodebuild ... test -only-testing:WalletStoreTests/WalletTests` — one suite
+- `xcodebuild ... test -only-testing:WalletStoreTests/WalletTests/authorizationIsIdempotent` — one test
 
 ### Whole app, on the simulator
 
@@ -78,7 +84,7 @@ the composition root only.
 - `xcodebuild ... test-without-building` — reuse the last build
 - `xcodebuild ... test -resultBundlePath /tmp/MoniPay.xcresult` — keep a result bundle for inspection
 
-Use `swift test` while iterating and the scheme before pushing: only the scheme run covers the
+Use the package's own tests while iterating and the app scheme before pushing: only the app scheme run covers the
 composition root and the simulator runtime.
 
 ## iOS: lint
@@ -263,7 +269,9 @@ dotnet test server/MoniPay.slnx
 # iOS change
 cd ios
 swiftlint lint --strict
-swift test --package-path Packages/<Name>          # the package you touched
+swift test --package-path Packages/<Name>          # Platform / ApiClient
+(cd Packages/<Name> && xcodebuild -scheme <Name> \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test)   # any package importing DesignSystem
 xcodebuild -scheme MoniPay \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test -quiet
 ```

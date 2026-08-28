@@ -95,7 +95,8 @@ touching either, the change is invisible to everyone else.
 
 ### Before every push
 
-1. `cd ios && swift test --package-path Packages/<Name>` for each package you touched
+1. `cd ios` and test each package you touched: `swift test --package-path Packages/<Name>` for `Platform` / `ApiClient`,
+   `(cd Packages/<Name> && xcodebuild -scheme <Name> -destination '…' test)` for any package that imports `DesignSystem`
 2. `swiftlint --strict`
 3. `xcodegen generate && xcodebuild build …` if `App/`, `Config/` or `project.yml` moved
    (see `ci-build-first`)
