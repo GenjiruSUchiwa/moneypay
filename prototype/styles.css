@@ -623,28 +623,36 @@ input:focus-visible{outline:none}
 .vcard .vc-bottom{display:flex;align-items:flex-end;justify-content:space-between;margin-top:8px}
 .vcard .vc-exp{font-family:var(--mono);font-size:11px;opacity:.72;letter-spacing:.06em}
 .vcard .vc-frozen{
-  position:absolute;inset:0;background:rgba(235,241,246,.44);
-  -webkit-backdrop-filter:blur(7px) saturate(.65) brightness(1.1);
-  backdrop-filter:blur(7px) saturate(.65) brightness(1.1);
+  position:absolute;inset:0;
+  background:
+    radial-gradient(120% 90% at 8% 0%, rgba(222,238,250,.62), rgba(222,238,250,0) 52%),
+    radial-gradient(130% 100% at 96% 100%, rgba(206,229,246,.58), rgba(206,229,246,0) 55%),
+    linear-gradient(135deg, rgba(228,240,249,.5), rgba(214,232,245,.34) 45%, rgba(222,238,250,.52));
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55), inset 0 0 26px rgba(198,224,244,.55);
+  -webkit-backdrop-filter:blur(7px) saturate(.55) brightness(1.12);
+  backdrop-filter:blur(7px) saturate(.55) brightness(1.12);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
   color:#12161C;font-size:12.5px;font-weight:600;
 }
+.vcard .vc-frozen .vf-ice{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.vcard .vc-frozen .vf-ice .ice{transform-box:fill-box}
+.vcard .vc-frozen .vf-ice .i1{transform-origin:top left}
+.vcard .vc-frozen .vf-ice .i2{transform-origin:bottom right}
+.vcard .vc-frozen .vf-ice .i3{transform-origin:center}
 .vcard .vc-frozen .vf-disc{
-  width:30px;height:30px;border-radius:99px;background:rgba(255,255,255,.78);
-  display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border-radius:99px;background:rgba(255,255,255,.82);
+  display:flex;align-items:center;justify-content:center;position:relative;
   box-shadow:0 2px 8px rgba(12,17,23,.16);
 }
+.vcard .vc-frozen > :not(.vf-ice){position:relative}
 @keyframes frostIn{from{opacity:0}}
+@keyframes iceGrow{from{opacity:0;transform:scale(.55)}}
 .anim .vc-frozen.frosting{animation:frostIn .55s ease-out both}
-.anim .vc-frozen.frosting .vf-disc{animation:popIn .45s .2s cubic-bezier(.3,1.5,.5,1) backwards}
-/* flip révélation */
-.flip-scene{perspective:1400px}
-.flip-inner{position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.3,.7,.25,1)}
-.flip-scene.flipped .flip-inner{transform:rotateY(180deg)}
-.flip-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.flip-back{position:absolute;inset:0;transform:rotateY(180deg);backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.vcard .vc-magstripe{height:17%;background:rgba(0,0,0,.32);margin:9% -8.8% 0}
-.vcard.light-art .vc-magstripe{background:rgba(18,22,28,.16)}
+.anim .vc-frozen.frosting .i1{animation:iceGrow .8s .1s cubic-bezier(.3,.9,.3,1) backwards}
+.anim .vc-frozen.frosting .i2{animation:iceGrow .8s .28s cubic-bezier(.3,.9,.3,1) backwards}
+.anim .vc-frozen.frosting .i3{animation:iceGrow .7s .5s cubic-bezier(.3,.9,.3,1) backwards}
+.anim .vc-frozen.frosting .vf-disc{animation:popIn .45s .25s cubic-bezier(.3,1.5,.5,1) backwards}
+/* secrets affichés sur la face (révélation) */
 .vcard .vc-secret-row{display:flex;gap:18px;margin-top:auto}
 .vcard .vc-secret .s-l{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.55}
 .vcard .vc-secret .s-v{font-family:var(--mono);font-size:12.5px;margin-top:2px;letter-spacing:.06em}
@@ -1131,7 +1139,12 @@ input:focus-visible{outline:none}
     var(--paper) 96%);
 }
 .cd-hero{position:relative;padding-top:6px;will-change:transform,opacity;transform-origin:top center}
-.cd-hero .flip-scene{display:block;width:min(316px, calc(100% - 2*var(--gutter)));margin:0 auto}
+.cd-hero .cd-cardbtn{display:block;width:min(316px, calc(100% - 2*var(--gutter)));margin:0 auto;transition:transform .14s ease}
+.cd-hero .cd-cardbtn:active{transform:scale(.985)}
+/* révélation sur la face : les chiffres « roulent » (réf. contentTransition numericText) */
+@keyframes panRoll{from{opacity:0;transform:translateY(9px);filter:blur(5px)}}
+.anim .reveal-roll .vc-pan{animation:panRoll .45s cubic-bezier(.25,.9,.3,1) both}
+.anim .reveal-roll .vc-bottom .vc-secret{animation:panRoll .45s .08s cubic-bezier(.25,.9,.3,1) backwards}
 .cd-hero .vcard{
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),
     0 24px 44px -20px color-mix(in srgb, var(--cd-tint) 50%, rgba(12,17,23,.5));
@@ -1164,8 +1177,15 @@ input:focus-visible{outline:none}
   opacity:0;transition:opacity .25s ease;
 }
 .cd-ambient ~ .navbar.scrolled::before{opacity:1}
-/* détails révélés : montée douce */
-.anim .cd-reveal{animation:riseIn .34s cubic-bezier(.22,.9,.3,1)}
+/* détails révélés : dépliage doux qui pousse le contenu (grid 0fr → 1fr) */
+.cd-collapse{display:grid;grid-template-rows:0fr;transition:grid-template-rows .42s cubic-bezier(.3,.8,.3,1)}
+.cd-collapse.open{grid-template-rows:1fr}
+.cd-collapse > .cd-reveal{
+  min-height:0;overflow:hidden;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .3s ease .08s,transform .36s cubic-bezier(.22,.9,.3,1) .05s;
+}
+.cd-collapse.open > .cd-reveal{opacity:1;transform:none}
 /* entrée de l'écran : la carte se pose sur la scène */
 @keyframes cdHero{from{opacity:0;transform:translateY(18px) scale(.94)}}
 .anim [data-anim="push"] .cd-hero{animation:cdHero .5s .06s cubic-bezier(.3,1.06,.4,1) backwards}

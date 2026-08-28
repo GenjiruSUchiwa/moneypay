@@ -451,35 +451,40 @@ function vcardHTML(card, { compact = false, revealed = false, holder = null } = 
       <div class="vc-label" style="font-size:${14 * fs + 1}px;color:${th.ink}">${esc(card.label)}</div>
       <div class="vc-pan" style="font-size:${12 * fs + .8}px;color:${th.ink}">${revealed && !compact ? chunkPan(card.pan) : "••••" + NBSP + card.pan.slice(-4)}</div>
       <div class="vc-bottom">
-        <span class="vc-exp" style="color:${th.ink};${revealed && !compact ? "" : "visibility:hidden"}">EXP ${card.exp}</span>
-        ${netMark(card.network, netInk, compact ? 16 : 21)}
+        ${revealed && !compact ? `
+        <span class="vc-secret-row" style="color:${th.ink};gap:18px;margin-top:0">
+          <span class="vc-secret"><span class="s-l">Expire</span><span class="s-v" style="display:block">${card.exp}</span></span>
+          <span class="vc-secret"><span class="s-l">CVV</span><span class="s-v" style="display:block">${card.cvv}</span></span>
+        </span>` : `<span class="vc-exp" style="color:${th.ink};visibility:hidden">EXP ${card.exp}</span>`}
+        ${netMark(card.network, netInk, compact ? 18 : 26)}
       </div>
     </div>`;
-  const frozen = card.frozen ? `<div class="vc-frozen${F._frost === card.id ? " frosting" : ""}"><span class="vf-disc">${ico("snow", 15)}</span>Gelée</div>` : "";
+  const frozen = card.frozen ? `<div class="vc-frozen${F._frost === card.id ? " frosting" : ""}">
+    <svg class="vf-ice" viewBox="0 0 289 182" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round">
+        <g class="ice i1" stroke-opacity=".62">
+          <path d="M6 4 L74 72"/>
+          <path d="M18 16 l-3 15 M18 16 l15 -3 M32 30 l-4 17 M32 30 l17 -4 M48 46 l-4 15 M48 46 l15 -4 M62 60 l-3 12 M62 60 l12 -3"/>
+          <path d="M4 36 L44 76 M13 45 l-2 12 M13 45 l12 -2 M27 59 l-3 13 M27 59 l13 -3"/>
+          <path d="M36 2 L70 36 M44 10 l-2 11 M44 10 l11 -2 M56 22 l-2 12 M56 22 l12 -2"/>
+        </g>
+        <g class="ice i2" stroke-opacity=".62">
+          <path d="M283 178 L215 110"/>
+          <path d="M271 166 l3 -15 M271 166 l-15 3 M257 152 l4 -17 M257 152 l-17 4 M241 136 l4 -15 M241 136 l-15 4 M227 122 l3 -12 M227 122 l-12 3"/>
+          <path d="M285 146 L245 106 M276 137 l2 -12 M276 137 l-12 2 M262 123 l3 -13 M262 123 l-13 3"/>
+          <path d="M253 180 L219 146 M245 172 l2 -11 M245 172 l-11 2 M233 160 l2 -12 M233 160 l-12 2"/>
+        </g>
+        <g class="ice i3" stroke-opacity=".5">
+          <path d="M226 34 v20 M216 44 h20 M219 37 l14 14 M233 37 l-14 14"/>
+          <path d="M66 138 v16 M58 146 h16 M60 140 l12 12 M72 140 l-12 12"/>
+          <path d="M148 22 v12 M142 28 h12"/>
+        </g>
+      </g>
+    </svg>
+    <span class="vf-disc">${ico("snow", 15)}</span>Gelée</div>` : "";
   const gl = th.art ? `<div class="vc-art">${cardArt(th.art)}</div>` : th.accent ? `<div class="vc-guilloche">${guilloche("rgba(60,221,155,.13)")}</div>` : "";
   return `<div class="vcard ${th.light ? "light-art" : ""}" style="background:${th.fill};border-radius:${compact ? 12 : 16}px">${gl}${front}${frozen}</div>`;
 }
-/* dos de carte pour la révélation */
-function vcardBackHTML(card, holder) {
-  const th = CARD_THEMES[card.theme];
-  return `<div class="vcard ${th.light ? "light-art" : ""}" style="background:${th.fill}">
-    <div class="vc-inner">
-      <div class="vc-magstripe"></div>
-      <div class="vc-secret-row" style="color:${th.ink}">
-        <span class="vc-secret"><span class="s-l">Titulaire</span><span class="s-v" style="display:block">${esc(holder)}</span></span>
-      </div>
-      <div class="vc-secret-row" style="color:${th.ink};margin-top:12px">
-        <span class="vc-secret"><span class="s-l">Numéro</span><span class="s-v" style="display:block">${chunkPan(card.pan)}</span></span>
-      </div>
-      <div class="vc-secret-row" style="color:${th.ink};margin-top:12px;margin-bottom:2px">
-        <span class="vc-secret"><span class="s-l">Expire</span><span class="s-v" style="display:block">${card.exp}</span></span>
-        <span class="vc-secret"><span class="s-l">CVV</span><span class="s-v" style="display:block">${card.cvv}</span></span>
-        <span style="margin-left:auto;align-self:flex-end">${netMark(card.network, th.light ? "#1434CB" : th.ink, 18)}</span>
-      </div>
-    </div>
-  </div>`;
-}
-
 function navBar({ back = null, close = null, title = "", right = "" } = {}) {
   let left = "";
   if (back) left = `<button type="button" class="nb-btn" data-act="${back}" aria-label="Retour">${ico("chevL", 22)}</button>`;
@@ -1577,22 +1582,17 @@ function cardDetailScreen(params) {
   const warn = pct > .85;
   const CIRC = 150.8; /* 2π·24 */
   const ringOff = (CIRC * (1 - pct)).toFixed(1);
-  const flipped = F._flipAnim ? !revealed : revealed;
   const month = MONTHS_FR[new Date(now).getMonth()];
   return `<div class="cd-ambient" style="--cd-tint:${tint}"></div>
   ${statusBar()}
   ${navBar({ back: "pop", title: c.label, right: `<button type="button" class="nb-btn" data-act="cardMenu" data-arg="${c.id}" aria-label="Plus d’options">${ico("dots", 20)}</button>` })}
   <div class="scroll" id="cdscroll">
     <div class="cd-hero" id="cdhero" style="--cd-tint:${tint}">
-      <button type="button" class="flip-scene ${flipped ? "flipped" : ""}" id="cdflip" data-act="cardReveal" aria-label="${revealed ? "Masquer les détails" : "Afficher les détails"}">
-        <div class="flip-inner" style="aspect-ratio:1.586">
-          <div class="flip-face" style="position:absolute;inset:0">${vcardHTML(c)}</div>
-          <div class="flip-back">${vcardBackHTML(c, holder)}</div>
-        </div>
+      <button type="button" class="cd-cardbtn ${F._revAnim ? "reveal-roll" : ""}" id="cdcard" data-act="cardReveal" aria-label="${revealed ? "Masquer les détails" : "Afficher les détails"}">
+        ${vcardHTML(c, { revealed })}
       </button>
       <div class="cd-sub tnum">
         <span class="pill ${c.frozen ? "neutral" : "credit"} no-ico">${c.frozen ? "Gelée" : "Active"}</span>
-        <span>${c.network === "mastercard" ? "Mastercard" : "Visa"} · Virtuelle${NBSP}··${NBSP}${c.pan.slice(-4)}</span>
       </div>
     </div>
     <div class="cd-panel">
@@ -1605,19 +1605,21 @@ function cardDetailScreen(params) {
       ${c.frozen ? `<div class="note-row gutter" style="padding-top:16px"><span style="color:var(--ink-3)">${ico("snow", 15)}</span><span>Carte gelée : tous les paiements sont refusés. Dégelez-la à tout moment.</span></div>` : ""}
 
       ${revealed ? `
-      <div class="cd-reveal">
-        <div class="rule" style="margin:20px var(--gutter) 0"></div>
-        <div class="gutter" style="padding-top:20px">${eyebrow("Détails de la carte")}</div>
-        <div style="margin-top:-2px">
-          ${kvRow("Titulaire", esc(holder), { copy: holder })}
-          <div class="rule" style="margin:0 var(--gutter)"></div>
-          ${kvRow("Numéro", chunkPan(c.pan), { mono: true, copy: c.pan })}
-          <div class="rule" style="margin:0 var(--gutter)"></div>
-          ${kvRow("Expiration", c.exp, { mono: true, copy: c.exp })}
-          <div class="rule" style="margin:0 var(--gutter)"></div>
-          ${kvRow("CVV", c.cvv, { mono: true, copy: c.cvv })}
+      <div class="cd-collapse ${F._revAnim ? "" : "open"}">
+        <div class="cd-reveal">
+          <div class="rule" style="margin:20px var(--gutter) 0"></div>
+          <div class="gutter" style="padding-top:20px">${eyebrow("Détails de la carte")}</div>
+          <div style="margin-top:-2px">
+            ${kvRow("Titulaire", esc(holder), { copy: holder })}
+            <div class="rule" style="margin:0 var(--gutter)"></div>
+            ${kvRow("Numéro", chunkPan(c.pan), { mono: true, copy: c.pan })}
+            <div class="rule" style="margin:0 var(--gutter)"></div>
+            ${kvRow("Expiration", c.exp, { mono: true, copy: c.exp })}
+            <div class="rule" style="margin:0 var(--gutter)"></div>
+            ${kvRow("CVV", c.cvv, { mono: true, copy: c.cvv })}
+          </div>
+          <div class="note-micro gutter">MoniPay ne vous demandera jamais ces informations.</div>
         </div>
-        <div class="note-micro gutter">MoniPay ne vous demandera jamais ces informations.</div>
       </div>` : ""}
 
       <div class="rule" style="margin:20px var(--gutter) 0"></div>
@@ -1644,6 +1646,12 @@ function cardDetailScreen(params) {
       ${c.declines > 0 ? `<div class="note-row gutter" style="margin-top:12px"><span style="color:var(--pend)">${ico("warn", 15)}</span><span>${c.declines} refus ce mois · la carte se bloque à 3.</span></div>` : ""}
       <div class="rule" style="margin:20px var(--gutter) 0"></div>
 
+      ${sectionHead("Transactions", { count: txs.length || null })}
+      ${txs.length
+        ? txs.slice(0, 6).map(t => txRow(t)).join("")
+        : emptyNote("Aucune transaction", "Les paiements effectués avec cette carte apparaîtront ici.")}
+      <div class="rule" style="margin:8px var(--gutter) 0"></div>
+
       <div style="padding-top:6px">
         ${listRow({ icon: "globe", title: "Paiements en ligne", value: c.online ? "Autorisés" : "Bloqués", act: "openControls", arg: c.id })}
         ${rule(true)}
@@ -1651,12 +1659,6 @@ function cardDetailScreen(params) {
         ${rule(true)}
         ${listRow({ icon: "sliders", title: "Tous les contrôles", chevron: true, act: "openControls", arg: c.id })}
       </div>
-      <div class="rule" style="margin:0 var(--gutter)"></div>
-
-      ${sectionHead("Transactions", { count: txs.length || null })}
-      ${txs.length
-        ? txs.slice(0, 6).map(t => txRow(t)).join("")
-        : emptyNote("Aucune transaction", "Les paiements effectués avec cette carte apparaîtront ici.")}
       <div style="height:26px"></div>
     </div>
   </div>
@@ -2769,15 +2771,13 @@ function renderPhone(mode) {
       if (rm) ring.style.strokeDashoffset = ring.dataset.off;
       else requestAnimationFrame(() => requestAnimationFrame(() => { ring.style.strokeDashoffset = ring.dataset.off; }));
     }
-    /* flip déclenché APRÈS le rendu pour que la transition joue */
-    if (F._flipAnim) {
-      delete F._flipAnim;
-      const fs = view.querySelector("#cdflip");
-      if (fs) {
-        if (rm) fs.classList.toggle("flipped", !!F.revealed);
-        else requestAnimationFrame(() => requestAnimationFrame(() => fs.classList.toggle("flipped", !!F.revealed)));
-      }
+    /* dépliage doux des détails APRÈS le rendu pour que la transition joue */
+    const col = view.querySelector(".cd-collapse");
+    if (col && !col.classList.contains("open")) {
+      if (rm) col.classList.add("open");
+      else requestAnimationFrame(() => requestAnimationFrame(() => col.classList.add("open")));
     }
+    delete F._revAnim;
   }
 }
 
@@ -2879,7 +2879,20 @@ const ACTIONS = {
   /* cartes */
   cardScope: i => { F.cardScope = +i; F.cardSel = 0; F._cwAnim = true; renderPhone(); },
   openCard: id => { delete F.revealed; delete F._cdSeen; pushScreen("cardDetail", { id }); },
-  cardReveal: () => { F.revealed = !F.revealed; F._flipAnim = 1; renderPhone(); },
+  cardReveal: () => {
+    if (F._cdBusy) return;
+    if (!F.revealed) { F.revealed = 1; F._revAnim = 1; renderPhone(); }
+    else {
+      /* replier en douceur AVANT de re-rendre */
+      const wrap = phone.querySelector(".cd-collapse");
+      const rm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (wrap && !rm) {
+        F._cdBusy = 1;
+        wrap.classList.remove("open");
+        setTimeout(() => { delete F._cdBusy; delete F.revealed; F._revAnim = 1; renderPhone(); }, 400);
+      } else { delete F.revealed; renderPhone(); }
+    }
+  },
   cardFreezeAsk: id => {
     const c = cardById(id);
     showDialog({
