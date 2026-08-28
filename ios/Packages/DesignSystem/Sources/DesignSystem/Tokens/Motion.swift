@@ -16,4 +16,7 @@ public enum Motion {
 
     /// A toast arriving or leaving.
     public static let toast = Animation.spring(response: 0.32, dampingFraction: 0.86)
+
+    /// Vertical travel of content entering a screen; zero when Reduce Motion is on.
+    public static let rise: CGFloat = 8
 }

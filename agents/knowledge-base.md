@@ -28,9 +28,10 @@ balance** from MTN Mobile Money or Orange Money, then spends it abroad through *
 Visa / Mastercard cards**. The wallet is the single source of truth for the balance; the cards
 have no balance of their own. All user-facing text is French.
 
-**Naming**: the product is **MoniPay**. The repository, the Xcode project, the bundle
-identifier (`com.moneypay.app`) still say *MoneyPay* — this is known and deliberate, do not
-rename anything as a side effect.
+**Naming**: the product is **MoniPay**, and so are the Xcode project, the bundle identifier
+(`com.monipay.app`) and the log subsystem. Only the repository folder still says *MoneyPay*,
+along with some older user-facing copy in the feature catalogs — rename that copy in its own PR,
+never as a side effect.
 
 ## Currencies
 

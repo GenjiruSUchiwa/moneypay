@@ -61,7 +61,7 @@ import Money
 import os
 
 actor Wallet {
-    private let logger = Logger(subsystem: "com.moneypay.app", category: "wallet")
+    private let logger = Logger(subsystem: "com.monipay.app", category: "wallet")
 }
 ```
 

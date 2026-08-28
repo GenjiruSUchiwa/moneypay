@@ -41,6 +41,6 @@ struct RootView: View {
             }
             }
         }
-        .animation(.easeInOut(duration: 0.35), value: phase)
+        .animation(Motion.screen, value: phase)
     }
 }

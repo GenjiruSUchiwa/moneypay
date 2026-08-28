@@ -4,7 +4,7 @@ name: MoniPay
 # regenerate it with `xcodegen generate` from ios/.
 
 options:
-  bundleIdPrefix: com.moneypay
+  bundleIdPrefix: com.monipay
   deploymentTarget:
     iOS: "26.0"
   createIntermediateGroups: true
@@ -107,7 +107,7 @@ targets:
         - MoniPayTests
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.moneypay.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.monipay.app
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ENABLE_PREVIEWS: "YES"
         # Per target, not in the project base: XcodeGen's presets write "1,2"
@@ -137,6 +137,6 @@ targets:
         product: PlatformTestSupport
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.moneypay.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.monipay.app.tests
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: "YES"
