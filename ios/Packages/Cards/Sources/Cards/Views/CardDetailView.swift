@@ -192,7 +192,7 @@ public struct CardDetailView: View {
                     if let cap = live.monthlyLimitUSDCents {
                         Text("of \(Fmt.usd(cap))", bundle: .module)
                     } else {
-                        Text("no cap", bundle: .module)
+                        Text("without a cap", bundle: .module)
                     }
                 }
                 .font(.sub).foregroundStyle(Brand.inkMuted)

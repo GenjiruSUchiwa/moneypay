@@ -277,7 +277,7 @@ public struct BiometricStep: View {
                 .font(.system(size: 44, weight: .light))
                 .foregroundStyle(Brand.ink)
 
-            Text("Turn on Face ID?", bundle: .module)
+            Text("Use Face ID?", bundle: .module)
                 .font(.system(size: 26, weight: .semibold)).tight(-0.6)
                 .foregroundStyle(Brand.ink).padding(.top, 26)
             Text("Open the app and confirm payments without typing your passcode.", bundle: .module)

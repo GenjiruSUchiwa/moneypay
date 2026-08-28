@@ -3,8 +3,8 @@ import Foundation
 
 /// One month of spending on the Analyse screen.
 ///
-/// The month is a `Date`, not a typed-out "août": the label comes from a
-/// `FormatStyle` so it follows the reader's locale instead of French.
+/// The month is a `Date`, not a typed-out month name: the label comes from a
+/// `FormatStyle`, so it follows the reader's locale.
 public struct MonthSpend: Identifiable {
     public init(month: Date, xaf: Int, isCurrent: Bool) {
         self.month = month

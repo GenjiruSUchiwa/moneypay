@@ -30,7 +30,7 @@ public struct CreateCardFlow: View {
             String(localized: "Shopping", bundle: .module),
             String(localized: "Advertising", bundle: .module),
             String(localized: "Servers", bundle: .module),
-            String(localized: "Travel", bundle: .module),
+            String(localized: "Travel", bundle: .module)
         ]
     }
 

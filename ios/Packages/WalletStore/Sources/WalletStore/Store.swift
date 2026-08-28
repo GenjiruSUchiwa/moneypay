@@ -135,7 +135,7 @@ public enum SampleData {
                   symbol: "building.columns.fill", tint: Brand.mark, feePct: 0, instant: false),
             .init(id: "agent", name: String(localized: "MoneyPay agent", bundle: .module),
                   detail: String(localized: "Cash deposit · instant", bundle: .module),
-                  symbol: "storefront.fill", tint: Brand.credit, feePct: 0.02, instant: true),
+                  symbol: "storefront.fill", tint: Brand.credit, feePct: 0.02, instant: true)
         ]
     }
 
@@ -225,7 +225,7 @@ public enum SampleData {
                   body: String(localized: "1 USD = \(Fmt.xaf(610)) · MoneyPay margin \(0.03, format: .percent)",
                                bundle: .module),
                   date: Date().addingTimeInterval(-70 * 3600), symbol: "arrow.left.arrow.right",
-                  tint: Brand.inkMuted, unread: false),
+                  tint: Brand.inkMuted, unread: false)
         ]
     }
 }
