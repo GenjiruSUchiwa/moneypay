@@ -28,6 +28,11 @@ public enum Brand {
     /// saturated colour reads as a demo.
     public static let inkFill = Color.adaptive(light: 0x101615, dark: 0xF1F4F3)
 
+    /// Primary action fill, matching the prototype's light and dark themes.
+    public static let action = Color.adaptive(light: 0x067647, dark: 0x2FC988)
+    /// Text color that remains legible on the primary action fill.
+    public static let onAction = Color.adaptive(light: 0xFFFFFF, dark: 0x04301F)
+
     /// Identity tint: the monogram, the active tab, links. Never a large
     /// fill, never confused with the credit green.
     public static let mark = Color.adaptive(light: 0x0B4F6C, dark: 0x6FB6D6)
