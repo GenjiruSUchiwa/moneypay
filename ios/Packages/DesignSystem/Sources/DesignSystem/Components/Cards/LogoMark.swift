@@ -1,19 +1,22 @@
 import SwiftUI
 
+/// The monogram. Defaults mirror the prototype's `logoMark()`: the action green tile
+/// with a constant white glyph, in light and dark alike. Pass `tint`/`glyph` only for
+/// a translucent variant on a coloured surface (splash, card art).
 public struct LogoMark: View {
-    public init(size: CGFloat = 40, tint: Color = Brand.inkFill, glyph: Color = Brand.onInk) {
+    public init(size: CGFloat = 40, tint: Color = Brand.action, glyph: Color = Brand.deepInk) {
         self.size = size
         self.tint = tint
         self.glyph = glyph
     }
 
     public var size: CGFloat = 40
-    public var tint: Color = Brand.inkFill
-    public var glyph: Color = Brand.onInk
+    public var tint: Color = Brand.action
+    public var glyph: Color = Brand.deepInk
 
     public var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: size * 0.24, style: .continuous).fill(tint)
+            RoundedRectangle(cornerRadius: size * 0.28, style: .continuous).fill(tint)
             Path { p in
                 p.move(to: .init(x: 0.24 * size, y: 0.72 * size))
                 p.addLine(to: .init(x: 0.24 * size, y: 0.30 * size))

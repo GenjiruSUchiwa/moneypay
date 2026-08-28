@@ -28,7 +28,7 @@ public struct WelcomeView: View {
                 style: .story(dwell: model.dwell)
             )
             .gutter()
-            .padding(.top, Metric.rowVertical)
+            .padding(.top, Metric.small)
             .modifier(Rise(index: 1, appeared: appeared, reduceMotion: reduceMotion))
 
             WelcomeTexts(
@@ -37,7 +37,7 @@ public struct WelcomeView: View {
                 reduceMotion: reduceMotion
             )
             .gutter()
-            .padding(.top, Metric.section)
+            .padding(.top, Metric.large)
             .modifier(Rise(index: 2, appeared: appeared, reduceMotion: reduceMotion))
 
             WelcomeDeckView(model: model, slides: WelcomeSlide.all)
@@ -45,13 +45,17 @@ public struct WelcomeView: View {
                 .modifier(Rise(index: 3, appeared: appeared, reduceMotion: reduceMotion))
 
             WelcomeActions(onStart: onStart, onSignIn: onSignIn)
+                .padding(.bottom, Metric.gutter)
                 .modifier(Rise(index: 4, appeared: appeared, reduceMotion: reduceMotion))
         }
         .page()
         .onAppear { appeared = true }
-        .task(id: voiceOverEnabled) {
+        // One task per generation: a swipe, a tap or a release restarts the dwell
+        // instead of waiting out the previous one. VoiceOver users drive the deck
+        // with the adjustable action, so no auto-advance while it is on.
+        .task(id: voiceOverEnabled ? nil : model.generation) {
             guard !voiceOverEnabled else { return }
-            await model.run()
+            await model.autoAdvanceAfterDwell()
         }
     }
 }
@@ -86,6 +90,7 @@ private struct WelcomeTexts: View {
                 .font(.bodyReg)
                 .foregroundStyle(Brand.inkMuted)
                 .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: Metric.measure, alignment: .leading)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .opacity(isCurrent ? 1 : 0)
