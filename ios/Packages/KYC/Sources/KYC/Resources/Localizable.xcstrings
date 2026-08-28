@@ -1,0 +1,457 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A national ID card, a passport or a licence that is still valid.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CNI, passeport ou permis en cours de validité."
+          }
+        }
+      }
+    },
+    "All four corners visible": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les quatre coins visibles"
+          }
+        }
+      }
+    },
+    "CEMAC rules require us to identify you before issuing a card in your name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La réglementation CEMAC nous impose de vous identifier avant d'émettre une carte à votre nom."
+          }
+        }
+      }
+    },
+    "Cameroonian national ID": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CNI camerounaise"
+          }
+        }
+      }
+    },
+    "Cards at once": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cartes simultanées"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
+          }
+        }
+      }
+    },
+    "Driving licence": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permis de conduire"
+          }
+        }
+      }
+    },
+    "Frame the front of your document": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cadrez le recto de votre pièce"
+          }
+        }
+      }
+    },
+    "Front and back": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recto et verso"
+          }
+        }
+      }
+    },
+    "Front and back, laid flat, somewhere well lit.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recto et verso, à plat, dans un endroit bien éclairé."
+          }
+        }
+      }
+    },
+    "Go to my account": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accéder à mon compte"
+          }
+        }
+      }
+    },
+    "Identity document": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pièce d'identité"
+          }
+        }
+      }
+    },
+    "Identity verified": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identité vérifiée"
+          }
+        }
+      }
+    },
+    "Instant": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instantané"
+          }
+        }
+      }
+    },
+    "It must still be valid and perfectly legible.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elle doit être en cours de validité et parfaitement lisible."
+          }
+        }
+      }
+    },
+    "Later": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        }
+      }
+    },
+    "Let's verify your identity": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifions votre identité"
+          }
+        }
+      }
+    },
+    "Look straight into the lens": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regardez droit vers l'objectif"
+          }
+        }
+      }
+    },
+    "Manual review within 48 h": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérification manuelle sous 48 h"
+          }
+        }
+      }
+    },
+    "Monthly cap": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plafond mensuel"
+          }
+        }
+      }
+    },
+    "National ID receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Récépissé CNI"
+          }
+        }
+      }
+    },
+    "Natural light if you can": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lumière naturelle de préférence"
+          }
+        }
+      }
+    },
+    "On a plain background, no glare": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur fond uni, sans reflet"
+          }
+        }
+      }
+    },
+    "Our partner is matching your selfie against your document. It takes under a minute.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notre partenaire compare votre selfie à votre pièce. Cela prend moins d'une minute."
+          }
+        }
+      }
+    },
+    "Passport": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passeport"
+          }
+        }
+      }
+    },
+    "Photograph it": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photographiez-la"
+          }
+        }
+      }
+    },
+    "Pick your ID": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez votre pièce"
+          }
+        }
+      }
+    },
+    "Place your face inside the circle": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Placez votre visage dans le cercle"
+          }
+        }
+      }
+    },
+    "Selfie": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selfie"
+          }
+        }
+      }
+    },
+    "So we can confirm the document is yours.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour confirmer que la pièce vous appartient."
+          }
+        }
+      }
+    },
+    "Start the verification": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer la vérification"
+          }
+        }
+      }
+    },
+    "Take a selfie": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prenez un selfie"
+          }
+        }
+      }
+    },
+    "Take off glasses and headwear": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirez lunettes et couvre-chef"
+          }
+        }
+      }
+    },
+    "Text sharp and legible": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Texte net et lisible"
+          }
+        }
+      }
+    },
+    "The page with the photo": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page avec photo"
+          }
+        }
+      }
+    },
+    "Up to %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jusqu'à %lld"
+          }
+        }
+      }
+    },
+    "Verification under way": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérification en cours"
+          }
+        }
+      }
+    },
+    "Which document\nare you using?": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quelle pièce\nutilisez-vous ?"
+          }
+        }
+      }
+    },
+    "Your account is live. You can create your first virtual card.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre compte est actif. Vous pouvez créer votre première carte virtuelle."
+          }
+        }
+      }
+    },
+    "Your documents are encrypted and sent only to our identity partner.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos documents sont chiffrés et transmis uniquement à notre partenaire d'identification."
+          }
+        }
+      }
+    },
+    "≈ 3 minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ 3 minutes"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
