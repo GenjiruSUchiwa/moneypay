@@ -15,12 +15,12 @@ public struct GalleryView: View {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(ScreenCatalog.sections, id: \.self) { section in
                     let entries = ScreenCatalog.all.filter { $0.section == section }
-                    Eyebrow(text: section).gutter().padding(.top, 24).padding(.bottom, 2)
+                    Eyebrow(text: Text(verbatim: section)).gutter().padding(.top, 24).padding(.bottom, 2)
                     VStack(spacing: 0) {
                         ForEach(Array(entries.enumerated()), id: \.element.id) { i, entry in
                             NavigationLink { entry.make(store) } label: {
                                 Row(icon: entry.icon, iconTint: entry.tint,
-                                    title: entry.title, chevron: true)
+                                    title: Text(verbatim: entry.title), chevron: true)
                             }
                             .buttonStyle(.plain)
                             if i < entries.count - 1 { Rule(inset: 51) }
@@ -29,7 +29,7 @@ public struct GalleryView: View {
                     .gutter()
                     Rule().padding(.top, 4)
                 }
-                Text("\(ScreenCatalog.all.count) écrans")
+                Text(verbatim: "\(ScreenCatalog.all.count) screens")
                     .font(.micro).foregroundStyle(Brand.inkFaint)
                     .gutter().padding(.top, 18)
             }
@@ -37,7 +37,7 @@ public struct GalleryView: View {
         }
         .scrollIndicators(.hidden)
         .page()
-        .navigationTitle("Galerie")
+        .navigationTitle(Text(verbatim: "Gallery"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

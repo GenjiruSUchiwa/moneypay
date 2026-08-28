@@ -18,10 +18,13 @@ public enum CardTheme: String, CaseIterable, Identifiable, Codable, Sendable {
     /// Ink that stays legible on this fill.
     public var ink: Color { self == .bone ? Color(rgb: 0x1A1712) : Color(rgb: 0xFAFAF8) }
 
+    /// The finish's name in the design language — a token, not product copy, so
+    /// it stays English and is rendered verbatim. If a card picker ever shows
+    /// these to a user, the copy belongs in the feature's catalog, not here.
     public var label: String {
         switch self {
-        case .ink: "Encre"; case .bone: "Ivoire"; case .pine: "Pin"
-        case .clay: "Terre"; case .slate: "Ardoise"; case .cobalt: "Cobalt"
+        case .ink: "Ink"; case .bone: "Bone"; case .pine: "Pine"
+        case .clay: "Clay"; case .slate: "Slate"; case .cobalt: "Cobalt"
         }
     }
 }
@@ -35,7 +38,7 @@ public enum CardNetwork: String, Codable, Sendable { case visa, mastercard }
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(theme.fill)
                     .frame(width: 56, height: 36)
-                Text(verbatim: theme.rawValue).font(.bodyReg).foregroundStyle(Brand.ink)
+                Text(verbatim: theme.label).font(.bodyReg).foregroundStyle(Brand.ink)
                 Spacer()
             }
         }

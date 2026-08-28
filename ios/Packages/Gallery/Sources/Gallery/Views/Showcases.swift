@@ -11,25 +11,25 @@ public struct EmptyStatesShowcase: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Rule()
-                EmptyNote(title: "Aucune carte",
-                          message: "Créez une carte dédiée à chaque usage : abonnements, achats, publicité.",
-                          actionTitle: "Créer une carte")
+                EmptyNote(title: Text(verbatim: "No card yet"),
+                          message: Text(verbatim: "Create a card for each use."),
+                          actionTitle: Text(verbatim: "Create a card"))
                 Rule()
-                EmptyNote(title: "Aucune transaction",
-                          message: "Les paiements effectués avec cette carte apparaîtront ici.")
+                EmptyNote(title: Text(verbatim: "No transaction"),
+                          message: Text(verbatim: "Payments with this card will show up here."))
                 Rule()
-                EmptyNote(title: "Aucun résultat",
-                          message: "Essayez un autre filtre ou un autre nom de marchand.")
+                EmptyNote(title: Text(verbatim: "No result"),
+                          message: Text(verbatim: "Try another filter or merchant name."))
                 Rule()
-                EmptyNote(title: "Pas de connexion",
-                          message: "Vérifiez votre réseau. Vos données seront synchronisées au retour.",
-                          actionTitle: "Réessayer")
+                EmptyNote(title: Text(verbatim: "No connection"),
+                          message: Text(verbatim: "Check your network. Data syncs when it returns."),
+                          actionTitle: Text(verbatim: "Try again"))
                 Rule()
             }
             .gutter()
         }
         .page()
-        .navigationTitle("États vides")
+        .navigationTitle(Text(verbatim: "Empty states"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -43,7 +43,7 @@ public struct CardThemeShowcase: View {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(CardTheme.allCases.enumerated()), id: \.element.id) { i, t in
                     VStack(alignment: .leading, spacing: 10) {
-                        Eyebrow(text: t.label)
+                        Eyebrow(text: Text(verbatim: t.label))
                         VirtualCardView(card: VirtualCard(
                             id: UUID(), label: "Abonnements", theme: t,
                             network: i % 2 == 0 ? .mastercard : .visa,
@@ -75,39 +75,43 @@ public struct ComponentsShowcase: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                block("Boutons") {
-                    MPButton(title: "Action principale") { toastMsg = Toast(text: "Touché") }
-                    MPButton(title: "Action neutre", tone: .quiet) {}
-                    MPButton(title: "Action secondaire", tone: .outline) {}
-                    MPButton(title: "Action destructive", tone: .danger) {}
-                    MPButton(title: "En cours", loading: true) {}
-                    MPButton(title: "Désactivé", enabled: false) {}
+                block("Buttons") {
+                    MPButton(title: Text(verbatim: "Primary action")) {
+                        toastMsg = Toast(text: Text(verbatim: "Tapped"))
+                    }
+                    MPButton(title: Text(verbatim: "Neutral action"), tone: .quiet) {}
+                    MPButton(title: Text(verbatim: "Secondary action"), tone: .outline) {}
+                    MPButton(title: Text(verbatim: "Destructive action"), tone: .danger) {}
+                    MPButton(title: Text(verbatim: "Loading"), loading: true) {}
+                    MPButton(title: Text(verbatim: "Disabled"), enabled: false) {}
                 }
-                block("Actions rapides") {
+                block("Quick actions") {
                     HStack(spacing: 4) {
-                        QuickAction(icon: "plus", label: "Recharger", emphasis: true)
-                        QuickAction(icon: "arrow.left.arrow.right", label: "Convertir")
-                        QuickAction(icon: "snowflake", label: "Geler")
-                        QuickAction(icon: "trash", label: "Supprimer")
+                        QuickAction(icon: "plus", label: Text(verbatim: "Top up"), emphasis: true)
+                        QuickAction(icon: "arrow.left.arrow.right", label: Text(verbatim: "Convert"))
+                        QuickAction(icon: "snowflake", label: Text(verbatim: "Freeze"))
+                        QuickAction(icon: "trash", label: Text(verbatim: "Delete"))
                     }
                 }
-                block("Segments et pastilles") {
-                    Segments(items: ["Tout", "Cartes", "Recharges"], selection: $seg)
+                block("Segments and chips") {
+                    Segments(items: [Text(verbatim: "All"), Text(verbatim: "Cards"),
+                                     Text(verbatim: "Top-ups")],
+                             selection: $seg)
                     HStack(spacing: 7) {
-                        Chip(text: "Sélectionné", selected: true)
-                        Chip(text: "Normal")
-                        Chip(text: "Illimité")
+                        Chip(text: Text(verbatim: "Selected"), selected: true)
+                        Chip(text: Text(verbatim: "Normal"))
+                        Chip(text: Text(verbatim: "Unlimited"))
                     }
                     HStack(spacing: 7) {
-                        StatusPill(text: "Réussi", symbol: "checkmark",
+                        StatusPill(text: Text(verbatim: "Approved"), symbol: "checkmark",
                                    tint: Brand.credit, soft: Brand.creditSoft)
-                        StatusPill(text: "En attente", symbol: "clock",
+                        StatusPill(text: Text(verbatim: "Pending"), symbol: "clock",
                                    tint: Brand.pending, soft: Brand.pendingSoft)
-                        StatusPill(text: "Refusé", symbol: "xmark",
+                        StatusPill(text: Text(verbatim: "Declined"), symbol: "xmark",
                                    tint: Brand.debit, soft: Brand.debitSoft)
                     }
                 }
-                block("Montants") {
+                block("Amounts") {
                     MoneyText.xaf(428_500, size: 34)
                     MoneyText.usd(109_945, size: 28)
                     HStack(spacing: 18) {
@@ -116,38 +120,42 @@ public struct ComponentsShowcase: View {
                         MoneyText.xaf(-6_907, size: 17, weight: .medium, signed: true)
                     }
                 }
-                block("Jauges") {
+                block("Meters") {
                     Meter(value: 0.32)
                     Meter(value: 0.88, tint: Brand.debit)
                 }
-                block("Saisie") {
+                block("Inputs") {
                     OTPBoxes(code: "418")
                     PasscodeDots(filled: 2)
-                    Field(placeholder: "Nom de la carte", text: $text, icon: "creditcard")
+                    Field(placeholder: Text(verbatim: "Card name"), text: $text, icon: "creditcard")
                 }
-                block("Lignes") {
+                block("Rows") {
                     VStack(spacing: 0) {
-                        Row(icon: "creditcard", title: "Avec icône", subtitle: "Et un sous-titre",
-                            chevron: true)
+                        Row(icon: "creditcard", title: Text(verbatim: "With an icon"),
+                            subtitle: Text(verbatim: "And a subtitle"), chevron: true)
                         Rule(inset: 51)
-                        Row(glyph: "🇨🇲", title: "Avec drapeau", chevron: true) {
-                            RowValue(text: "+237")
+                        Row(glyph: "🇨🇲", title: Text(verbatim: "With a flag"), chevron: true) {
+                            RowValue(text: Text(verbatim: "+237"))
                         }
                         Rule(inset: 51)
-                        Row(icon: "trash", title: "Destructive", destructive: true)
+                        Row(icon: "trash", title: Text(verbatim: "Destructive"), destructive: true)
                     }
                 }
-                block("Palette de visualisation") {
+                block("Visualization palette") {
                     HStack(spacing: 5) {
                         ForEach(Viz.categorical.indices, id: \.self) { i in
                             VStack(spacing: 5) {
                                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                                     .fill(Viz.categorical[i]).frame(height: 38)
-                                Text("\(i + 1)").font(.eyebrow).foregroundStyle(Brand.inkFaint)
+                                Text(i + 1, format: .number).font(.eyebrow)
+                                    .foregroundStyle(Brand.inkFaint)
                             }
                         }
                     }
-                    Text("Ordre fixe, jamais recyclé. Validé au script : ΔE daltonisme 8,4 · vision normale 19,3 · contraste ≥ 3:1.")
+                    Text(verbatim: """
+                        Fixed order, never recycled. Script-checked: ΔE colour-blind 8.4 · \
+                        normal vision 19.3 · contrast ≥ 3:1.
+                        """)
                         .font(.micro).foregroundStyle(Brand.inkFaint)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -157,7 +165,7 @@ public struct ComponentsShowcase: View {
         }
         .scrollIndicators(.hidden)
         .page()
-        .navigationTitle("Composants")
+        .navigationTitle(Text(verbatim: "Components"))
         .navigationBarTitleDisplayMode(.inline)
         .toast($toastMsg)
     }
@@ -165,7 +173,7 @@ public struct ComponentsShowcase: View {
     @ViewBuilder
     private func block<C: View>(_ title: String, @ViewBuilder content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Eyebrow(text: title)
+            Eyebrow(text: Text(verbatim: title))
             content()
         }
         .padding(.vertical, 22)
