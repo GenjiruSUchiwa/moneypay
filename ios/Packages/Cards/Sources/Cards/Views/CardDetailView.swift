@@ -40,7 +40,7 @@ public struct CardDetailView: View {
                 transactions
                 Rule()
                 Button { confirmDelete = true } label: {
-                    Row(icon: "trash", title: "Supprimer cette carte", destructive: true)
+                    Row(icon: "trash", title: Text("Delete this card", bundle: .module), destructive: true)
                 }
                 .buttonStyle(.plain)
                 .gutter()
@@ -49,17 +49,21 @@ public struct CardDetailView: View {
         }
         .scrollIndicators(.hidden)
         .page()
-        .navigationTitle(live.label)
+        .navigationTitle(Text(verbatim: live.label))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Button("Renommer la carte", systemImage: "pencil") {}
-                    Button("Ajouter à Apple Wallet", systemImage: "wallet.pass") {}
-                    Button("Voir le relevé", systemImage: "doc.text") {}
+                    menuButton("Rename the card", "pencil") {}
+                    menuButton("Add to Apple Wallet", "wallet.pass") {}
+                    menuButton("View the statement", "doc.text") {}
                     Divider()
-                    Button("Supprimer la carte", systemImage: "trash", role: .destructive) {
-                        confirmDelete = true
+                    Button(role: .destructive) { confirmDelete = true } label: {
+                        Label {
+                            Text("Delete the card", bundle: .module)
+                        } icon: {
+                            Image(systemName: "trash")
+                        }
                     }
                 } label: {
                     Image(systemName: "ellipsis").font(.system(size: 15, weight: .semibold))
@@ -68,38 +72,48 @@ public struct CardDetailView: View {
         }
         .toast($toastMsg)
         .sheet(isPresented: $showControls) { CardControlsView(card: live) }
-        .confirmationDialog(live.isFrozen ? "Dégeler cette carte ?" : "Geler cette carte ?",
+        .confirmationDialog(Text(live.isFrozen ? "Unfreeze this card?" : "Freeze this card?",
+                                 bundle: .module),
                             isPresented: $confirmFreeze, titleVisibility: .visible) {
-            Button(live.isFrozen ? "Dégeler" : "Geler") {
+            Button {
                 let wasFrozen = live.isFrozen
                 store.toggleFreeze(live)
-                toastMsg = Toast(text: wasFrozen ? "Carte dégelée" : "Carte gelée",
+                toastMsg = Toast(text: Text(wasFrozen ? "Card unfrozen" : "Card frozen",
+                                            bundle: .module),
                                  icon: wasFrozen ? "checkmark" : "snowflake")
+            } label: {
+                Text(live.isFrozen ? "Unfreeze" : "Freeze", bundle: .module)
             }
-            Button("Annuler", role: .cancel) {}
+            Button(role: .cancel) {} label: { Text("Cancel", bundle: .module) }
         } message: {
-            Text("Tant que la carte est gelée, chaque autorisation est refusée. Les abonnements rattachés échoueront.")
+            Text("While the card is frozen every authorization is declined. Attached subscriptions will fail.",
+                 bundle: .module)
         }
-        .confirmationDialog("Supprimer définitivement ?", isPresented: $confirmDelete,
+        .confirmationDialog(Text("Delete permanently?", bundle: .module), isPresented: $confirmDelete,
                             titleVisibility: .visible) {
-            Button("Supprimer la carte", role: .destructive) { store.deleteCard(live); dismiss() }
-            Button("Annuler", role: .cancel) {}
+            Button(role: .destructive) { store.deleteCard(live); dismiss() } label: {
+                Text("Delete the card", bundle: .module)
+            }
+            Button(role: .cancel) {} label: { Text("Cancel", bundle: .module) }
         } message: {
-            Text("Les abonnements rattachés cesseront d'être prélevés.")
+            Text("Attached subscriptions will stop being charged.", bundle: .module)
         }
     }
 
     private var actions: some View {
         HStack(spacing: 4) {
             QuickAction(icon: revealed ? "eye.slash" : "eye",
-                        label: revealed ? "Masquer" : "Détails") {
+                        label: Text(revealed ? "Hide" : "Details", bundle: .module)) {
                 withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) { revealed.toggle() }
             }
             QuickAction(icon: live.isFrozen ? "sun.max" : "snowflake",
-                        label: live.isFrozen ? "Dégeler" : "Geler") { confirmFreeze = true }
-            QuickAction(icon: "slider.horizontal.3", label: "Contrôles") { showControls = true }
-            QuickAction(icon: "wallet.pass", label: "Wallet") {
-                toastMsg = Toast(text: "Ajout à Apple Wallet simulé", icon: "wallet.pass")
+                        label: Text(live.isFrozen ? "Unfreeze" : "Freeze",
+                                    bundle: .module)) { confirmFreeze = true }
+            QuickAction(icon: "slider.horizontal.3",
+                        label: Text("Controls", bundle: .module)) { showControls = true }
+            QuickAction(icon: "wallet.pass", label: Text("Wallet", bundle: .module)) {
+                toastMsg = Toast(text: Text("Apple Wallet hand-off simulated", bundle: .module),
+                                 icon: "wallet.pass")
             }
         }
         .gutter()
@@ -110,32 +124,46 @@ public struct CardDetailView: View {
 
     private var secrets: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Eyebrow(text: "Détails de la carte").gutter().padding(.top, 22).padding(.bottom, 4)
+            Eyebrow(text: Text("Card details", bundle: .module)).gutter().padding(.top, 22).padding(.bottom, 4)
             VStack(spacing: 0) {
-                copyRow("Titulaire", store.user.fullName.uppercased(), mono: false)
+                copyRow("Cardholder", store.user.fullName.uppercased(), mono: false)
                 Rule()
-                copyRow("Numéro", live.pan.chunked())
+                copyRow("Number", live.pan.chunked())
                 Rule()
-                copyRow("Expiration", live.expiry)
+                copyRow("Expiry", live.expiry)
                 Rule()
                 copyRow("CVV", live.cvv)
             }
             .gutter()
-            Text("MoneyPay ne vous demandera jamais ces informations.")
+            Text("MoneyPay will never ask you for these details.", bundle: .module)
                 .font(.micro).foregroundStyle(Brand.inkFaint)
                 .gutter().padding(.top, 10).padding(.bottom, 20)
         }
     }
 
-    private func copyRow(_ label: String, _ value: String, mono: Bool = true) -> some View {
-        Button {
+    private func menuButton(_ title: LocalizedStringKey, _ symbol: String,
+                            action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label {
+                Text(title, bundle: .module)
+            } icon: {
+                Image(systemName: symbol)
+            }
+        }
+    }
+
+    private func copyRow(_ label: String.LocalizationValue, _ value: String,
+                         mono: Bool = true) -> some View {
+        let title = String(localized: label, bundle: .module)
+        return Button {
             UIPasteboard.general.string = value
-            Haptic.success(); toastMsg = Toast(text: "\(label) copié", icon: "doc.on.doc")
+            Haptic.success()
+            toastMsg = Toast(text: Text("\(title) copied", bundle: .module), icon: "doc.on.doc")
         } label: {
             HStack {
-                Text(label).font(.bodyReg).foregroundStyle(Brand.inkMuted)
+                Text(verbatim: title).font(.bodyReg).foregroundStyle(Brand.inkMuted)
                 Spacer()
-                Text(value).font(mono ? .dataMono : .bodyReg).foregroundStyle(Brand.ink)
+                Text(verbatim: value).font(mono ? .dataMono : .bodyReg).foregroundStyle(Brand.ink)
                 Image(systemName: "doc.on.doc").font(.system(size: 12))
                     .foregroundStyle(Brand.inkFaint)
             }
@@ -150,18 +178,24 @@ public struct CardDetailView: View {
     private var limit: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Eyebrow(text: "Plafond mensuel")
+                Eyebrow(text: Text("Monthly cap", bundle: .module))
                 Spacer()
                 Button { showControls = true } label: {
-                    Text("Modifier").font(.microMed).foregroundStyle(Brand.mark)
+                    Text("Edit", bundle: .module).font(.microMed).foregroundStyle(Brand.mark)
                 }
             }
             .gutter().padding(.top, 22)
 
             HStack(alignment: .firstTextBaseline, spacing: 7) {
                 MoneyText.usd(live.spentUSDCents, size: 26)
-                Text(live.monthlyLimitUSDCents.map { "sur \(Fmt.usd($0))" } ?? "sans plafond")
-                    .font(.sub).foregroundStyle(Brand.inkMuted)
+                Group {
+                    if let cap = live.monthlyLimitUSDCents {
+                        Text("of \(Fmt.usd(cap))", bundle: .module)
+                    } else {
+                        Text("no cap", bundle: .module)
+                    }
+                }
+                .font(.sub).foregroundStyle(Brand.inkMuted)
             }
             .gutter().padding(.top, 10)
 
@@ -169,10 +203,10 @@ public struct CardDetailView: View {
                 Meter(value: live.usage, tint: live.usage > 0.85 ? Brand.debit : Brand.ink)
                     .gutter().padding(.top, 12)
                 HStack {
-                    Text("Reste \(Fmt.usd(max(0, l - live.spentUSDCents)))")
+                    Text("\(Fmt.usd(max(0, l - live.spentUSDCents))) left", bundle: .module)
                         .font(.micro).foregroundStyle(Brand.inkMuted)
                     Spacer()
-                    Text("Réinitialisé le 1er").font(.micro).foregroundStyle(Brand.inkFaint)
+                    Text("Resets on the 1st", bundle: .module).font(.micro).foregroundStyle(Brand.inkFaint)
                 }
                 .gutter().padding(.top, 7)
             }
@@ -181,7 +215,7 @@ public struct CardDetailView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 12)).foregroundStyle(Brand.pending)
-                    Text("\(live.declineCount) refus ce mois · la carte se bloque à 3")
+                    Text("\(live.declineCount) declines this month · the card blocks at 3", bundle: .module)
                         .font(.sub).foregroundStyle(Brand.inkMuted)
                 }
                 .gutter().padding(.top, 14)
@@ -194,18 +228,20 @@ public struct CardDetailView: View {
 
     private var controls: some View {
         VStack(spacing: 0) {
-            Row(icon: "globe", title: "Paiements en ligne") {
-                RowValue(text: live.onlineAllowed ? "Autorisés" : "Bloqués",
+            Row(icon: "globe", title: Text("Online payments", bundle: .module)) {
+                RowValue(text: Text(live.onlineAllowed ? "Allowed" : "Blocked", bundle: .module),
                          tint: live.onlineAllowed ? Brand.credit : Brand.debit)
             }
             Rule(inset: 51)
-            Row(icon: "arrow.triangle.2.circlepath", title: "Abonnements récurrents") {
-                RowValue(text: live.subscriptionsAllowed ? "Autorisés" : "Bloqués",
+            Row(icon: "arrow.triangle.2.circlepath",
+                title: Text("Recurring subscriptions", bundle: .module)) {
+                RowValue(text: Text(live.subscriptionsAllowed ? "Allowed" : "Blocked", bundle: .module),
                          tint: live.subscriptionsAllowed ? Brand.credit : Brand.debit)
             }
             Rule(inset: 51)
             Button { showControls = true } label: {
-                Row(icon: "slider.horizontal.3", title: "Tous les contrôles", chevron: true)
+                Row(icon: "slider.horizontal.3", title: Text("All controls", bundle: .module),
+                    chevron: true)
             }
             .buttonStyle(.plain)
         }
@@ -217,12 +253,14 @@ public struct CardDetailView: View {
     private var transactions: some View {
         let txs = store.transactions(for: live.id)
         return VStack(alignment: .leading, spacing: 2) {
-            SectionHead(title: "Transactions", trailing: txs.isEmpty ? nil : "\(txs.count)",
+            SectionHead(title: Text("Transactions", bundle: .module),
+                        trailing: txs.isEmpty ? nil : txs.count.formatted(),
                         tappable: !txs.isEmpty)
                 .gutter().padding(.top, 22)
             if txs.isEmpty {
-                EmptyNote(title: "Aucune transaction",
-                          message: "Les paiements effectués avec cette carte apparaîtront ici.")
+                EmptyNote(title: Text("No transaction", bundle: .module),
+                          message: Text("Payments made with this card will show up here.",
+                                        bundle: .module))
                     .gutter()
             } else {
                 ForEach(txs.prefix(6)) { tx in
