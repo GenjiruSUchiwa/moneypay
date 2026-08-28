@@ -15,13 +15,13 @@ public struct TransactionRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(tx.merchant).font(.bodyReg).foregroundStyle(Brand.ink).lineLimit(1)
+                    Text(verbatim: tx.merchant).font(.bodyReg).foregroundStyle(Brand.ink).lineLimit(1)
                     if tx.status != .approved {
-                        StatusPill(text: tx.status.label, symbol: tx.status.symbol,
+                        StatusPill(text: Text(tx.status.label), symbol: tx.status.symbol,
                                    tint: tx.status.tint, soft: tx.status.soft)
                     }
                 }
-                Text("\(tx.kind.label) · \(Fmt.time(tx.date))")
+                Text("\(String(localized: tx.kind.label)) · \(Fmt.time(tx.date))", bundle: .module)
                     .font(.sub).foregroundStyle(Brand.inkMuted).lineLimit(1)
             }
             Spacer(minLength: 10)
@@ -29,14 +29,14 @@ public struct TransactionRow: View {
             VStack(alignment: .trailing, spacing: 2) {
                 if tx.status == .declined {
                     // Nothing was debited: say so, rather than strike a zero.
-                    Text("—").font(.bodyMed).foregroundStyle(Brand.inkFaint)
+                    Text(verbatim: "—").font(.bodyMed).foregroundStyle(Brand.inkFaint)
                 } else {
                     MoneyText.xaf(tx.amountXAF, size: 16, weight: .medium,
                                   color: tx.amountXAF > 0 ? Brand.credit : Brand.ink,
                                   signed: true, unit: false)
                 }
                 if tx.amountUSDCents != 0 {
-                    Text(Fmt.usd(tx.amountUSDCents)).font(.micro).foregroundStyle(Brand.inkFaint)
+                    Text(verbatim: Fmt.usd(tx.amountUSDCents)).font(.micro).foregroundStyle(Brand.inkFaint)
                 }
             }
         }

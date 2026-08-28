@@ -13,7 +13,7 @@ public struct TransactionsView: View {
     @State private var filter = 0
     @State private var query = ""
 
-    private let filters = ["Tout", "Cartes", "Recharges", "Refusés"]
+    private let filters: [LocalizedStringKey] = ["All", "Cards", "Top-ups", "Declined"]
 
     private var filtered: [Money.Transaction] {
         var out = store.transactions
@@ -33,9 +33,9 @@ public struct TransactionsView: View {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     ForEach(store.grouped(filtered), id: \.day) { group in
                         HStack {
-                            Eyebrow(text: Fmt.relativeDay(group.day))
+                            Eyebrow(text: Text(verbatim: Fmt.relativeDay(group.day)))
                             Spacer()
-                            Text(dayTotal(group.items)).font(.micro).foregroundStyle(Brand.inkFaint)
+                            Text(verbatim: dayTotal(group.items)).font(.micro).foregroundStyle(Brand.inkFaint)
                                 .monospacedDigit()
                         }
                         .gutter()
@@ -52,8 +52,9 @@ public struct TransactionsView: View {
                     }
 
                     if filtered.isEmpty {
-                        EmptyNote(title: "Aucun résultat",
-                                  message: "Essayez un autre filtre ou un autre nom de marchand.")
+                        EmptyNote(title: Text("No result", bundle: .module),
+                                  message: Text("Try another filter or another merchant name.",
+                                                bundle: .module))
                             .gutter()
                     }
                 }
@@ -64,30 +65,49 @@ public struct TransactionsView: View {
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack {
-                        Text("Activité").font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
+                        Text("Activity", bundle: .module).font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
                         Spacer()
                         Menu {
-                            Button("Exporter en PDF", systemImage: "arrow.down.doc") {}
-                            Button("Exporter en CSV", systemImage: "tablecells") {}
+                            Button(action: {}) {
+                                Label {
+                                    Text("Export as PDF", bundle: .module)
+                                } icon: {
+                                    Image(systemName: "arrow.down.doc")
+                                }
+                            }
+                            Button(action: {}) {
+                                Label {
+                                    Text("Export as CSV", bundle: .module)
+                                } icon: {
+                                    Image(systemName: "tablecells")
+                                }
+                            }
                         } label: {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 16)).foregroundStyle(Brand.ink)
                                 .frame(width: 34, height: 34)
                         }
                     }
-                    Segments(items: filters, selection: $filter)
+                    Segments(items: filters.map { Text($0, bundle: .module) }, selection: $filter)
                 }
                 .gutter()
                 .padding(.top, 4)
                 .background(Brand.bg)
                 .overlay(alignment: .bottom) { Rule() }
             }
-            .searchable(text: $query, prompt: "Rechercher un marchand")
+            .searchable(text: $query, prompt: Text("Search a merchant", bundle: .module))
         }
     }
 
     private func dayTotal(_ items: [Money.Transaction]) -> String {
         let net = items.filter { $0.status != .declined }.reduce(0) { $0 + $1.amountXAF }
-        return (net > 0 ? "+" : net < 0 ? "−" : "") + Fmt.group(net) + " FCFA"
+        let sign = net > 0 ? "+" : (net < 0 ? "−" : "")
+        return sign + Fmt.xaf(net)
     }
+}
+
+#Preview("Transactions — fr") {
+    TransactionsView()
+        .environment(Store())
+        .environment(\.locale, Locale(identifier: "fr"))
 }
