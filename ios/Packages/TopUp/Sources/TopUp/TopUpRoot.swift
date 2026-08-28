@@ -42,17 +42,23 @@ public struct TopUpFlow: View {
 
     private var amountStep: some View {
         VStack(spacing: 0) {
-            NavBar(title: "Recharger", onClose: { dismiss() })
+            NavBar(title: Text("Top up", bundle: .module), onClose: { dismiss() })
 
             Spacer()
             AmountEntry(digits: digits.isEmpty ? "" : Fmt.group(amount), currency: "FCFA")
-            Text(amount > 0 ? "≈ \(Fmt.usd(usdCents)) dépensables en carte" : "Minimum 1 000 FCFA")
+            Group {
+                if amount > 0 {
+                    Text("≈ \(Fmt.usd(usdCents)) to spend on a card", bundle: .module)
+                } else {
+                    Text("Minimum \(Fmt.xaf(1_000))", bundle: .module)
+                }
+            }
                 .font(.sub).foregroundStyle(Brand.inkMuted).padding(.top, 10)
             Spacer()
 
             HStack(spacing: 7) {
                 ForEach([10_000, 25_000, 50_000, 100_000], id: \.self) { v in
-                    Chip(text: Fmt.group(v), selected: amount == v) { digits = "\(v)" }
+                    Chip(text: Text(verbatim: Fmt.group(v)), selected: amount == v) { digits = "\(v)" }
                 }
             }
             .gutter()
@@ -62,11 +68,11 @@ public struct TopUpFlow: View {
                 HStack(spacing: 12) {
                     IconTile(symbol: method.symbol, tint: method.tint)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(method.name).font(.bodyReg).foregroundStyle(Brand.ink)
-                        Text(method.detail).font(.sub).foregroundStyle(Brand.inkMuted)
+                        Text(verbatim: method.name).font(.bodyReg).foregroundStyle(Brand.ink)
+                        Text(verbatim: method.detail).font(.sub).foregroundStyle(Brand.inkMuted)
                     }
                     Spacer()
-                    Text("Changer").font(.subMed).foregroundStyle(Brand.mark)
+                    Text("Change", bundle: .module).font(.subMed).foregroundStyle(Brand.mark)
                 }
                 .padding(.vertical, Metric.rowVertical)
                 .contentShape(.rect)
@@ -80,7 +86,7 @@ public struct TopUpFlow: View {
                 .gutter()
                 .padding(.top, 6)
 
-            MPButton(title: "Continuer", enabled: valid) {
+            MPButton(title: Text("Continue", bundle: .module), enabled: valid) {
                 withAnimation(.easeOut(duration: 0.22)) { step = .confirm }
             }
             .gutter().padding(.bottom, 10)
@@ -95,28 +101,32 @@ public struct TopUpFlow: View {
 
     private var confirmStep: some View {
         VStack(spacing: 0) {
-            NavBar(title: "Confirmer", onBack: {
+            NavBar(title: Text("Confirm", bundle: .module), onBack: {
                 withAnimation(.easeOut(duration: 0.22)) { step = .amount }
             })
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     MoneyText.xaf(amount, size: 36).gutter().padding(.top, 8)
-                    Text("depuis \(method.name)").font(.sub).foregroundStyle(Brand.inkMuted)
+                    Text("from \(method.name)", bundle: .module).font(.sub)
+                        .foregroundStyle(Brand.inkMuted)
                         .gutter().padding(.top, 4)
 
                     Rule().padding(.top, 26)
                     VStack(spacing: 0) {
-                        kv("Montant", Fmt.xaf(amount))
+                        kv("Amount", Text(verbatim: Fmt.xaf(amount)))
                         Rule()
-                        kv("Frais", fee == 0 ? "Offerts" : "− \(Fmt.xaf(fee))",
+                        kv("Fee",
+                           fee == 0 ? Text("Waived", bundle: .module)
+                                    : Text(verbatim: "− \(Fmt.xaf(fee))"),
                            tint: fee == 0 ? Brand.credit : Brand.pending)
                         Rule()
-                        kv("Crédité sur le wallet", Fmt.xaf(credited), strong: true)
+                        kv("Credited to the wallet", Text(verbatim: Fmt.xaf(credited)), strong: true)
                         Rule()
-                        kv("Nouveau solde", Fmt.xaf(store.balanceXAF + credited))
+                        kv("New balance", Text(verbatim: Fmt.xaf(store.balanceXAF + credited)))
                         Rule()
-                        kv("Délai", method.instant ? "Immédiat" : "1 à 2 jours ouvrés")
+                        kv("Delay", method.instant ? Text("Immediate", bundle: .module)
+                                                   : Text("1 to 2 business days", bundle: .module))
                     }
                     .gutter()
                     Rule()
@@ -124,9 +134,8 @@ public struct TopUpFlow: View {
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: "iphone.gen3.radiowaves.left.and.right")
                             .font(.system(size: 13)).foregroundStyle(Brand.inkMuted).padding(.top, 2)
-                        Text("Vous allez recevoir une demande de confirmation sur votre téléphone. " +
-                             "Validez-la avec votre code " +
-                             (method.name.contains("MTN") ? "MoMo" : "opérateur") + ".")
+                        Text("You will get a confirmation request on your phone. Approve it with your \(codeName) code.",
+                             bundle: .module)
                             .font(.sub).foregroundStyle(Brand.inkMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -135,7 +144,7 @@ public struct TopUpFlow: View {
             }
             .scrollIndicators(.hidden)
 
-            MPButton(title: "Confirmer le rechargement") {
+            MPButton(title: Text("Confirm the top-up", bundle: .module)) {
                 store.topUp(xaf: amount, method: method)
                 Haptic.success()
                 withAnimation(.easeOut(duration: 0.25)) { step = .done }
@@ -144,11 +153,18 @@ public struct TopUpFlow: View {
         }
     }
 
-    private func kv(_ l: String, _ v: String, tint: Color = Brand.ink, strong: Bool = false) -> some View {
+    /// The name of the code the operator asks for. `id`, not a substring of the
+    /// display name: a translated name must never change which branch runs.
+    private var codeName: String {
+        method.id == "mtn" ? "MoMo" : String(localized: "carrier", bundle: .module)
+    }
+
+    private func kv(_ label: LocalizedStringKey, _ value: Text,
+                    tint: Color = Brand.ink, strong: Bool = false) -> some View {
         HStack {
-            Text(l).font(.bodyReg).foregroundStyle(Brand.inkMuted)
+            Text(label, bundle: .module).font(.bodyReg).foregroundStyle(Brand.inkMuted)
             Spacer()
-            Text(v).font(strong ? .bodyMed : .bodyReg).foregroundStyle(tint).monospacedDigit()
+            value.font(strong ? .bodyMed : .bodyReg).foregroundStyle(tint).monospacedDigit()
         }
         .padding(.vertical, Metric.rowVertical)
     }
@@ -159,27 +175,34 @@ public struct TopUpFlow: View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer()
             SuccessMark()
-            Text("Rechargement effectué")
+            Text("Top-up complete", bundle: .module)
                 .font(.system(size: 26, weight: .semibold)).tight(-0.6)
                 .foregroundStyle(Brand.ink).padding(.top, 24)
-            Text("\(Fmt.xaf(credited)) ajoutés à votre solde.")
+            Text("\(Fmt.xaf(credited)) added to your balance.", bundle: .module)
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted).padding(.top, 8)
 
             Rule().padding(.top, 26)
-            kv("Nouveau solde", Fmt.xaf(store.balanceXAF), strong: true)
+            kv("New balance", Text(verbatim: Fmt.xaf(store.balanceXAF)), strong: true)
             Rule()
-            kv("Référence", "MP-\(Int.random(in: 100000...999999))")
+            kv("Reference", Text(verbatim: "MP-\(Int.random(in: 100_000...999_999))"))
             Rule()
-            kv("Date", Fmt.fullDate(.now))
+            kv("Date", Text(verbatim: Fmt.fullDate(.now)))
             Rule()
 
             Spacer()
             VStack(spacing: 9) {
-                MPButton(title: "Partager le reçu", icon: "square.and.arrow.up", tone: .quiet) {}
-                MPButton(title: "Terminé") { dismiss() }
+                MPButton(title: Text("Share the receipt", bundle: .module),
+                         icon: "square.and.arrow.up", tone: .quiet) {}
+                MPButton(title: Text("Done", bundle: .module)) { dismiss() }
             }
             .padding(.bottom, 14)
         }
         .gutter()
     }
+}
+
+#Preview("Top up — fr") {
+    TopUpFlow()
+        .environment(Store())
+        .environment(\.locale, Locale(identifier: "fr"))
 }

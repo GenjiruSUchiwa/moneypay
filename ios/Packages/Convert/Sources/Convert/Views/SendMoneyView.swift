@@ -50,12 +50,13 @@ public struct SendMoneyView: View {
 
     private var picker: some View {
         VStack(spacing: 0) {
-            NavBar(title: "Envoyer", onClose: { dismiss() })
-            Field(placeholder: "Nom ou numéro MoneyPay", text: $query, icon: "magnifyingglass").gutter()
+            NavBar(title: Text("Send", bundle: .module), onClose: { dismiss() })
+            Field(placeholder: Text("Name or MoneyPay number", bundle: .module),
+                  text: $query, icon: "magnifyingglass").gutter()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Eyebrow(text: "Récents").gutter().padding(.top, 22).padding(.bottom, 4)
+                    Eyebrow(text: Text("Recent", bundle: .module)).gutter().padding(.top, 22).padding(.bottom, 4)
                     VStack(spacing: 0) {
                         ForEach(Array(filtered.enumerated()), id: \.element.id) { i, c in
                             Button {
@@ -63,18 +64,18 @@ public struct SendMoneyView: View {
                                 withAnimation(.easeOut(duration: 0.22)) { recipient = c }
                             } label: {
                                 HStack(spacing: 12) {
-                                    Text(c.initials)
+                                    Text(verbatim: c.initials)
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundStyle(Brand.ink)
                                         .frame(width: 38, height: 38)
                                         .background(Brand.well, in: .circle)
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(c.name).font(.bodyReg).foregroundStyle(Brand.ink)
-                                        Text(c.phone).font(.sub).foregroundStyle(Brand.inkMuted)
+                                        Text(verbatim: c.name).font(.bodyReg).foregroundStyle(Brand.ink)
+                                        Text(verbatim: c.phone).font(.sub).foregroundStyle(Brand.inkMuted)
                                             .monospacedDigit()
                                     }
                                     Spacer()
-                                    Image(systemName: "chevron.right")
+                                    Image(systemName: "chevron.forward")
                                         .font(.system(size: 13, weight: .semibold))
                                         .foregroundStyle(Brand.inkFaint)
                                 }
@@ -97,27 +98,28 @@ public struct SendMoneyView: View {
             NavBar(onBack: { withAnimation(.easeOut(duration: 0.22)) { recipient = nil } })
 
             VStack(spacing: 8) {
-                Text(c.initials)
+                Text(verbatim: c.initials)
                     .font(.system(size: 18, weight: .medium)).foregroundStyle(Brand.ink)
                     .frame(width: 52, height: 52)
                     .background(Brand.well, in: .circle)
-                Text(c.name).font(.bodyMed).foregroundStyle(Brand.ink)
-                Text(c.phone).font(.sub).foregroundStyle(Brand.inkMuted).monospacedDigit()
+                Text(verbatim: c.name).font(.bodyMed).foregroundStyle(Brand.ink)
+                Text(verbatim: c.phone).font(.sub).foregroundStyle(Brand.inkMuted).monospacedDigit()
             }
 
             Spacer()
             AmountEntry(digits: digits.isEmpty ? "" : Fmt.group(amount), currency: "FCFA")
-            Text("Transfert MoneyPay instantané, sans frais")
+            Text("Instant MoneyPay transfer, no fee", bundle: .module)
                 .font(.sub).foregroundStyle(Brand.inkMuted).padding(.top, 10)
             Spacer()
 
-            Field(placeholder: "Ajouter une note", text: $note, icon: "text.bubble").gutter()
+            Field(placeholder: Text("Add a note", bundle: .module), text: $note, icon: "text.bubble").gutter()
 
             Keypad(onDigit: { d in if digits.count < 8 { digits.append("\(d)") } },
                    onDelete: { if !digits.isEmpty { digits.removeLast() } })
                 .gutter().padding(.top, 6)
 
-            MPButton(title: amount > 0 ? "Envoyer \(Fmt.xaf(amount))" : "Envoyer",
+            MPButton(title: amount > 0 ? Text("Send \(Fmt.xaf(amount))", bundle: .module)
+                                       : Text("Send", bundle: .module),
                      enabled: amount >= 500 && amount <= store.balanceXAF) {
                 Haptic.success()
                 withAnimation(.easeOut(duration: 0.25)) { sent = true }
@@ -130,13 +132,13 @@ public struct SendMoneyView: View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer()
             SuccessMark()
-            Text("Argent envoyé")
+            Text("Money sent", bundle: .module)
                 .font(.system(size: 26, weight: .semibold)).tight(-0.6)
                 .foregroundStyle(Brand.ink).padding(.top, 24)
-            Text("\(Fmt.xaf(amount)) envoyés à \(recipient?.name ?? "").")
+            Text("\(Fmt.xaf(amount)) sent to \(recipient?.name ?? "").", bundle: .module)
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted).padding(.top, 8)
             Spacer()
-            MPButton(title: "Terminé") { dismiss() }.padding(.bottom, 14)
+            MPButton(title: Text("Done", bundle: .module)) { dismiss() }.padding(.bottom, 14)
         }
         .gutter()
     }
