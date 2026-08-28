@@ -1,0 +1,292 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %@"
+          }
+        }
+      }
+    },
+    "A decline costs %@ from the processor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un refus est facturé %@ par le processeur."
+          }
+        }
+      }
+    },
+    "Activity": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activité"
+          }
+        }
+      }
+    },
+    "All": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout"
+          }
+        }
+      }
+    },
+    "Breakdown": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décompte"
+          }
+        }
+      }
+    },
+    "Cards": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cartes"
+          }
+        }
+      }
+    },
+    "Category": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catégorie"
+          }
+        }
+      }
+    },
+    "Declined": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refusés"
+          }
+        }
+      }
+    },
+    "Dispute this payment": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contester ce paiement"
+          }
+        }
+      }
+    },
+    "Equivalent": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contre-valeur"
+          }
+        }
+      }
+    },
+    "Export as CSV": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporter en CSV"
+          }
+        }
+      }
+    },
+    "Export as PDF": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporter en PDF"
+          }
+        }
+      }
+    },
+    "FX margin · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marge de change · %@"
+          }
+        }
+      }
+    },
+    "Get help": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obtenir de l'aide"
+          }
+        }
+      }
+    },
+    "Merchant amount": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Montant marchand"
+          }
+        }
+      }
+    },
+    "MoneyPay declined the authorization.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorisation refusée par MoneyPay."
+          }
+        }
+      }
+    },
+    "No result": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun résultat"
+          }
+        }
+      }
+    },
+    "Paid with": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Payé avec"
+          }
+        }
+      }
+    },
+    "Rate applied": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taux appliqué"
+          }
+        }
+      }
+    },
+    "Reference": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence"
+          }
+        }
+      }
+    },
+    "Reference copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence copiée"
+          }
+        }
+      }
+    },
+    "Search a merchant": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher un marchand"
+          }
+        }
+      }
+    },
+    "Share the receipt": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager le reçu"
+          }
+        }
+      }
+    },
+    "Top-ups": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recharges"
+          }
+        }
+      }
+    },
+    "Total debited": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total débité"
+          }
+        }
+      }
+    },
+    "Try another filter or another merchant name.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essayez un autre filtre ou un autre nom de marchand."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -41,7 +41,7 @@ public struct TransactionDetailView: View {
             IconTile(symbol: tx.kind == .topUp ? "arrow.down" : tx.category.symbol,
                      tint: tx.kind == .topUp ? Brand.credit : tx.category.tint, size: 44)
 
-            Text(tx.merchant).font(.heading3).foregroundStyle(Brand.inkMuted).padding(.top, 16)
+            Text(verbatim: tx.merchant).font(.heading3).foregroundStyle(Brand.inkMuted).padding(.top, 16)
 
             Group {
                 if tx.amountUSDCents != 0 {
@@ -55,9 +55,9 @@ public struct TransactionDetailView: View {
             .padding(.top, 4)
 
             HStack(spacing: 8) {
-                StatusPill(text: tx.status.label, symbol: tx.status.symbol,
+                StatusPill(text: Text(tx.status.label), symbol: tx.status.symbol,
                            tint: tx.status.tint, soft: tx.status.soft)
-                Text(Fmt.fullDate(tx.date)).font(.sub).foregroundStyle(Brand.inkMuted)
+                Text(verbatim: Fmt.fullDate(tx.date)).font(.sub).foregroundStyle(Brand.inkMuted)
             }
             .padding(.top, 12)
         }
@@ -70,10 +70,11 @@ public struct TransactionDetailView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 13)).foregroundStyle(Brand.debit).padding(.top, 2)
             VStack(alignment: .leading, spacing: 3) {
-                Text(tx.declineReason ?? "Autorisation refusée par MoneyPay.")
+                Text(verbatim: tx.declineReason
+                     ?? String(localized: "MoneyPay declined the authorization.", bundle: .module))
                     .font(.sub).foregroundStyle(Brand.ink)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Un refus est facturé 220 FCFA par le processeur.")
+                Text("A decline costs \(Fmt.xaf(220)) from the processor.", bundle: .module)
                     .font(.micro).foregroundStyle(Brand.inkMuted)
             }
         }
@@ -87,31 +88,36 @@ public struct TransactionDetailView: View {
     /// The breakdown that shows where the money actually goes.
     private var breakdown: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Eyebrow(text: "Décompte").gutter().padding(.top, 22).padding(.bottom, 6)
+            Eyebrow(text: Text("Breakdown", bundle: .module)).gutter().padding(.top, 22).padding(.bottom, 6)
             VStack(spacing: 0) {
                 if tx.amountUSDCents != 0 {
-                    kv("Montant marchand", Fmt.usd(tx.amountUSDCents))
+                    kv(Text("Merchant amount", bundle: .module),
+                       Text(verbatim: Fmt.usd(tx.amountUSDCents)))
                     Rule()
-                    kv("Taux appliqué", "1 USD = \(Int(tx.fxRate)) FCFA")
+                    kv(Text("Rate applied", bundle: .module),
+                       Text(verbatim: "1 USD = \(Fmt.xaf(Int(tx.fxRate)))"))
                     Rule()
-                    kv("Contre-valeur", Fmt.xaf(gross))
+                    kv(Text("Equivalent", bundle: .module), Text(verbatim: Fmt.xaf(gross)))
                     Rule()
-                    kv("Marge de change · \(Int(tx.fxMarginPct * 100)) %", Fmt.xaf(margin),
-                       tint: Brand.pending)
+                    kv(Text("FX margin · \(tx.fxMarginPct, format: .percent)", bundle: .module),
+                       Text(verbatim: Fmt.xaf(margin)), tint: Brand.pending)
                     Rule()
                 }
-                kv("Total débité", Fmt.xaf(abs(tx.amountXAF)), strong: true)
+                kv(Text("Total debited", bundle: .module),
+                   Text(verbatim: Fmt.xaf(abs(tx.amountXAF))), strong: true)
                 Rule()
-                kv("Catégorie", tx.category.label)
+                kv(Text("Category", bundle: .module), Text(tx.category.label))
                 Rule()
                 Button {
                     UIPasteboard.general.string = tx.id.uuidString
-                    Haptic.success(); toastMsg = Toast(text: "Référence copiée", icon: "doc.on.doc")
+                    Haptic.success()
+                    toastMsg = Toast(text: Text("Reference copied", bundle: .module), icon: "doc.on.doc")
                 } label: {
                     HStack {
-                        Text("Référence").font(.bodyReg).foregroundStyle(Brand.inkMuted)
+                        Text("Reference", bundle: .module).font(.bodyReg)
+                            .foregroundStyle(Brand.inkMuted)
                         Spacer()
-                        Text(String(tx.id.uuidString.prefix(13)))
+                        Text(verbatim: String(tx.id.uuidString.prefix(13)))
                             .font(.dataMono).foregroundStyle(Brand.ink)
                         Image(systemName: "doc.on.doc").font(.system(size: 12))
                             .foregroundStyle(Brand.inkFaint)
@@ -125,18 +131,19 @@ public struct TransactionDetailView: View {
         .padding(.bottom, 8)
     }
 
-    private func kv(_ l: String, _ v: String, tint: Color = Brand.ink, strong: Bool = false) -> some View {
+    private func kv(_ label: Text, _ value: Text, tint: Color = Brand.ink,
+                    strong: Bool = false) -> some View {
         HStack {
-            Text(l).font(.bodyReg).foregroundStyle(Brand.inkMuted)
+            label.font(.bodyReg).foregroundStyle(Brand.inkMuted)
             Spacer()
-            Text(v).font(strong ? .bodyMed : .bodyReg).foregroundStyle(tint).monospacedDigit()
+            value.font(strong ? .bodyMed : .bodyReg).foregroundStyle(tint).monospacedDigit()
         }
         .padding(.vertical, Metric.rowVertical)
     }
 
     private func paidWith(_ card: VirtualCard) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Eyebrow(text: "Payé avec").gutter().padding(.top, 22).padding(.bottom, 2)
+            Eyebrow(text: Text("Paid with", bundle: .module)).gutter().padding(.top, 22).padding(.bottom, 2)
             // No link to CardDetailView: Cards depends on Transactions
             // (CardDetailView lists a card's transactions), so the reverse
             // would make a cycle between the two packages.
@@ -147,8 +154,8 @@ public struct TransactionDetailView: View {
                         .frame(width: 34, height: 22)
                         .overlay { RoundedRectangle(cornerRadius: 5).stroke(Brand.hairline, lineWidth: 1) }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(card.label).font(.bodyReg).foregroundStyle(Brand.ink)
-                        Text("•• \(card.last4)").font(.sub).foregroundStyle(Brand.inkMuted)
+                        Text(verbatim: card.label).font(.bodyReg).foregroundStyle(Brand.ink)
+                        Text(verbatim: "•• \(card.last4)").font(.sub).foregroundStyle(Brand.inkMuted)
                     }
                     Spacer()
                 }
@@ -161,11 +168,13 @@ public struct TransactionDetailView: View {
 
     private var actions: some View {
         VStack(spacing: 0) {
-            Row(icon: "arrow.uturn.backward", title: "Contester ce paiement", chevron: true)
+            Row(icon: "arrow.uturn.backward",
+                title: Text("Dispute this payment", bundle: .module), chevron: true)
             Rule(inset: 51)
-            Row(icon: "questionmark.circle", title: "Obtenir de l'aide", chevron: true)
+            Row(icon: "questionmark.circle", title: Text("Get help", bundle: .module), chevron: true)
             Rule(inset: 51)
-            Row(icon: "square.and.arrow.up", title: "Partager le reçu", chevron: true)
+            Row(icon: "square.and.arrow.up",
+                title: Text("Share the receipt", bundle: .module), chevron: true)
         }
         .gutter()
         .padding(.top, 8)
