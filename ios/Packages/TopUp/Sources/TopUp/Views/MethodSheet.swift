@@ -13,7 +13,7 @@ public struct MethodSheet: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Recharger depuis").font(.heading2).tight().foregroundStyle(Brand.ink)
+            Text("Top up from", bundle: .module).font(.heading2).tight().foregroundStyle(Brand.ink)
                 .gutter().padding(.top, 20).padding(.bottom, 12)
             Rule()
             ScrollView {
@@ -24,13 +24,13 @@ public struct MethodSheet: View {
                                 IconTile(symbol: m.symbol, tint: m.tint)
                                 VStack(alignment: .leading, spacing: 3) {
                                     HStack(spacing: 6) {
-                                        Text(m.name).font(.bodyReg).foregroundStyle(Brand.ink)
+                                        Text(verbatim: m.name).font(.bodyReg).foregroundStyle(Brand.ink)
                                         if m.feePct == 0 {
-                                            StatusPill(text: "Sans frais", symbol: "checkmark",
+                                            StatusPill(text: Text("No fee", bundle: .module), symbol: "checkmark",
                                                        tint: Brand.credit, soft: Brand.creditSoft)
                                         }
                                     }
-                                    Text(m.detail).font(.sub).foregroundStyle(Brand.inkMuted)
+                                    Text(verbatim: m.detail).font(.sub).foregroundStyle(Brand.inkMuted)
                                 }
                                 Spacer(minLength: 8)
                                 Image(systemName: "checkmark")

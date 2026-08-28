@@ -1,0 +1,215 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ converted into %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ convertis en %@."
+          }
+        }
+      }
+    },
+    "%@ sent to %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ envoyés à %@."
+          }
+        }
+      }
+    },
+    "Add a note": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter une note"
+          }
+        }
+      }
+    },
+    "At the raw interbank rate you would get %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Au taux interbancaire pur, vous auriez %@."
+          }
+        }
+      }
+    },
+    "Available: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponible : %@"
+          }
+        }
+      }
+    },
+    "Conversion complete": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversion effectuée"
+          }
+        }
+      }
+    },
+    "Convert": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Convertir"
+          }
+        }
+      }
+    },
+    "Done": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminé"
+          }
+        }
+      }
+    },
+    "Instant MoneyPay transfer, no fee": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transfert MoneyPay instantané, sans frais"
+          }
+        }
+      }
+    },
+    "Insufficient balance": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solde insuffisant"
+          }
+        }
+      }
+    },
+    "Interbank rate": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taux interbancaire"
+          }
+        }
+      }
+    },
+    "Money sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Argent envoyé"
+          }
+        }
+      }
+    },
+    "MoneyPay margin · %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marge MoneyPay · %@"
+          }
+        }
+      }
+    },
+    "Name or MoneyPay number": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom ou numéro MoneyPay"
+          }
+        }
+      }
+    },
+    "Recent": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Récents"
+          }
+        }
+      }
+    },
+    "Send": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer"
+          }
+        }
+      }
+    },
+    "Send %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer %@"
+          }
+        }
+      }
+    },
+    "Spendable on all your cards": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utilisable sur toutes vos cartes"
+          }
+        }
+      }
+    },
+    "You receive": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous recevez"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

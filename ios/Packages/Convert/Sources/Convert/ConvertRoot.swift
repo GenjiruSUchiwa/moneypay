@@ -26,10 +26,11 @@ public struct ConvertView: View {
 
     private var form: some View {
         VStack(spacing: 0) {
-            NavBar(title: "Convertir", onClose: { dismiss() })
+            NavBar(title: Text("Convert", bundle: .module), onClose: { dismiss() })
 
             VStack(spacing: 0) {
-                leg(flag: "🇨🇲", code: "FCFA", note: "Disponible : \(Fmt.xaf(store.balanceXAF))",
+                leg(flag: "🇨🇲", code: "FCFA",
+                    note: Text("Available: \(Fmt.xaf(store.balanceXAF))", bundle: .module),
                     value: digits.isEmpty ? "0" : Fmt.group(xaf), active: true)
                 ZStack {
                     Rule()
@@ -39,7 +40,8 @@ public struct ConvertView: View {
                         .frame(width: 26, height: 26)
                         .background(Brand.inkFill, in: .circle)
                 }
-                leg(flag: "🇺🇸", code: "USD", note: "Utilisable sur toutes vos cartes",
+                leg(flag: "🇺🇸", code: "USD",
+                    note: Text("Spendable on all your cards", bundle: .module),
                     value: Fmt.usd(usdCents, symbol: false), active: false)
             }
             .gutter()
@@ -49,18 +51,20 @@ public struct ConvertView: View {
             // The margin is shown, not buried in the rate. That is the whole
             // argument against the apps that hide it.
             VStack(spacing: 0) {
-                kv("Taux interbancaire", "1 USD = \(Int(store.fx.usdToXAF)) FCFA")
+                kv(Text("Interbank rate", bundle: .module),
+                   Text(verbatim: "1 USD = \(Fmt.xaf(Int(store.fx.usdToXAF)))"))
                 Rule()
-                kv("Marge MoneyPay · \(Int(store.fx.marginPct * 100)) %",
-                   marginXAF > 0 ? "− \(Fmt.xaf(marginXAF))" : "—", tint: Brand.pending)
+                kv(Text("MoneyPay margin · \(store.fx.marginPct, format: .percent)", bundle: .module),
+                   marginXAF > 0 ? Text(verbatim: "− \(Fmt.xaf(marginXAF))") : Text(verbatim: "—"),
+                   tint: Brand.pending)
                 Rule()
-                kv("Vous recevez", Fmt.usd(usdCents), strong: true)
+                kv(Text("You receive", bundle: .module), Text(verbatim: Fmt.usd(usdCents)), strong: true)
             }
             .gutter()
             Rule()
 
             if marketCents > 0 {
-                Text("Au taux interbancaire pur, vous auriez \(Fmt.usd(marketCents)).")
+                Text("At the raw interbank rate you would get \(Fmt.usd(marketCents)).", bundle: .module)
                     .font(.micro).foregroundStyle(Brand.inkFaint)
                     .gutter().padding(.top, 12)
             }
@@ -71,7 +75,9 @@ public struct ConvertView: View {
                    onDelete: { if !digits.isEmpty { digits.removeLast() } })
                 .gutter()
 
-            MPButton(title: xaf > store.balanceXAF ? "Solde insuffisant" : "Convertir", enabled: valid) {
+            MPButton(title: Text(xaf > store.balanceXAF ? "Insufficient balance" : "Convert",
+                                 bundle: .module),
+                     enabled: valid) {
                 Haptic.success()
                 withAnimation(.easeOut(duration: 0.25)) { done = true }
             }
@@ -80,15 +86,15 @@ public struct ConvertView: View {
         .page()
     }
 
-    private func leg(flag: String, code: String, note: String, value: String, active: Bool) -> some View {
+    private func leg(flag: String, code: String, note: Text, value: String, active: Bool) -> some View {
         HStack(spacing: 12) {
-            Text(flag).font(.system(size: 26))
+            Text(verbatim: flag).font(.system(size: 26))
             VStack(alignment: .leading, spacing: 2) {
-                Text(code).font(.bodyMed).foregroundStyle(Brand.ink)
-                Text(note).font(.micro).foregroundStyle(Brand.inkMuted).lineLimit(1)
+                Text(verbatim: code).font(.bodyMed).foregroundStyle(Brand.ink)
+                note.font(.micro).foregroundStyle(Brand.inkMuted).lineLimit(1)
             }
             Spacer(minLength: 8)
-            Text(value)
+            Text(verbatim: value)
                 .font(.system(size: 26, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(active ? Brand.ink : Brand.inkMuted)
@@ -97,11 +103,12 @@ public struct ConvertView: View {
         .padding(.vertical, 18)
     }
 
-    private func kv(_ l: String, _ v: String, tint: Color = Brand.ink, strong: Bool = false) -> some View {
+    private func kv(_ label: Text, _ value: Text, tint: Color = Brand.ink,
+                    strong: Bool = false) -> some View {
         HStack {
-            Text(l).font(.bodyReg).foregroundStyle(Brand.inkMuted)
+            label.font(.bodyReg).foregroundStyle(Brand.inkMuted)
             Spacer()
-            Text(v).font(strong ? .bodyMed : .bodyReg).foregroundStyle(tint).monospacedDigit()
+            value.font(strong ? .bodyMed : .bodyReg).foregroundStyle(tint).monospacedDigit()
         }
         .padding(.vertical, 13)
     }
@@ -110,15 +117,21 @@ public struct ConvertView: View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer()
             SuccessMark()
-            Text("Conversion effectuée")
+            Text("Conversion complete", bundle: .module)
                 .font(.system(size: 26, weight: .semibold)).tight(-0.6)
                 .foregroundStyle(Brand.ink).padding(.top, 24)
-            Text("\(Fmt.xaf(xaf)) convertis en \(Fmt.usd(usdCents)).")
+            Text("\(Fmt.xaf(xaf)) converted into \(Fmt.usd(usdCents)).", bundle: .module)
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted).padding(.top, 8)
             Spacer()
-            MPButton(title: "Terminé") { dismiss() }.padding(.bottom, 14)
+            MPButton(title: Text("Done", bundle: .module)) { dismiss() }.padding(.bottom, 14)
         }
         .gutter()
         .page()
     }
+}
+
+#Preview("Convert — fr") {
+    ConvertView()
+        .environment(Store())
+        .environment(\.locale, Locale(identifier: "fr"))
 }
