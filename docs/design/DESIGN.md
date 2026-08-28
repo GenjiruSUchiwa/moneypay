@@ -630,6 +630,8 @@ capsule 20px, **toujours icône + libellé**. **`toggle`** — 46×28, pastille 
 ressort `cubic-bezier(.3,.7,.3,1.2)`. **`meter`** — jauge 4px, remplissage
 `{colors.green}` (`.warn` → `{colors.debit}`). **`success-mark`** / **`fail-mark`** —
 disque 58px, tracé du trait 0,4s + onde `ringOut` 0,7s.
+**`SegmentedProgress`** — progression en étapes avec `.steps`, ou style stories avec
+`.story(dwell:cycle:)` pour remplir le segment courant pendant `dwell` et le réarmer via `cycle`.
 
 ### Lignes & données clé-valeur
 **`row`** — min 56px, `:active{opacity:.6}` (`.static` pour les lignes inertes).
@@ -750,6 +752,27 @@ relâche > 55px = carte suivante/précédente, tap = suivante ; flottement lent 
 transition fondu + `blur(5px)` + montée 0,5s.
 En bas : **deux boutons empilés** — « Créer mon compte » (plein) + « J'ai déjà un compte »
 (quiet) — puis la ligne légale. Entrée en cascade `weRise` (délais .05→.26s).
+**Correspondances iOS** : `SegmentedProgress(style: .story(dwell:cycle:))` utilise
+`WelcomeModel.dwell` (4,2 s) et `WelcomeModel.generation` comme `cycle` ; chaque action
+utilisateur réarme le remplissage. Le deck est `WelcomeDeckView` : les profondeurs viennent
+de `WelcomeModel.depth(of:)`, et `DeckPose.at(depth:)` fournit les poses (offsets (12, −32) /
+(−13, −58) pt, échelles .92 / .84, rotations 4,5° / −4°). Sa largeur est `Metric.stage`
+(296 pt). La rotation animée utilise `Motion.deck`.
+Pendant le glissement, la carte suit le doigt sans animation ; l'inclinaison utilise
+`DeckPose.dragTiltPerPoint` (1/18 °/pt). `WelcomeModel.swipeThreshold` (55 pt) déclenche
+le changement de carte, tandis que `WelcomeModel.tapThreshold` (6 pt) sépare le tap du
+glissement. Le flottement repose sur `Motion.float` (3,2 s ease-in-out,
+`repeatForever(autoreverses:)`), avec ± `Motion.floatAmplitude` (4,5 pt).
+Les textes combinent fondu, `Motion.blur` (5 pt), `Motion.rise` (8 pt) et `Motion.screen`
+(0,35 s). L'entrée en cascade réutilise `Motion.screen`, décalé de `Motion.stagger`
+(0,07 s) par élément.
+Les actions utilisent `MPButton` avec les tons `.primary` et `.quiet`, empilés par
+`Metric.stack` (10 pt). La ligne légale utilise `Font.micro` et `Brand.inkFaint`. Les thèmes
+d'exemple du prototype `sapin` / `ndop` / `encre` deviennent `CardTheme` `.pine` / `.cobalt` /
+`.ink`.
+Avec le mouvement réduit, il n'y a ni cascade ni flottement ; le ré-empilement est sans
+animation, les textes passent en fondu avec `Motion.quick` sans flou, le remplissage du segment
+reste actif, et VoiceOver désactive l'auto-avance ; le deck devient un élément ajustable.
 
 ### Graphiques (Analyse)
 **`bars-chart`** — barres `{colors.ink}` à 13 %, **active en `{colors.green}`** + étiquette,
@@ -789,11 +812,11 @@ Tout est conditionné par `.anim` sur la racine ; `prefers-reduced-motion` neutr
 | Entrée du détail de carte `cdHero` | 0,5s, uniquement au push (`[data-anim="push"]`) |
 | Splash : révélation (fondu + montée 8px) | `Motion.screen` — 0,35s ease-in-out |
 | Splash : dwell avant Bienvenue | 1,5s (`SplashModel.hold`) |
-| Bienvenue : segment `weFill` | 4,2s linéaire (= dwell d'auto-avance) |
-| Bienvenue : rotation du deck | 0,55s `cubic-bezier(.3,1.25,.4,1)` (ressort), drag sans transition |
-| Bienvenue : flottement `weBob` | 3,2s ease-in-out alternate |
-| Bienvenue : textes (fondu + blur + montée) | 0,5s ease |
-| Bienvenue : entrée `weRise` en cascade | 0,55s `cubic-bezier(.2,.7,.3,1)`, délais .05→.26s |
+| Bienvenue : segment (`SegmentedProgress` story) | linéaire sur `WelcomeModel.dwell` — 4,2 s |
+| Bienvenue : rotation du deck | `Motion.deck` — ressort 0,55 s / 0,72 ; drag sans animation |
+| Bienvenue : flottement | `Motion.float` — 3,2 s ease-in-out, `repeatForever(autoreverses:)`, ± `Motion.floatAmplitude` |
+| Bienvenue : textes (fondu + `Motion.blur` + `Motion.rise`) | `Motion.screen` — 0,35 s |
+| Bienvenue : entrée en cascade | `Motion.screen`, décalage `Motion.stagger` (0,07 s) par élément |
 | Retours de pression | scale .92–.985, 0,12–0,14s |
 | Bascule de thème `.theme-anim` | fondu 0,3s |
 
@@ -866,6 +889,9 @@ creux = `{colors.well}` · capsule = 999px · gutter = 20px.
 - **Deux systèmes coexistent** : l'app SwiftUI (`MoneyPay/`) porte un langage antérieur
   (« Registre », monochrome) — obsolète, ne fait pas foi, à l'exception du splash, désormais
   porté par les jetons partagés.
+- **Art des cartes de bienvenue** : les motifs héritage (`ndop`, `bogolan`, `wax`) et le thème
+  `sapin` sont propres au prototype ; iOS mappe `sapin` / `ndop` / `encre` vers `CardTheme`
+  `.pine` / `.cobalt` / `.ink`, les équivalents les plus proches.
 - Google Sans Flex est servie par Google Fonts ; hors ligne, le fallback système change
   sensiblement la voix typographique.
 - `rounded: 20px` (`.method-card`, `.fx-card`) est hors barème — assumé, non tokenisé.
