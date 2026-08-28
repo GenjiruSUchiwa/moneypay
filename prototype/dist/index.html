@@ -3257,7 +3257,8 @@ function topupSheet() {
   const m = S.methods.find(x => x.id === (F.methodId || "mtn"));
   const fee = Math.round(amount * m.fee);
   const credited = amount - fee;
-  const valid = amount >= 1000;
+  const minTopup = LIVE.on ? 25 : 1000; // sandbox Campay : max 25 F par collecte, on abaisse le minimum
+  const valid = amount >= minTopup;
 
   if (step === "done") {
     return `<div class="sheet-grab"></div>
@@ -3312,7 +3313,7 @@ function topupSheet() {
   return `<div class="sheet-grab"></div>
   ${navBar({ close: "closeSheet", title: "Recharger" })}
   ${flowWrap(`<div style="flex:1"></div>
-  ${amountEntry(digits, "FCFA", amount > 0 ? `≈ ${fmtUSD(xafToUSD(credited))} dépensables en carte` : `Minimum 1${NBSP}000${NBSP}F`)}
+  ${amountEntry(digits, "FCFA", amount > 0 ? `≈ ${fmtUSD(xafToUSD(credited))} dépensables en carte` : `Minimum ${grp(minTopup)}${NBSP}F`)}
   <div style="flex:1"></div>
   <div class="chip-row" style="margin-bottom:14px">
     ${[10000, 25000, 50000, 100000].map(v => `<button type="button" class="chip ${amount === v ? "on" : ""}" data-act="topupPreset" data-arg="${v}">${grp(v)}</button>`).join("")}
