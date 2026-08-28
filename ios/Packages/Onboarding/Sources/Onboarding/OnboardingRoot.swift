@@ -17,7 +17,7 @@ public struct SignUpFlow: View {
                     Haptic.tap()
                     withAnimation(.easeOut(duration: 0.22)) { step = max(0, step - 1) }
                 } label: {
-                    Image(systemName: "chevron.left")
+                    Image(systemName: "chevron.backward")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(Brand.ink)
                         .frame(width: 36, height: 36)

@@ -14,7 +14,7 @@ public struct SplashView: View {
             Brand.inkFill.ignoresSafeArea()
             VStack(spacing: 14) {
                 LogoMark(size: 56, tint: Brand.onInk, glyph: Brand.inkFill)
-                Text("MoneyPay")
+                Text(verbatim: "MoneyPay")
                     .font(.system(size: 22, weight: .semibold))
                     .tight(-0.3)
                     .foregroundStyle(Brand.onInk)
@@ -24,7 +24,7 @@ public struct SplashView: View {
 
             VStack {
                 Spacer()
-                Text("Établissement de paiement agréé · zone CEMAC")
+                Text("Licensed payment institution · CEMAC zone", bundle: .module)
                     .font(.micro)
                     .foregroundStyle(Brand.onInk.opacity(0.45))
                     .padding(.bottom, 40)

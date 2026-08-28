@@ -13,15 +13,20 @@ public struct PhoneStep: View {
     @State private var country = Country.cameroon
 
     struct Country: Identifiable, Equatable {
-        let id: String, flag: String, name: String, dial: String, length: Int
-        static let cameroon = Country(id: "CM", flag: "🇨🇲", name: "Cameroun", dial: "+237", length: 9)
+        let id: String, flag: String, dial: String, length: Int
+
+        /// Foundation already carries every region name in every language, so
+        /// the country list is not ours to translate.
+        var name: String { Locale.current.localizedString(forRegionCode: id) ?? id }
+
+        static let cameroon = Country(id: "CM", flag: "🇨🇲", dial: "+237", length: 9)
         static let all: [Country] = [
             .cameroon,
-            .init(id: "CI", flag: "🇨🇮", name: "Côte d'Ivoire", dial: "+225", length: 10),
-            .init(id: "SN", flag: "🇸🇳", name: "Sénégal", dial: "+221", length: 9),
-            .init(id: "GA", flag: "🇬🇦", name: "Gabon", dial: "+241", length: 8),
-            .init(id: "CD", flag: "🇨🇩", name: "RD Congo", dial: "+243", length: 9),
-            .init(id: "BJ", flag: "🇧🇯", name: "Bénin", dial: "+229", length: 8)
+            .init(id: "CI", flag: "🇨🇮", dial: "+225", length: 10),
+            .init(id: "SN", flag: "🇸🇳", dial: "+221", length: 9),
+            .init(id: "GA", flag: "🇬🇦", dial: "+241", length: 8),
+            .init(id: "CD", flag: "🇨🇩", dial: "+243", length: 9),
+            .init(id: "BJ", flag: "🇧🇯", dial: "+229", length: 8)
         ]
     }
 
@@ -32,10 +37,11 @@ public struct PhoneStep: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Quel est votre\nnuméro ?")
+            Text("What is your\nnumber?", bundle: .module)
                 .font(.system(size: 28, weight: .semibold)).tight(-0.7)
                 .foregroundStyle(Brand.ink)
-            Text("Un code à six chiffres part sur cette ligne. C'est aussi elle qui recevra vos rechargements Mobile Money.")
+            Text("A six-digit code goes out to this line. It is also the line your Mobile Money top-ups arrive on.",
+                 bundle: .module)
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 10)
@@ -43,8 +49,8 @@ public struct PhoneStep: View {
             HStack(spacing: 0) {
                 Button { Haptic.tap(); showCountries = true } label: {
                     HStack(spacing: 6) {
-                        Text(country.flag).font(.system(size: 20))
-                        Text(country.dial).font(.bodyMed).foregroundStyle(Brand.ink).monospacedDigit()
+                        Text(verbatim: country.flag).font(.system(size: 20))
+                        Text(verbatim: country.dial).font(.bodyMed).foregroundStyle(Brand.ink).monospacedDigit()
                         Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold))
                             .foregroundStyle(Brand.inkFaint)
                     }
@@ -54,7 +60,7 @@ public struct PhoneStep: View {
 
                 Rectangle().fill(Brand.rule).frame(width: 1, height: 24)
 
-                Text(digits.isEmpty ? "6 XX XX XX XX" : formatted)
+                Text(verbatim: digits.isEmpty ? "6 XX XX XX XX" : formatted)
                     .font(.system(size: 20, weight: .medium))
                     .monospacedDigit()
                     .foregroundStyle(digits.isEmpty ? Brand.inkFaint : Brand.ink)
@@ -72,9 +78,10 @@ public struct PhoneStep: View {
             Keypad(onDigit: { d in if digits.count < country.length { digits.append("\(d)") } },
                    onDelete: { if !digits.isEmpty { digits.removeLast() } })
 
-            MPButton(title: "Recevoir le code", enabled: valid, action: next).padding(.top, 8)
+            MPButton(title: Text("Send me the code", bundle: .module), enabled: valid, action: next)
+                .padding(.top, 8)
 
-            Text("En continuant, vous acceptez les conditions générales et la politique de confidentialité de MoneyPay.")
+            Text("By continuing you accept MoneyPay's terms and privacy policy.", bundle: .module)
                 .font(.micro).foregroundStyle(Brand.inkFaint)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 12)
@@ -100,7 +107,7 @@ internal struct CountrySheet: View {
 
     internal var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Pays").font(.heading2).tight().foregroundStyle(Brand.ink)
+            Text("Country", bundle: .module).font(.heading2).tight().foregroundStyle(Brand.ink)
                 .gutter().padding(.top, 20).padding(.bottom, 12)
             Rule()
             ScrollView {
@@ -108,10 +115,10 @@ internal struct CountrySheet: View {
                     ForEach(Array(PhoneStep.Country.all.enumerated()), id: \.element.id) { i, c in
                         Button { Haptic.tap(); selection = c; dismiss() } label: {
                             HStack(spacing: 13) {
-                                Text(c.flag).font(.system(size: 24))
-                                Text(c.name).font(.bodyReg).foregroundStyle(Brand.ink)
+                                Text(verbatim: c.flag).font(.system(size: 24))
+                                Text(verbatim: c.name).font(.bodyReg).foregroundStyle(Brand.ink)
                                 Spacer()
-                                Text(c.dial).font(.bodyReg).foregroundStyle(Brand.inkMuted).monospacedDigit()
+                                Text(verbatim: c.dial).font(.bodyReg).foregroundStyle(Brand.inkMuted).monospacedDigit()
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundStyle(Brand.ink)
@@ -142,20 +149,20 @@ public struct OTPStep: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Entrez le code")
+            Text("Enter the code", bundle: .module)
                 .font(.system(size: 28, weight: .semibold)).tight(-0.7).foregroundStyle(Brand.ink)
-            Text("Envoyé au +237 6 99 12 34 56")
+            Text("Sent to \("+237 6 99 12 34 56")", bundle: .module)
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted).padding(.top, 10)
 
             OTPBoxes(code: code).padding(.top, 34)
 
             Group {
                 if seconds > 0 {
-                    Text("Renvoyer le code dans \(seconds) s")
+                    Text("Resend the code in \(seconds) s", bundle: .module)
                         .font(.sub).foregroundStyle(Brand.inkMuted).monospacedDigit()
                 } else {
                     Button { Haptic.tap(); seconds = 42 } label: {
-                        Text("Renvoyer le code").font(.subMed).foregroundStyle(Brand.mark)
+                        Text("Resend the code", bundle: .module).font(.subMed).foregroundStyle(Brand.mark)
                     }
                 }
             }
@@ -170,7 +177,8 @@ public struct OTPStep: View {
                    },
                    onDelete: { if !code.isEmpty { code.removeLast() } })
 
-            MPButton(title: "Vérifier", loading: verifying, enabled: code.count == 6, action: verify)
+            MPButton(title: Text("Verify", bundle: .module), loading: verifying,
+                     enabled: code.count == 6, action: verify)
                 .padding(.top, 8)
         }
         .gutter()
@@ -208,11 +216,11 @@ public struct PasscodeStep: View {
     public var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 8) {
-                Text(confirming ? "Confirmez votre code" : "Créez un code secret")
+                Text(confirming ? "Confirm your passcode" : "Create a passcode", bundle: .module)
                     .font(.system(size: 24, weight: .semibold)).tight(-0.5)
                     .foregroundStyle(Brand.ink)
-                Text(error ? "Les codes ne correspondent pas"
-                     : "Il déverrouille l'application et valide vos paiements sensibles.")
+                Text(error ? "The passcodes do not match"
+                     : "It unlocks the app and confirms your sensitive payments.", bundle: .module)
                     .font(.sub)
                     .foregroundStyle(error ? Brand.debit : Brand.inkMuted)
                     .multilineTextAlignment(.center)
@@ -269,24 +277,24 @@ public struct BiometricStep: View {
                 .font(.system(size: 44, weight: .light))
                 .foregroundStyle(Brand.ink)
 
-            Text("Activer Face ID ?")
+            Text("Turn on Face ID?", bundle: .module)
                 .font(.system(size: 26, weight: .semibold)).tight(-0.6)
                 .foregroundStyle(Brand.ink).padding(.top, 26)
-            Text("Ouvrez l'application et confirmez vos paiements sans saisir votre code.")
+            Text("Open the app and confirm payments without typing your passcode.", bundle: .module)
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted)
                 .fixedSize(horizontal: false, vertical: true).padding(.top, 8)
 
             HStack(spacing: 9) {
                 Image(systemName: "lock.shield").font(.system(size: 13))
-                Text("Vos données biométriques ne quittent pas votre iPhone.").font(.sub)
+                Text("Your biometric data never leaves your iPhone.", bundle: .module).font(.sub)
             }
             .foregroundStyle(Brand.inkMuted)
             .padding(.top, 22)
 
             Spacer()
             VStack(spacing: 9) {
-                MPButton(title: "Activer Face ID", action: next)
-                MPButton(title: "Plus tard", tone: .outline, action: next)
+                MPButton(title: Text("Turn on Face ID", bundle: .module), action: next)
+                MPButton(title: Text("Later", bundle: .module), tone: .outline, action: next)
             }
         }
         .gutter()
@@ -310,28 +318,36 @@ public struct ProfileStep: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Vos informations")
+            Text("Your details", bundle: .module)
                 .font(.system(size: 28, weight: .semibold)).tight(-0.7).foregroundStyle(Brand.ink)
-            Text("Le nom doit correspondre exactement à votre pièce d'identité : c'est celui qui sera porté par vos cartes.")
+            Text("The name must match your ID exactly — it is the one your cards will carry.", bundle: .module)
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted)
                 .fixedSize(horizontal: false, vertical: true).padding(.top, 10)
 
             VStack(spacing: 10) {
-                Field(placeholder: "Prénom", text: $first, icon: "person", focused: focus == .first)
+                Field(placeholder: Text("First name", bundle: .module), text: $first,
+                      icon: "person", focused: focus == .first)
                     .focused($focus, equals: .first)
-                Field(placeholder: "Nom", text: $last, icon: "person.text.rectangle", focused: focus == .last)
+                Field(placeholder: Text("Last name", bundle: .module), text: $last,
+                      icon: "person.text.rectangle", focused: focus == .last)
                     .focused($focus, equals: .last)
-                Field(placeholder: "Adresse e-mail", text: $email, icon: "envelope",
-                      keyboard: .emailAddress, focused: focus == .email)
+                Field(placeholder: Text("Email address", bundle: .module), text: $email,
+                      icon: "envelope", keyboard: .emailAddress, focused: focus == .email)
                     .focused($focus, equals: .email)
             }
             .padding(.top, 28)
 
             Spacer()
-            MPButton(title: "Continuer", enabled: valid, action: next)
+            MPButton(title: Text("Continue", bundle: .module), enabled: valid, action: next)
         }
         .gutter()
         .padding(.bottom, 10)
         .onAppear { focus = .first }
     }
+}
+
+#Preview("Profile step — fr, XXL") {
+    ProfileStep(next: {})
+        .environment(\.locale, Locale(identifier: "fr"))
+        .environment(\.dynamicTypeSize, .accessibility3)
 }
