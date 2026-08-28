@@ -1,0 +1,204 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ from MTN Mobile Money": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ depuis MTN Mobile Money"
+          }
+        }
+      }
+    },
+    "1 USD = %@ · MoneyPay margin %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 USD = %@ · marge MoneyPay %@"
+          }
+        }
+      }
+    },
+    "Afriland First Bank · 1 to 2 days": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afriland First Bank · 1 à 2 jours"
+          }
+        }
+      }
+    },
+    "Amazon · insufficient balance. %lld declines left before a block.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amazon · solde insuffisant. %lld refus restants avant blocage."
+          }
+        }
+      }
+    },
+    "Bank transfer": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Virement bancaire"
+          }
+        }
+      }
+    },
+    "Card frozen": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carte gelée"
+          }
+        }
+      }
+    },
+    "Cash deposit · instant": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dépôt en espèces · instantané"
+          }
+        }
+      }
+    },
+    "Decline fee": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frais de refus"
+          }
+        }
+      }
+    },
+    "Insufficient balance at authorization": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solde insuffisant au moment de l'autorisation"
+          }
+        }
+      }
+    },
+    "MoneyPay agent": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agent MoneyPay"
+          }
+        }
+      }
+    },
+    "My card": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ma carte"
+          }
+        }
+      }
+    },
+    "Netflix · %@ charged to “%@”": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netflix · %@ débité de « %@ »"
+          }
+        }
+      }
+    },
+    "Payment approved": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiement autorisé"
+          }
+        }
+      }
+    },
+    "Payment declined": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paiement refusé"
+          }
+        }
+      }
+    },
+    "Today's rate": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taux du jour"
+          }
+        }
+      }
+    },
+    "Top-up received": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechargement reçu"
+          }
+        }
+      }
+    },
+    "“%@” was frozen from the app": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« %@ » a été gelée depuis l'application"
+          }
+        }
+      }
+    },
+    "•• %@ · instant": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "•• %@ · instantané"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
