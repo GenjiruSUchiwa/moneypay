@@ -14,8 +14,9 @@ ten minutes long and teaches you nothing. Copy **the exact command the failing j
 locally, and work from the real error.
 
 **Which tier failed tells you which command to copy.** CI has two:
-- **`package-tests`** — `swift test --package-path ios/Packages/<Name>`, one job per package, in
-  parallel. Reproducing it needs no Xcode project and no simulator.
+- **`Test packages`** — one `xcodebuild test -scheme <Name>` per package, run from `ios/Packages/<Name>`.
+  Reproduce it with the same command; `swift test --package-path` only works for the UIKit-free
+  `Platform` and `ApiClient`, because the host toolchain builds for macOS.
 - **`full-build`** — `xcodegen generate` then `xcodebuild build` on a **freshly generated** project.
   A failure here that does not reproduce from a package job is almost always a composition-root or
   `project.yml` problem.
@@ -36,8 +37,9 @@ locally, and work from the real error.
 ```sh
 cd ios
 
-# package-tests tier: exactly the job that went red.
-swift test --package-path Packages/Money 2>&1 | tee /tmp/branch-money.log
+# Test packages step: exactly the package that went red.
+(cd Packages/Money && xcodebuild test -scheme Money \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4') 2>&1 | tee /tmp/branch-money.log
 
 # full-build tier: CI starts from a regenerated project, so do we.
 xcodegen generate
@@ -54,7 +56,8 @@ swiftlint --strict --reporter emoji
 ```sh
 git stash push --include-untracked
 git checkout main
-swift test --package-path ios/Packages/Money 2>&1 | grep -E "error:|✘" | sort -u > /tmp/main.log
+(cd ios/Packages/Money && xcodebuild test -scheme Money \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.4') 2>&1 | grep -E "error:|✘" | sort -u > /tmp/main.log
 git checkout - && git stash pop
 diff /tmp/main.log <(grep -E "error:|✘" /tmp/branch-money.log | sort -u)
 ```
@@ -71,7 +74,7 @@ and the cause (a test double that no longer conforms to its protocol) still ther
 
 ```text
 The "package tests (WalletStore)" job is red → copy its command →
-  swift test --package-path ios/Packages/WalletStore
+  (cd ios/Packages/WalletStore && xcodebuild test -scheme WalletStore -destination '…')
   Sources/WalletStoreTestSupport/StubTopUpService.swift:9: error: type
   'StubTopUpService' does not conform to protocol 'TopUpService'  (the port changed)
 → one fix, one commit, one push, green.
