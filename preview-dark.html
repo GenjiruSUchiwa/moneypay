@@ -120,6 +120,7 @@ body{background:var(--paper);scroll-behavior:smooth}
     <a href="#listes">Listes &amp; données</a>
     <a href="#flux">Héro &amp; flux</a>
     <a href="#cartes">Cartes virtuelles</a>
+    <a href="#bienvenue">Bienvenue</a>
     <a href="#verre">Verre liquide</a>
     <a href="#messages">États &amp; messages</a>
   </nav>
@@ -568,6 +569,66 @@ body{background:var(--paper);scroll-behavior:smooth}
             </div>
           </div>
           <div class="sp-cap"><b>Choix du réseau</b><code>.net-option — sélection : liseré encre 1,5px + {colors.surface}</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= BIENVENUE ======================= -->
+    <section class="pv-sec" id="bienvenue">
+      <h3>Bienvenue (onboarding)</h3>
+      <div class="s-note">Réf. Revolut / Wise. Trois messages auto-avancés toutes les 4,2s ; le deck
+      de cartes se drague au doigt (relâche &gt; 55px = carte suivante, tap = suivante). Textes en
+      fondu + flou, deux boutons empilés en pied, entrée de l'écran en cascade <code class="mono">weRise</code>.</div>
+      <div class="pv-grid half">
+        <div class="spec" style="align-self:start">
+          <div class="sp-zone">
+            <div class="we-segs sp-w" style="padding:0">
+              <span class="ws done"><i></i></span>
+              <span class="ws run"><i></i></span>
+              <span class="ws"><i></i></span>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Segments stories</b><code>.we-segs — capsules 3px · passé .done plein · courant .run : weFill 4,2s linéaire</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone" style="padding-top:92px">
+            <div class="we-stage we-float">
+              <div class="we-card" data-depth="2">
+                <div class="vcard" style="background:#15181B;color:#F2F3F1;width:100%;height:100%;max-width:none">
+                  <div class="vc-inner">
+                    <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
+                    <span class="vc-label" style="font-size:15px">Serveurs</span>
+                    <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;4412</span>
+                    <div class="vc-bottom"><span></span>
+                      <span style="display:inline-flex"><span style="width:24px;height:24px;border-radius:99px;background:#EB001B"></span><span style="width:24px;height:24px;border-radius:99px;background:#F79E1B;margin-left:-9px;mix-blend-mode:hard-light"></span></span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="we-card" data-depth="1">
+                <div class="vcard" style="background:#23307C;color:#FFFFFF;width:100%;height:100%;max-width:none">
+                  <span class="vc-art"><svg viewBox="0 0 200 126" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><pattern id="pv-ndop2" width="28" height="28" patternUnits="userSpaceOnUse"><g fill="none" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="1.6"><path d="M0 14 14 0l14 14-14 14Z"/><path d="M7 14l7-7 7 7-7 7Z"/></g></pattern></defs><rect width="200" height="126" fill="url(#pv-ndop2)"/></svg></span>
+                  <div class="vc-inner">
+                    <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
+                    <span class="vc-label" style="font-size:15px">Shopping</span>
+                    <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;0093</span>
+                    <div class="vc-bottom"><span></span><span style="font-weight:800;font-style:italic;font-size:17px">VISA</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="we-card" data-depth="0">
+                <div class="vcard" style="background:#053826;color:#FFFFFF;width:100%;height:100%;max-width:none">
+                  <div class="vc-inner">
+                    <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
+                    <span class="vc-label" style="font-size:15px">Abonnements</span>
+                    <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;8412</span>
+                    <div class="vc-bottom"><span></span>
+                      <span style="display:inline-flex"><span style="width:24px;height:24px;border-radius:99px;background:#EB001B"></span><span style="width:24px;height:24px;border-radius:99px;background:#F79E1B;margin-left:-9px;mix-blend-mode:hard-light"></span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Deck de cartes</b><code>.we-stage — éventail data-depth 0/1/2 · ressort 0,55s cubic-bezier(.3,1.25,.4,1) · flottement weBob</code></div>
         </div>
       </div>
     </section>
