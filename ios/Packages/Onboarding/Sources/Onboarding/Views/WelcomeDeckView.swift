@@ -8,7 +8,9 @@ struct WelcomeDeckView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.locale) private var locale
     @State private var dragOffset: CGFloat = .zero
-    @State private var isHolding = false
+    /// Reset by SwiftUI when the gesture ends *or* is cancelled (an alert, backgrounding,
+    /// a system gesture) — `onEnded` only covers the former, `pointercancel` in the prototype.
+    @GestureState private var isDragging = false
     @State private var isFloating = false
 
     var body: some View {
@@ -18,12 +20,21 @@ struct WelcomeDeckView: View {
             }
         }
         .animation(reduceMotion ? nil : Motion.deck, value: model.index)
-        .frame(width: Metric.deckWidth)
-        .contentShape(.rect)
         // The prototype listens on `.we-deck`, not on the card: the whole stage is the
         // drag surface, and every card keeps one stable identity across depth changes.
-        .gesture(dragGesture)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(.rect)
+        .gesture(dragGesture)
+        .onChange(of: isDragging) { _, dragging in
+            if dragging {
+                model.hold()
+            } else {
+                withAnimation(reduceMotion ? nil : Motion.deck) {
+                    dragOffset = .zero
+                    model.resume()
+                }
+            }
+        }
         .offset(y: floatOffset)
         .animation(reduceMotion ? nil : Motion.float, value: isFloating)
         .onAppear { isFloating = true }
@@ -41,37 +52,29 @@ struct WelcomeDeckView: View {
 
     private func card(at index: Int) -> some View {
         let depth = model.depth(of: index)
-        let slot = DeckSlot.placement(for: depth)
+        let pose = DeckPose.at(depth: depth)
         let drag = depth == 0 ? dragOffset : .zero
 
-        // Same order as CSS `translate() scale() rotate()`: rotate about the centre,
-        // scale, then move — so the offsets land where the prototype puts them.
-        return VirtualCardView(card: WelcomeSlide.card(for: slides[index], locale: locale))
-            .frame(width: Metric.deckWidth)
-            .rotationEffect(slot.rotation)
-            .scaleEffect(slot.scale)
-            .offset(slot.offset)
+        // Same order as CSS `translate() scale() rotate()` and `translateX() rotate()`:
+        // SwiftUI applies the innermost modifier first, so rotate, scale, then move.
+        return VirtualCardView(card: slides[index].card(locale: locale))
+            .frame(width: Metric.stage)
+            .rotationEffect(pose.rotation)
+            .scaleEffect(pose.scale)
+            .offset(pose.offset)
+            .rotationEffect(.degrees(drag * DeckPose.dragTiltPerPoint))
             .offset(x: drag)
-            .rotationEffect(.degrees(drag / DeckSlot.dragRotationDivisor))
             .zIndex(Double(slides.count - depth))
     }
 
     private var dragGesture: some Gesture {
         DragGesture(minimumDistance: .zero)
-            .onChanged { value in
-                if !isHolding {
-                    isHolding = true
-                    model.hold()
-                }
-                dragOffset = value.translation.width
-            }
+            .updating($isDragging) { _, state, _ in state = true }
+            .onChanged { dragOffset = $0.translation.width }
             .onEnded { value in
-                let distance = value.translation.width
                 withAnimation(reduceMotion ? nil : Motion.deck) {
-                    model.release(dx: distance)
-                    dragOffset = .zero
+                    model.release(dx: value.translation.width)
                 }
-                isHolding = false
             }
     }
 
@@ -89,34 +92,16 @@ struct WelcomeDeckView: View {
     }
 
     private var accessibilityLabel: Text {
-        let card = WelcomeSlide.card(for: slides[model.index], locale: locale)
         let position = String(
             localized: "Card \(model.index + 1) of \(slides.count)",
             bundle: .module,
             locale: locale
         )
-        return Text(verbatim: "\(card.label), \(position)")
+        return Text(verbatim: "\(slides[model.index].localizedCardLabel(locale)), \(position)")
     }
 }
 
-/// Geometry mirrors `.we-card[data-depth]` in `prototype/styles.css`.
-private enum DeckSlot {
-    struct Placement {
-        let offset: CGSize
-        let scale: CGFloat
-        let rotation: Angle
-    }
-
-    static let dragRotationDivisor: CGFloat = 18
-
-    static func placement(for depth: Int) -> Placement {
-        switch depth {
-        case 1:
-            Placement(offset: CGSize(width: 12, height: -32), scale: 0.92, rotation: .degrees(4.5))
-        case 2:
-            Placement(offset: CGSize(width: -13, height: -58), scale: 0.84, rotation: .degrees(-4))
-        default:
-            Placement(offset: .zero, scale: 1, rotation: .zero)
-        }
-    }
+#Preview("WelcomeDeckView") {
+    WelcomeDeckView(model: WelcomeModel(count: WelcomeSlide.all.count), slides: WelcomeSlide.all)
+        .page()
 }

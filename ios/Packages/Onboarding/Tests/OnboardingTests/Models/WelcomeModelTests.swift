@@ -45,6 +45,7 @@ struct WelcomeModelTests {
         let shortDrag = WelcomeModel(count: 3)
         shortDrag.release(dx: 30)
         #expect(shortDrag.index == 0)
+        #expect(shortDrag.generation == 0)
     }
 
     @Test("autoAdvanceAfterDwell() pages forward once and bumps the generation")
@@ -57,7 +58,7 @@ struct WelcomeModelTests {
         #expect(model.generation == 1)
     }
 
-    @Test("a held deck does not auto-advance; the release re-arms a fresh dwell")
+    @Test("a held deck does not auto-advance; resume re-arms a fresh dwell")
     func holdSkipsAutoAdvance() async {
         let model = WelcomeModel(count: 3, dwell: .zero)
         model.hold()
@@ -65,22 +66,23 @@ struct WelcomeModelTests {
         await model.autoAdvanceAfterDwell()
         #expect(model.index == 0)
 
-        model.release(dx: 30)   // short drag: stays put, but the dwell restarts
-        #expect(model.index == 0)
+        model.resume()
         #expect(model.generation == 1)
 
         await model.autoAdvanceAfterDwell()
         #expect(model.index == 1)
     }
 
-    @Test("every user action re-arms the dwell by bumping the generation")
-    func userActionsBumpGeneration() {
-        let model = WelcomeModel(count: 3)
+    @Test("a dwell re-armed while sleeping does not page when it expires")
+    func staleDwellIsDropped() async {
+        let model = WelcomeModel(count: 3, dwell: .milliseconds(200))
+        let stale = Task { await model.autoAdvanceAfterDwell() }
+        try? await Task.sleep(for: .milliseconds(20))
 
-        model.release(dx: -60)
-        #expect(model.generation == 2)   // release + advance
-        model.retreat()
-        #expect(model.generation == 3)
+        model.advance()
+        await stale.value
+
+        #expect(model.index == 1)
     }
 
     @Test("a single-slide deck is a no-op for every direction")
