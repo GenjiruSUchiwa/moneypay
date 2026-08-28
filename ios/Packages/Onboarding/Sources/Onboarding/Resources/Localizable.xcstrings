@@ -320,7 +320,7 @@
         }
       }
     },
-    "Turn on Face ID?": {
+    "Use Face ID?": {
       "extractionState": "manual",
       "localizations": {
         "fr": {

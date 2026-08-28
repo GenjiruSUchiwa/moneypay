@@ -68,20 +68,8 @@ public struct TransactionsView: View {
                         Text("Activity", bundle: .module).font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
                         Spacer()
                         Menu {
-                            Button(action: {}) {
-                                Label {
-                                    Text("Export as PDF", bundle: .module)
-                                } icon: {
-                                    Image(systemName: "arrow.down.doc")
-                                }
-                            }
-                            Button(action: {}) {
-                                Label {
-                                    Text("Export as CSV", bundle: .module)
-                                } icon: {
-                                    Image(systemName: "tablecells")
-                                }
-                            }
+                            exportButton("Export as PDF", "arrow.down.doc")
+                            exportButton("Export as CSV", "tablecells")
                         } label: {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 16)).foregroundStyle(Brand.ink)
@@ -97,6 +85,18 @@ public struct TransactionsView: View {
             }
             .searchable(text: $query, prompt: Text("Search a merchant", bundle: .module))
         }
+    }
+
+    private func exportButton(_ title: LocalizedStringKey, _ symbol: String) -> some View {
+        Button(
+            action: {},
+            label: {
+                Label(
+                    title: { Text(title, bundle: .module) },
+                    icon: { Image(systemName: symbol) }
+                )
+            }
+        )
     }
 
     private func dayTotal(_ items: [Money.Transaction]) -> String {

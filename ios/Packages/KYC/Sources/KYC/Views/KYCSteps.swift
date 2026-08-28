@@ -90,12 +90,23 @@ public struct KYCDocumentPickerView: View {
 
     /// `id` is what the picker hands back to the flow — a stable code, not the
     /// label the user reads.
-    private let docs: [(id: String, title: LocalizedStringKey, detail: LocalizedStringKey,
-                        symbol: String, instant: Bool)] = [
-        ("national-id", "Cameroonian national ID", "Front and back", "person.text.rectangle", true),
-        ("passport", "Passport", "The page with the photo", "book.pages", true),
-        ("driving-licence", "Driving licence", "Front and back", "car", false),
-        ("id-receipt", "National ID receipt", "Manual review within 48 h", "doc.text", false)
+    private struct Document: Identifiable {
+        let id: String
+        var title: LocalizedStringKey
+        var detail: LocalizedStringKey
+        var symbol: String
+        var instant: Bool
+    }
+
+    private let docs: [Document] = [
+        .init(id: "national-id", title: "Cameroonian national ID", detail: "Front and back",
+              symbol: "person.text.rectangle", instant: true),
+        .init(id: "passport", title: "Passport", detail: "The page with the photo",
+              symbol: "book.pages", instant: true),
+        .init(id: "driving-licence", title: "Driving licence", detail: "Front and back",
+              symbol: "car", instant: false),
+        .init(id: "id-receipt", title: "National ID receipt",
+              detail: "Manual review within 48 h", symbol: "doc.text", instant: false)
     ]
 
     public var body: some View {

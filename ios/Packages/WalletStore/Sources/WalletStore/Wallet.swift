@@ -39,7 +39,7 @@ public actor Wallet {
     public var availableXAF: Int { balanceXAF - holds.values.reduce(0, +) }
 
     public func topUp(_ xaf: Int) {
-        precondition(xaf > 0, "recharge <= 0")
+        precondition(xaf > 0, "a top-up must be a positive amount")
         balanceXAF += xaf
     }
 

@@ -59,10 +59,14 @@ jobs:
 
       # Package tests are not in the app scheme: every SwiftPM package is
       # tested in its own directory. Add a package here when it gains tests.
+      # A package that owns a string catalog is tested here rather than with
+      # `swift test`: the CLI copies Localizable.xcstrings without compiling it,
+      # so only the Xcode build produces the .lproj a French lookup resolves in.
       - name: Test packages
         run: |
           set -o pipefail
-          for pkg in Platform Money ApiClient; do
+          for pkg in Platform Money ApiClient DesignSystem WalletStore Onboarding KYC \
+                     TopUp Convert Transactions Cards Home Settings; do
             echo "::group::$pkg"
             (cd "Packages/$pkg" && xcodebuild test \
               -scheme "$pkg" \

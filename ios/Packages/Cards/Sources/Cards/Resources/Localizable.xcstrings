@@ -914,17 +914,6 @@
         }
       }
     },
-    "no cap": {
-      "extractionState": "manual",
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "sans plafond"
-          }
-        }
-      }
-    },
     "of %@": {
       "extractionState": "manual",
       "localizations": {
@@ -932,6 +921,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "sur %@"
+          }
+        }
+      }
+    },
+    "without a cap": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sans plafond"
           }
         }
       }
