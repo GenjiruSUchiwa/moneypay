@@ -41,9 +41,9 @@ public struct AuthorizationSheet: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 7) {
                 Circle().fill(Brand.pending).frame(width: 6, height: 6)
-                Eyebrow(text: "Autorisation en attente")
+                Eyebrow(text: Text("Authorization pending", bundle: .module))
                 Spacer()
-                Text("\(Int(remaining.rounded())) s")
+                Text("\(Int(remaining.rounded())) s", bundle: .module)
                     .font(.eyebrow).monospacedDigit()
                     .foregroundStyle(remaining < 6 ? Brand.debit : Brand.inkMuted)
             }
@@ -62,34 +62,37 @@ public struct AuthorizationSheet: View {
 
             IconTile(symbol: category.symbol, tint: category.tint, size: 44).padding(.top, 26)
 
-            Text(merchant).font(.heading3).foregroundStyle(Brand.inkMuted).padding(.top, 14)
+            Text(verbatim: merchant).font(.heading3).foregroundStyle(Brand.inkMuted).padding(.top, 14)
             MoneyText.usd(amountUSDCents, size: 40).padding(.top, 2)
-            Text("soit \(Fmt.xaf(amountXAF)) au taux du jour")
+            Text("that is \(Fmt.xaf(amountXAF)) at today's rate", bundle: .module)
                 .font(.sub).foregroundStyle(Brand.inkMuted).padding(.top, 6)
 
             Rule().padding(.top, 26)
-            kv("Carte", "\(card.label) · •• \(card.last4)")
+            kv(Text("Card", bundle: .module),
+               Text(verbatim: "\(card.label) · •• \(card.last4)"))
             Rule()
-            kv("Solde actuel", Fmt.xaf(store.balanceXAF))
+            kv(Text("Current balance", bundle: .module), Text(verbatim: Fmt.xaf(store.balanceXAF)))
             Rule()
-            kv("Solde après paiement", enough ? Fmt.xaf(after) : "Insuffisant",
+            kv(Text("Balance after payment", bundle: .module),
+               enough ? Text(verbatim: Fmt.xaf(after)) : Text("Not enough", bundle: .module),
                tint: enough ? Brand.ink : Brand.debit)
             Rule()
 
             Spacer(minLength: 16)
 
             VStack(spacing: 9) {
-                MPButton(title: enough ? "Approuver le paiement" : "Solde insuffisant",
+                MPButton(title: Text(enough ? "Approve the payment" : "Insufficient balance",
+                                     bundle: .module),
                          enabled: enough) {
                     withAnimation(.easeOut(duration: 0.25)) { outcome = .approved }
                 }
-                MPButton(title: "Refuser", tone: .danger) {
+                MPButton(title: Text("Decline", bundle: .module), tone: .danger) {
                     Haptic.warning()
                     withAnimation(.easeOut(duration: 0.25)) { outcome = .declined }
                 }
             }
 
-            Text("Un refus est facturé 220 FCFA par le processeur.")
+            Text("A decline costs \(Fmt.xaf(220)) from the processor.", bundle: .module)
                 .font(.micro).foregroundStyle(Brand.inkFaint).padding(.top, 10)
         }
         .gutter()
@@ -105,11 +108,11 @@ public struct AuthorizationSheet: View {
         }
     }
 
-    private func kv(_ l: String, _ v: String, tint: Color = Brand.ink) -> some View {
+    private func kv(_ label: Text, _ value: Text, tint: Color = Brand.ink) -> some View {
         HStack {
-            Text(l).font(.bodyReg).foregroundStyle(Brand.inkMuted)
+            label.font(.bodyReg).foregroundStyle(Brand.inkMuted)
             Spacer()
-            Text(v).font(.bodyReg).foregroundStyle(tint).monospacedDigit()
+            value.font(.bodyReg).foregroundStyle(tint).monospacedDigit()
         }
         .padding(.vertical, 13)
     }
@@ -128,16 +131,28 @@ public struct AuthorizationSheet: View {
                     .background(Brand.debit, in: .circle)
             }
 
-            Text(o == .approved ? "Paiement approuvé"
-                 : o == .expired ? "Autorisation expirée" : "Paiement refusé")
+            Group {
+                switch o {
+                case .approved: Text("Payment approved", bundle: .module)
+                case .expired: Text("Authorization expired", bundle: .module)
+                case .declined: Text("Payment declined", bundle: .module)
+                }
+            }
                 .font(.system(size: 26, weight: .semibold)).tight(-0.6)
                 .foregroundStyle(Brand.ink).padding(.top, 24)
 
-            Text(o == .approved
-                 ? "\(Fmt.xaf(amountXAF)) débités de votre wallet et versés à \(merchant)."
-                 : o == .expired
-                 ? "Vous n'avez pas répondu à temps. Le marchand a reçu un refus automatique."
-                 : "\(merchant) a reçu un refus. Aucun montant n'a été débité.")
+            Group {
+                switch o {
+                case .approved:
+                    Text("\(Fmt.xaf(amountXAF)) debited from your wallet and paid to \(merchant).",
+                         bundle: .module)
+                case .expired:
+                    Text("You did not answer in time. The merchant got an automatic decline.",
+                         bundle: .module)
+                case .declined:
+                    Text("\(merchant) got a decline. Nothing was debited.", bundle: .module)
+                }
+            }
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted)
                 .fixedSize(horizontal: false, vertical: true).padding(.top, 8)
 
@@ -145,7 +160,8 @@ public struct AuthorizationSheet: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 12)).foregroundStyle(Brand.pending).padding(.top, 2)
-                    Text("\(card.declineCount + 1) refus sur cette carte ce mois. Elle se bloque automatiquement à 3.")
+                    Text("\(card.declineCount + 1) declines on this card this month. It blocks automatically at 3.",
+                         bundle: .module)
                         .font(.sub).foregroundStyle(Brand.inkMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -153,7 +169,7 @@ public struct AuthorizationSheet: View {
             }
 
             Spacer()
-            MPButton(title: "Fermer") { dismiss() }
+            MPButton(title: Text("Close", bundle: .module)) { dismiss() }
         }
         .gutter()
         .padding(.bottom, 18)
@@ -176,9 +192,15 @@ public struct LockScreenView: View {
         VStack(spacing: 0) {
             Spacer()
             LogoMark(size: 44)
-            Text("Bon retour, \(store.user.firstName)")
+            Text("Welcome back, \(store.user.firstName)", bundle: .module)
                 .font(.heading3).foregroundStyle(Brand.ink).padding(.top, 18)
-            Text(error ? "Code incorrect · 2 essais restants" : "Entrez votre code secret")
+            Group {
+                if error {
+                    Text("Wrong code · \(2) attempts left", bundle: .module)
+                } else {
+                    Text("Enter your passcode", bundle: .module)
+                }
+            }
                 .font(.sub)
                 .foregroundStyle(error ? Brand.debit : Brand.inkMuted)
                 .padding(.top, 6)
@@ -198,7 +220,7 @@ public struct LockScreenView: View {
                    onSide: { Haptic.success(); onUnlock() })
 
             Button { Haptic.tap() } label: {
-                Text("Code oublié ?").font(.subMed).foregroundStyle(Brand.mark)
+                Text("Forgot your code?", bundle: .module).font(.subMed).foregroundStyle(Brand.mark)
             }
             .padding(.top, 12)
         }
