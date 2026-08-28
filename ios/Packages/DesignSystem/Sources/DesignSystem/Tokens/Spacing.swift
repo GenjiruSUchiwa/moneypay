@@ -8,6 +8,8 @@ public enum Metric {
     public static let rowVertical: CGFloat = 14
     /// Height of a segmented progress bar (prototype `.we-segs`).
     public static let progressHeight: CGFloat = 3
+    /// Width of the welcome card deck (prototype `.we-stage`).
+    public static let deckWidth: CGFloat = 296
     /// Horizontal gap between two segments of a progress bar (prototype `gap: 5px`).
     public static let progressGap: CGFloat = 5
     /// Vertical gap between two stacked buttons (prototype `margin-top: 10px`).

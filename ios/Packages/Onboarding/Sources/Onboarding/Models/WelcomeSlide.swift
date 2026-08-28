@@ -1,16 +1,18 @@
 import DesignSystem
+import Foundation
+import Money
 import SwiftUI
 
-/// One slide of the welcome deck: its copy as catalog keys, and the card it
-/// shows. The keys' French values land with the view PR (#20); until then an
-/// unresolved key renders as its English source, which is what previews show.
+/// One slide of the welcome deck: its copy as catalog keys and its card presentation data.
 struct WelcomeSlide: Identifiable, Sendable {
     let id: Int
     let title: LocalizedStringKey
     let body: LocalizedStringKey
-    let cardLabel: LocalizedStringKey
+    let cardLabel: String
     let theme: CardTheme
     let network: CardNetwork
+
+    private static let sampleCardIDs = [UUID(), UUID(), UUID()]
 
     static let all: [WelcomeSlide] = [
         WelcomeSlide(
@@ -38,4 +40,23 @@ struct WelcomeSlide: Identifiable, Sendable {
             network: .mastercard
         )
     ]
+
+    static func card(for slide: WelcomeSlide, locale: Locale = .current) -> VirtualCard {
+        VirtualCard(
+            id: Self.sampleCardIDs[slide.id],
+            label: String(
+                localized: String.LocalizationValue(slide.cardLabel),
+                bundle: .module,
+                locale: locale
+            ),
+            theme: slide.theme,
+            network: slide.network,
+            pan: "5399471028834412",
+            cvv: "417",
+            expiry: "09/29",
+            createdAt: Date.distantPast,
+            monthlyLimitUSDCents: 15_000,
+            spentUSDCents: 0
+        )
+    }
 }
