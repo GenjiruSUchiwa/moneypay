@@ -53,12 +53,12 @@ public struct HomeView: View {
         HStack(spacing: 10) {
             NavigationLink { SettingsView() } label: {
                 HStack(spacing: 8) {
-                    Text(store.user.initials)
+                    Text(verbatim: store.user.initials)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Brand.onInk)
                         .frame(width: 26, height: 26)
                         .background(Brand.inkFill, in: .rect(cornerRadius: 7, style: .continuous))
-                    Text(store.user.fullName).font(.subMed).foregroundStyle(Brand.ink)
+                    Text(verbatim: store.user.fullName).font(.subMed).foregroundStyle(Brand.ink)
                     Image(systemName: "chevron.down")
                         .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(Brand.inkFaint)
@@ -88,7 +88,7 @@ public struct HomeView: View {
     private var balance: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 7) {
-                Eyebrow(text: "Solde disponible")
+                Eyebrow(text: Text("Available balance", bundle: .module))
                 Button {
                     Haptic.tap()
                     withAnimation(.easeOut(duration: 0.2)) { store.hiddenBalance.toggle() }
@@ -101,7 +101,7 @@ public struct HomeView: View {
 
             Group {
                 if store.hiddenBalance {
-                    Text("••• •••").font(.system(size: 40, weight: .semibold))
+                    Text(verbatim: "••• •••").font(.system(size: 40, weight: .semibold))
                         .foregroundStyle(Brand.ink)
                 } else {
                     MoneyText.xaf(store.balanceXAF, size: 40)
@@ -111,7 +111,7 @@ public struct HomeView: View {
 
             HStack(spacing: 5) {
                 Image(systemName: "arrow.left.arrow.right").font(.system(size: 10, weight: .semibold))
-                Text("≈ \(Fmt.usd(store.usdEquivalentCents)) dépensables en carte")
+                Text("≈ \(Fmt.usd(store.usdEquivalentCents)) to spend on a card", bundle: .module)
                     .font(.sub)
             }
             .foregroundStyle(Brand.inkMuted)
@@ -124,10 +124,14 @@ public struct HomeView: View {
 
     private var actions: some View {
         HStack(spacing: 4) {
-            QuickAction(icon: "plus", label: "Recharger", emphasis: true, action: onTopUp)
-            QuickAction(icon: "arrow.left.arrow.right", label: "Convertir") { showConvert = true }
-            QuickAction(icon: "creditcard", label: "Nouvelle carte", action: onNewCard)
-            QuickAction(icon: "arrow.up.right", label: "Envoyer") { showSend = true }
+            QuickAction(icon: "plus", label: Text("Top up", bundle: .module),
+                        emphasis: true, action: onTopUp)
+            QuickAction(icon: "arrow.left.arrow.right",
+                        label: Text("Convert", bundle: .module)) { showConvert = true }
+            QuickAction(icon: "creditcard", label: Text("New card", bundle: .module),
+                        action: onNewCard)
+            QuickAction(icon: "arrow.up.right",
+                        label: Text("Send", bundle: .module)) { showSend = true }
         }
         .gutter()
         .padding(.top, 24)
@@ -137,18 +141,23 @@ public struct HomeView: View {
 
     private var monthRow: some View {
         HStack(alignment: .top, spacing: 0) {
-            monthCell("Entrées", store.monthCreditXAF, "arrow.down.left", Brand.credit)
+            monthCell("In", store.monthCreditXAF, "arrow.down.left", Brand.credit)
             Rectangle().fill(Brand.hairline).frame(width: 1, height: 34)
-            monthCell("Sorties", store.monthSpendXAF, "arrow.up.right", Brand.debit)
+            monthCell("Out", store.monthSpendXAF, "arrow.up.right", Brand.debit)
                 .padding(.leading, 18)
         }
         .gutter()
         .padding(.vertical, 18)
     }
 
-    private func monthCell(_ label: String, _ amount: Int, _ symbol: String, _ tint: Color) -> some View {
+    /// "In · August": the month comes from a `FormatStyle`, never from a
+    /// hand-typed name.
+    private func monthCell(_ label: String.LocalizationValue, _ amount: Int,
+                           _ symbol: String, _ tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("\(label) · août").font(.micro).foregroundStyle(Brand.inkMuted)
+            Text("\(String(localized: label, bundle: .module)) · \(Date.now.formatted(.dateTime.month(.wide)))",
+                 bundle: .module)
+                .font(.micro).foregroundStyle(Brand.inkMuted)
             HStack(spacing: 5) {
                 Image(systemName: symbol).font(.system(size: 11, weight: .bold)).foregroundStyle(tint)
                 MoneyText.xaf(amount, size: 17, weight: .medium, unit: false)
@@ -161,14 +170,16 @@ public struct HomeView: View {
 
     private var cardsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            SectionHead(title: "Cartes", trailing: "\(store.cards.count)", tappable: true)
+            SectionHead(title: Text("Cards", bundle: .module),
+                        trailing: store.cards.count.formatted(), tappable: true)
                 .gutter()
                 .padding(.top, 22)
 
             if store.cards.isEmpty {
-                EmptyNote(title: "Aucune carte",
-                          message: "Créez une carte dédiée à chaque usage : abonnements, achats, publicité.",
-                          actionTitle: "Créer une carte", action: onNewCard)
+                EmptyNote(title: Text("No card yet", bundle: .module),
+                          message: Text("Create a card for each use: subscriptions, shopping, ads.",
+                                        bundle: .module),
+                          actionTitle: Text("Create a card", bundle: .module), action: onNewCard)
                     .gutter()
             } else {
                 ScrollView(.horizontal) {
@@ -182,7 +193,7 @@ public struct HomeView: View {
                         Button { Haptic.tap(); onNewCard() } label: {
                             VStack(spacing: 8) {
                                 Image(systemName: "plus").font(.system(size: 16, weight: .medium))
-                                Text("Nouvelle").font(.microMed)
+                                Text("New", bundle: .module).font(.microMed)
                             }
                             .foregroundStyle(Brand.inkMuted)
                             .frame(width: 108, height: 124)
@@ -205,7 +216,7 @@ public struct HomeView: View {
 
     private var activitySection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            SectionHead(title: "Activité", tappable: true).gutter().padding(.top, 22)
+            SectionHead(title: Text("Activity", bundle: .module), tappable: true).gutter().padding(.top, 22)
             VStack(spacing: 0) {
                 ForEach(store.transactions.prefix(5)) { tx in
                     NavigationLink { TransactionDetailView(tx: tx) } label: {
@@ -217,4 +228,16 @@ public struct HomeView: View {
             .gutter()
         }
     }
+}
+
+#Preview("Home — fr") {
+    HomeView(onTopUp: {}, onNewCard: {})
+        .environment(Store())
+        .environment(\.locale, Locale(identifier: "fr"))
+}
+
+#Preview("Home — en") {
+    HomeView(onTopUp: {}, onNewCard: {})
+        .environment(Store())
+        .environment(\.locale, Locale(identifier: "en"))
 }

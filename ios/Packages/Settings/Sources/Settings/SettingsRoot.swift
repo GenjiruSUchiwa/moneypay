@@ -19,44 +19,52 @@ public struct SettingsView: View {
                     referral
                     Rule()
 
-                    group("Compte") {
-                        link("Informations personnelles", "person.text.rectangle") { ProfileView() }
+                    group("Account") {
+                        link("Personal details", "person.text.rectangle") { ProfileView() }
                         Rule(inset: 51)
-                        link("Plafonds et limites", "gauge.with.dots.needle.50percent") { LimitsView() }
+                        link("Caps and limits", "gauge.with.dots.needle.50percent") { LimitsView() }
                         Rule(inset: 51)
-                        link("Abonnements récurrents", "arrow.triangle.2.circlepath",
-                             value: "4") { SubscriptionsView() }
+                        link("Recurring subscriptions", "arrow.triangle.2.circlepath",
+                             value: 4) { SubscriptionsView() }
                         Rule(inset: 51)
-                        link("Documents et relevés", "doc.text") { DocumentsView() }
+                        link("Documents and statements", "doc.text") { DocumentsView() }
                     }
 
-                    group("Sécurité") {
-                        link("Code secret", "lock") { SecurityView() }
+                    group("Security") {
+                        link("Passcode", "lock") { SecurityView() }
                         Rule(inset: 51)
                         toggleRow("Face ID", "faceid", $faceIDOn)
                         Rule(inset: 51)
-                        link("Appareils connectés", "iphone", value: "2") { DevicesView() }
+                        link("Connected devices", "iphone", value: 2) { DevicesView() }
                     }
 
-                    group("Préférences") {
-                        toggleRow("Notifications push", "bell", $notificationsOn)
+                    group("Preferences") {
+                        toggleRow("Push notifications", "bell", $notificationsOn)
                         Rule(inset: 51)
-                        Row(icon: "globe", title: "Langue", chevron: true) { RowValue(text: "Français") }
+                        Row(icon: "globe", title: Text("Language", bundle: .module), chevron: true) {
+                            // The language the app is showing, named in itself.
+                            RowValue(text: Text(verbatim: Locale.current.localizedString(
+                                forLanguageCode: Locale.current.language.languageCode?.identifier ?? "en"
+                            ) ?? ""))
+                        }
                         Rule(inset: 51)
-                        Row(icon: "coloncurrencysign.circle", title: "Devise d'affichage",
-                            chevron: true) { RowValue(text: "FCFA") }
+                        Row(icon: "coloncurrencysign.circle",
+                            title: Text("Display currency", bundle: .module),
+                            chevron: true) { RowValue(text: Text(verbatim: "FCFA")) }
                     }
 
-                    group("Aide") {
-                        link("Centre d'aide", "questionmark.circle") { HelpView() }
+                    group("Help") {
+                        link("Help centre", "questionmark.circle") { HelpView() }
                         Rule(inset: 51)
-                        Row(icon: "bubble.left.and.bubble.right", title: "Discuter avec un conseiller",
+                        Row(icon: "bubble.left.and.bubble.right",
+                            title: Text("Chat with an adviser", bundle: .module),
                             chevron: true) {
-                            StatusPill(text: "En ligne", symbol: "circle.fill",
+                            StatusPill(text: Text("Online", bundle: .module), symbol: "circle.fill",
                                        tint: Brand.credit, soft: Brand.creditSoft)
                         }
                         Rule(inset: 51)
-                        Row(icon: "doc.plaintext", title: "Conditions générales", chevron: true)
+                        Row(icon: "doc.plaintext", title: Text("Terms and conditions", bundle: .module),
+                            chevron: true)
                     }
 
                     // The screen gallery (Gallery package) references EVERY
@@ -64,12 +72,12 @@ public struct SettingsView: View {
                     // and its entry point lives in MainTabView (App).
 
                     Rule()
-                    Row(icon: "rectangle.portrait.and.arrow.right", title: "Se déconnecter",
-                        destructive: true)
+                    Row(icon: "rectangle.portrait.and.arrow.right",
+                        title: Text("Sign out", bundle: .module), destructive: true)
                         .gutter()
                     Rule()
 
-                    Text("MoneyPay · version 0.1 (maquette)\nAucune donnée réelle n'est traitée.")
+                    Text("MoneyPay · version 0.1 (mock-up)\nNo real data is processed.", bundle: .module)
                         .font(.micro).foregroundStyle(Brand.inkFaint)
                         .gutter().padding(.top, 18)
                 }
@@ -79,7 +87,7 @@ public struct SettingsView: View {
             .page()
             .safeAreaInset(edge: .top, spacing: 0) {
                 HStack {
-                    Text("Profil").font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
+                    Text("Profile", bundle: .module).font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
                     Spacer()
                 }
                 .gutter()
@@ -93,21 +101,21 @@ public struct SettingsView: View {
     private var identity: some View {
         NavigationLink { ProfileView() } label: {
             HStack(spacing: 14) {
-                Text(store.user.initials)
+                Text(verbatim: store.user.initials)
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(Brand.onInk)
                     .frame(width: 48, height: 48)
                     .background(Brand.inkFill, in: .rect(cornerRadius: 13, style: .continuous))
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(store.user.fullName).font(.bodyMed).foregroundStyle(Brand.ink)
-                    Text(store.user.phone).font(.sub).foregroundStyle(Brand.inkMuted).monospacedDigit()
+                    Text(verbatim: store.user.fullName).font(.bodyMed).foregroundStyle(Brand.ink)
+                    Text(verbatim: store.user.phone).font(.sub).foregroundStyle(Brand.inkMuted).monospacedDigit()
                     if store.user.kycVerified {
-                        StatusPill(text: "Identité vérifiée", symbol: "checkmark",
+                        StatusPill(text: Text("Identity verified", bundle: .module), symbol: "checkmark",
                                    tint: Brand.credit, soft: Brand.creditSoft)
                     }
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Brand.inkFaint)
             }
             .padding(.vertical, 18)
@@ -122,12 +130,13 @@ public struct SettingsView: View {
             HStack(spacing: 13) {
                 IconTile(symbol: "gift")
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Parrainez, gagnez 2 500 FCFA").font(.bodyReg).foregroundStyle(Brand.ink)
-                    Text("Pour chaque ami qui crée sa première carte")
+                    Text("Refer a friend, earn \(Fmt.xaf(2_500))", bundle: .module)
+                        .font(.bodyReg).foregroundStyle(Brand.ink)
+                    Text("For every friend who creates their first card", bundle: .module)
                         .font(.sub).foregroundStyle(Brand.inkMuted)
                 }
                 Spacer(minLength: 8)
-                Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                Image(systemName: "chevron.forward").font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Brand.inkFaint)
             }
             .padding(.vertical, Metric.rowVertical)
@@ -138,32 +147,41 @@ public struct SettingsView: View {
     }
 
     @ViewBuilder
-    private func group<C: View>(_ title: String, @ViewBuilder content: () -> C) -> some View {
+    private func group<C: View>(_ title: LocalizedStringKey,
+                                @ViewBuilder content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Eyebrow(text: title).gutter().padding(.top, 24)
+            Eyebrow(text: Text(title, bundle: .module)).gutter().padding(.top, 24)
             VStack(spacing: 0) { content() }.gutter()
         }
         .padding(.bottom, 4)
         Rule()
     }
 
-    private func link<D: View>(_ title: String, _ icon: String, value: String? = nil,
+    private func link<D: View>(_ title: LocalizedStringKey, _ icon: String, value: Int? = nil,
                                @ViewBuilder dest: @escaping () -> D) -> some View {
         NavigationLink { dest() } label: {
-            Row(icon: icon, title: title, chevron: true) {
-                if let value { RowValue(text: value) }
+            Row(icon: icon, title: Text(title, bundle: .module), chevron: true) {
+                if let value { RowValue(text: Text(value, format: .number)) }
             }
         }
         .buttonStyle(.plain)
     }
 
-    private func toggleRow(_ title: String, _ icon: String, _ value: Binding<Bool>) -> some View {
+    private func toggleRow(_ title: LocalizedStringKey, _ icon: String,
+                           _ value: Binding<Bool>) -> some View {
         HStack(spacing: 13) {
             IconTile(symbol: icon)
-            Text(title).font(.bodyReg).foregroundStyle(Brand.ink)
+            Text(title, bundle: .module).font(.bodyReg).foregroundStyle(Brand.ink)
             Spacer()
-            Toggle("", isOn: value).labelsHidden().tint(Brand.inkFill)
+            Toggle(isOn: value) { Text(title, bundle: .module) }
+                .labelsHidden().tint(Brand.inkFill)
         }
         .padding(.vertical, 11)
     }
+}
+
+#Preview("Settings — fr") {
+    SettingsView()
+        .environment(Store())
+        .environment(\.locale, Locale(identifier: "fr"))
 }

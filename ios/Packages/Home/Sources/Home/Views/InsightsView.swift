@@ -12,17 +12,12 @@ public struct InsightsView: View {
     @State private var selectedMonth: String?
     @State private var showTable = false
 
-    private let months: [MonthSpend] = [
-        .init(label: "mars", xaf: 62_400, isCurrent: false),
-        .init(label: "avr.", xaf: 88_100, isCurrent: false),
-        .init(label: "mai", xaf: 74_900, isCurrent: false),
-        .init(label: "juin", xaf: 121_300, isCurrent: false),
-        .init(label: "juil.", xaf: 96_700, isCurrent: false),
-        .init(label: "août", xaf: 108_500, isCurrent: true)
-    ]
+    private let months = MonthSpend.demoSeries([62_400, 88_100, 74_900, 121_300, 96_700, 108_500])
 
     private var current: Int { months.last?.xaf ?? 0 }
     private var previous: Int { months.dropLast().last?.xaf ?? 0 }
+    private var currentLabel: String { months.last?.label ?? "" }
+    private var previousLabel: String { months.dropLast().last?.label ?? "" }
     private var delta: Double { previous == 0 ? 0 : Double(current - previous) / Double(previous) }
 
     public var body: some View {
@@ -44,8 +39,11 @@ public struct InsightsView: View {
             .page()
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Analyse").font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
-                    Segments(items: ["6 mois", "Cette année", "Tout"], selection: $period)
+                    Text("Analyse", bundle: .module).font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
+                    Segments(items: [Text("6 months", bundle: .module),
+                                     Text("This year", bundle: .module),
+                                     Text("All", bundle: .module)],
+                             selection: $period)
                 }
                 .gutter()
                 .padding(.top, 4)
@@ -59,13 +57,15 @@ public struct InsightsView: View {
 
     private var hero: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Eyebrow(text: "Dépensé en août")
+            Eyebrow(text: Text("Spent in \(currentLabel)", bundle: .module))
             MoneyText.xaf(current, size: 36).padding(.top, 8)
             // State never rides on colour alone: arrow plus label.
             HStack(spacing: 5) {
                 Image(systemName: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
                     .font(.system(size: 11, weight: .bold))
-                Text("\(delta >= 0 ? "+" : "")\(Int(delta * 100)) % par rapport à juillet").font(.sub)
+                Text("\(delta, format: .percent.precision(.fractionLength(0)).sign(strategy: .always())) versus \(previousLabel)",
+                     bundle: .module)
+                    .font(.sub)
             }
             .foregroundStyle(delta >= 0 ? Brand.pending : Brand.credit)
             .padding(.top, 8)
@@ -80,13 +80,13 @@ public struct InsightsView: View {
     private var trend: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                SectionHead(title: "Par mois", trailing: "FCFA")
+                SectionHead(title: Text("By month", bundle: .module), trailing: "FCFA")
                 Spacer()
                 Button {
                     Haptic.tap()
                     withAnimation(.easeOut(duration: 0.18)) { showTable.toggle() }
                 } label: {
-                    Text(showTable ? "Graphique" : "Tableau")
+                    Text(showTable ? "Chart" : "Table", bundle: .module)
                         .font(.microMed).foregroundStyle(Brand.mark)
                 }
             }
@@ -97,9 +97,10 @@ public struct InsightsView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(months.reversed().enumerated()), id: \.element.id) { i, m in
                         HStack {
-                            Text(m.label.capitalized).font(.bodyReg).foregroundStyle(Brand.inkMuted)
+                            Text(verbatim: m.label.capitalized).font(.bodyReg)
+                                .foregroundStyle(Brand.inkMuted)
                             Spacer()
-                            Text(Fmt.group(m.xaf))
+                            Text(verbatim: Fmt.group(m.xaf))
                                 .font(m.isCurrent ? .bodyMed : .bodyReg)
                                 .foregroundStyle(Brand.ink).monospacedDigit()
                         }
@@ -110,31 +111,35 @@ public struct InsightsView: View {
                 .gutter()
             } else {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(selectedMonth.flatMap { s in months.first { $0.label == s } }
-                            .map { "\($0.label.capitalized) · \(Fmt.xaf($0.xaf))" }
-                         ?? "Touchez une barre pour le détail")
+                    Group {
+                        if let picked = selectedMonth.flatMap({ s in months.first { $0.label == s } }) {
+                            Text(verbatim: "\(picked.label.capitalized) · \(Fmt.xaf(picked.xaf))")
+                        } else {
+                            Text("Tap a bar for the detail", bundle: .module)
+                        }
+                    }
                         .font(.sub)
                         .foregroundStyle(selectedMonth == nil ? Brand.inkFaint : Brand.ink)
                         .monospacedDigit()
                         .gutter()
 
                     Chart(months) { m in
-                        BarMark(x: .value("Mois", m.label),
-                                y: .value("Dépense", m.xaf),
+                        BarMark(x: .value(String(localized: "Month", bundle: .module), m.label),
+                                y: .value(String(localized: "Spend", bundle: .module), m.xaf),
                                 width: .fixed(20))
                             .foregroundStyle(Brand.ink.opacity(m.isCurrent ? 1 : 0.28))
                             .cornerRadius(4)
                             .annotation(position: .top, spacing: 5) {
                                 // Selective direct labelling, never on every bar.
                                 if m.isCurrent || m.label == selectedMonth {
-                                    Text("\(m.xaf / 1000)k")
+                                    Text(m.xaf, format: .number.notation(.compactName))
                                         .font(.system(size: 10, weight: .medium))
                                         .foregroundStyle(Brand.inkMuted)
                                         .monospacedDigit()
                                 }
                             }
-                            .accessibilityLabel(m.label)
-                            .accessibilityValue(Fmt.xaf(m.xaf))
+                            .accessibilityLabel(Text(verbatim: m.label))
+                            .accessibilityValue(Text(verbatim: Fmt.xaf(m.xaf)))
                     }
                     .chartXSelection(value: $selectedMonth)
                     .chartYAxis {
@@ -142,7 +147,8 @@ public struct InsightsView: View {
                             AxisGridLine().foregroundStyle(Viz.grid)
                             AxisValueLabel {
                                 if let n = v.as(Int.self) {
-                                    Text("\(n / 1000)k").font(.system(size: 10))
+                                    Text(n, format: .number.notation(.compactName))
+                                        .font(.system(size: 10))
                                         .foregroundStyle(Brand.inkFaint)
                                 }
                             }
@@ -168,7 +174,7 @@ public struct InsightsView: View {
         let rows = store.spendByCategory()
         let maxV = rows.first?.xaf ?? 1
         return VStack(alignment: .leading, spacing: 14) {
-            SectionHead(title: "Par catégorie", trailing: "FCFA").gutter().padding(.top, 22)
+            SectionHead(title: Text("By category", bundle: .module), trailing: "FCFA").gutter().padding(.top, 22)
             VStack(spacing: 14) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                     VStack(spacing: 7) {
@@ -183,7 +189,7 @@ public struct InsightsView: View {
                                             in: .rect(cornerRadius: 6, style: .continuous))
                             Text(row.category.label).font(.sub).foregroundStyle(Brand.ink)
                             Spacer()
-                            Text(Fmt.group(row.xaf)).font(.subMed)
+                            Text(verbatim: Fmt.group(row.xaf)).font(.subMed)
                                 .foregroundStyle(Brand.ink).monospacedDigit()
                         }
                         Meter(value: Double(row.xaf) / Double(maxV), tint: Brand.ink, height: 4)
@@ -199,18 +205,26 @@ public struct InsightsView: View {
 
     private var costs: some View {
         VStack(alignment: .leading, spacing: 4) {
-            SectionHead(title: "Coût réel du mois", trailing: "FCFA").gutter().padding(.top, 22)
+            SectionHead(title: Text("True cost of the month", bundle: .module), trailing: "FCFA").gutter().padding(.top, 22)
             VStack(spacing: 0) {
-                cost("Marge de change · 3 %", "3 254", "Prélevée sur chaque conversion FCFA → USD")
+                cost(Text("FX margin · \(0.03, format: .percent)", bundle: .module),
+                     3_254,
+                     Text("Taken on every FCFA → USD conversion", bundle: .module))
                 Rule()
-                cost("Frais de rechargement", "1 477", "1,5 % sur MTN MoMo et Orange Money")
+                cost(Text("Top-up fees", bundle: .module),
+                     1_477,
+                     Text("\(0.015, format: .percent.precision(.fractionLength(1))) on MTN MoMo and Orange Money",
+                          bundle: .module))
                 Rule()
-                cost("Frais de refus", "220", "1 autorisation refusée ce mois")
+                cost(Text("Decline fees", bundle: .module),
+                     220,
+                     Text("\(1) authorization declined this month", bundle: .module))
                 Rule()
                 HStack {
-                    Text("Total des frais").font(.bodyMed).foregroundStyle(Brand.ink)
+                    Text("Total fees", bundle: .module).font(.bodyMed).foregroundStyle(Brand.ink)
                     Spacer()
-                    Text("4 951 FCFA").font(.bodyMed).foregroundStyle(Brand.pending).monospacedDigit()
+                    Text(verbatim: Fmt.xaf(4_951)).font(.bodyMed)
+                        .foregroundStyle(Brand.pending).monospacedDigit()
                 }
                 .padding(.vertical, Metric.rowVertical)
             }
@@ -219,14 +233,15 @@ public struct InsightsView: View {
         .padding(.bottom, 26)
     }
 
-    private func cost(_ t: String, _ v: String, _ sub: String) -> some View {
+    private func cost(_ title: Text, _ amountXAF: Int, _ detail: Text) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(t).font(.bodyReg).foregroundStyle(Brand.ink)
-                Text(sub).font(.micro).foregroundStyle(Brand.inkMuted)
+                title.font(.bodyReg).foregroundStyle(Brand.ink)
+                detail.font(.micro).foregroundStyle(Brand.inkMuted)
             }
             Spacer(minLength: 8)
-            Text(v).font(.bodyReg).foregroundStyle(Brand.ink).monospacedDigit()
+            Text(verbatim: Fmt.xaf(amountXAF, symbol: false))
+                .font(.bodyReg).foregroundStyle(Brand.ink).monospacedDigit()
         }
         .padding(.vertical, Metric.rowVertical)
     }
@@ -235,7 +250,7 @@ public struct InsightsView: View {
 
     private var perCard: some View {
         VStack(alignment: .leading, spacing: 4) {
-            SectionHead(title: "Par carte").gutter().padding(.top, 22)
+            SectionHead(title: Text("By card", bundle: .module)).gutter().padding(.top, 22)
             VStack(spacing: 0) {
                 ForEach(Array(store.cards.enumerated()), id: \.element.id) { i, card in
                     HStack(spacing: 12) {
@@ -243,11 +258,12 @@ public struct InsightsView: View {
                             .fill(card.theme.fill).frame(width: 34, height: 22)
                             .overlay { RoundedRectangle(cornerRadius: 5).stroke(Brand.hairline, lineWidth: 1) }
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(card.label).font(.bodyReg).foregroundStyle(Brand.ink)
-                            Text("•• \(card.last4)").font(.micro).foregroundStyle(Brand.inkMuted)
+                            Text(verbatim: card.label).font(.bodyReg).foregroundStyle(Brand.ink)
+                            Text(verbatim: "•• \(card.last4)").font(.micro)
+                                .foregroundStyle(Brand.inkMuted)
                         }
                         Spacer()
-                        Text(Fmt.usd(card.spentUSDCents)).font(.subMed)
+                        Text(verbatim: Fmt.usd(card.spentUSDCents)).font(.subMed)
                             .foregroundStyle(Brand.ink).monospacedDigit()
                     }
                     .padding(.vertical, 12)
@@ -257,4 +273,10 @@ public struct InsightsView: View {
             .gutter()
         }
     }
+}
+
+#Preview("Insights — fr") {
+    InsightsView()
+        .environment(Store())
+        .environment(\.locale, Locale(identifier: "fr"))
 }
