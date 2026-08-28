@@ -1,6 +1,6 @@
 import SwiftUI
 
-public enum Tone { case ink, quiet, outline, danger }
+public enum Tone { case primary, ink, quiet, outline, danger }
 
 public struct MPButton: View {
     public init(
@@ -36,10 +36,10 @@ public struct MPButton: View {
             .frame(maxWidth: .infinity)
             .frame(height: 52)
             .foregroundStyle(fg)
-            .background(bg, in: .rect(cornerRadius: Metric.control))
+            .background(bg, in: .capsule)
             .overlay {
                 if tone == .outline {
-                    RoundedRectangle(cornerRadius: Metric.control).stroke(Brand.rule, lineWidth: 1)
+                    Capsule().stroke(Brand.rule, lineWidth: 1)
                 }
             }
             .opacity(enabled ? 1 : 0.35)
@@ -50,6 +50,7 @@ public struct MPButton: View {
 
     private var bg: Color {
         switch tone {
+        case .primary: Brand.action
         case .ink: Brand.inkFill
         case .quiet: Brand.well
         case .outline: .clear
@@ -58,6 +59,7 @@ public struct MPButton: View {
     }
     private var fg: Color {
         switch tone {
+        case .primary: Brand.onAction
         case .ink: Brand.onInk
         case .quiet, .outline: Brand.ink
         case .danger: Brand.debit
@@ -67,6 +69,7 @@ public struct MPButton: View {
 
 #Preview("MPButton, every tone") {
     VStack(spacing: 12) {
+        MPButton(title: Text(verbatim: "Primary action"), tone: .primary) {}
         MPButton(title: Text(verbatim: "Top up"), tone: .ink) {}
         MPButton(title: Text(verbatim: "Convert"), icon: "arrow.left.arrow.right", tone: .quiet) {}
         MPButton(title: Text(verbatim: "New card"), tone: .outline) {}

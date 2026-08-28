@@ -102,8 +102,12 @@ private struct WelcomeActions: View {
 
     var body: some View {
         VStack(spacing: Metric.stack) {
-            MPButton(title: Text("Create my account", bundle: .module), action: onStart)
-                .gutter()
+            MPButton(
+                title: Text("Create my account", bundle: .module),
+                tone: .primary,
+                action: onStart
+            )
+            .gutter()
 
             MPButton(
                 title: Text("I already have an account", bundle: .module),
