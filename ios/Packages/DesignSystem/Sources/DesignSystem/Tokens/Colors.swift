@@ -32,6 +32,14 @@ public enum Brand {
     /// fill, never confused with the credit green.
     public static let mark = Color.adaptive(light: 0x0B4F6C, dark: 0x6FB6D6)
     public static let markSoft = Color.adaptive(light: 0xE2EDF2, dark: 0x11262F)
+    /// Immersive deep-green panel for hero and full-screen identity moments.
+    public static let greenDeep = Color.adaptive(light: 0x053826, dark: 0x0A4331)
+    /// Constant white text and glyphs rendered on `greenDeep`.
+    public static let deepInk = Color.adaptive(light: 0xFFFFFF, dark: 0xFFFFFF)
+    /// Muted legal copy rendered on `greenDeep`.
+    public static let deepInkMuted = deepInk.opacity(0.45)
+    /// A translucent disc or logo tile rendered on `greenDeep`.
+    public static let deepInkFill = deepInk.opacity(0.12)
 
     /// Money semantics. Reserved: never used as a series colour.
     public static let credit = Color.adaptive(light: 0x10704A, dark: 0x4FBF8B)
