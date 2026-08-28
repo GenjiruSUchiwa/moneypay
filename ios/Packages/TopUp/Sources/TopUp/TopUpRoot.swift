@@ -153,8 +153,7 @@ public struct TopUpFlow: View {
         }
     }
 
-    /// The name of the code the operator asks for. `id`, not a substring of the
-    /// display name: a translated name must never change which branch runs.
+    /// Operator code name, keyed on `id` so a translated name never changes the branch.
     private var codeName: String {
         method.id == "mtn" ? "MoMo" : String(localized: "carrier", bundle: .module)
     }

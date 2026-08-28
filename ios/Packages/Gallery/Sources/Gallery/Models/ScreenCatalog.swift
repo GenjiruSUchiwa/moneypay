@@ -14,9 +14,6 @@ import WalletStore
 /// The single registry of every view in the mockup.
 /// It serves two uses: the in-app gallery, and launching straight into one
 /// screen (`-screen <key>`) to capture it without replaying the flows.
-///
-/// `title` and `section` are engineering labels for a review tool, not product
-/// copy: they stay English and render verbatim, so `Gallery` owns no catalog.
 public struct CatalogEntry: Identifiable {
     public init(
         key: String,

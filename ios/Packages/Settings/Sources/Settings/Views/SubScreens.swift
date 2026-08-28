@@ -76,8 +76,6 @@ public struct ProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    /// Sample date of birth, built from components rather than typed out as
-    /// "12 mars 1994", so it renders in the reader's locale.
     private static let birthDate = DateComponents(
         calendar: .current, timeZone: TimeZone(identifier: "Africa/Douala"),
         year: 1994, month: 3, day: 12
@@ -323,7 +321,6 @@ public struct DocumentsView: View {
     public init() {
     }
 
-    /// The last five months, formatted per locale rather than typed out.
     private var months: [Date] {
         (0..<5).compactMap { Calendar.current.date(byAdding: .month, value: -$0, to: .now) }
     }

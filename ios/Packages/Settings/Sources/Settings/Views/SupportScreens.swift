@@ -95,8 +95,6 @@ public struct HelpView: View {
         var answer: String
     }
 
-    /// Resolved to `String`, not held as keys: the search box matches on the
-    /// question the reader actually sees.
     private var faq: [Entry] {
         let pairs: [(String.LocalizationValue, String.LocalizationValue)] = [
             ("Why was my payment declined?",

@@ -13,8 +13,6 @@ public struct WelcomeView: View {
     public var onSignIn: () -> Void
     @State private var page = 0
 
-    /// `title` and `body` are copy and resolve against this package's catalog
-    /// at render time; `label` is the name printed on the sample card, data.
     private struct Slide {
         var title: LocalizedStringKey
         var body: LocalizedStringKey

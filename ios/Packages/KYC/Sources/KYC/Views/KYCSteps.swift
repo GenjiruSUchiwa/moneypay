@@ -88,8 +88,7 @@ public struct KYCDocumentPickerView: View {
     public var onPick: (String) -> Void
     public var onBack: () -> Void
 
-    /// `id` is what the picker hands back to the flow — a stable code, not the
-    /// label the user reads.
+    /// `id` is a stable code; the flow never branches on the localized label.
     private struct Document: Identifiable {
         let id: String
         var title: LocalizedStringKey

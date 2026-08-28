@@ -24,8 +24,6 @@ public struct SendMoneyView: View {
         }
     }
 
-    /// Sample contacts. Person names and phone numbers are data, not copy: they
-    /// never go through a catalog, and they render with `Text(verbatim:)`.
     private let contacts: [Contact] = [
         .init(name: "Nadège Ateba", phone: "+237 6 77 21 09 44"),
         .init(name: "Serge Kamdem", phone: "+237 6 91 55 30 12"),

@@ -12,8 +12,6 @@ public struct SubscriptionsView: View {
 
     private struct Sub: Identifiable {
         let id = UUID()
-        /// `dayOfMonth` is the charge day; the sentence around it is a catalog
-        /// key, so French can put the ordinal where French puts it.
         var name: String, category: TxCategory, usdCents: Int, dayOfMonth: Int, active: Bool
     }
 

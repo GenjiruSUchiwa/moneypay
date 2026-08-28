@@ -15,8 +15,6 @@ public struct PhoneStep: View {
     struct Country: Identifiable, Equatable {
         let id: String, flag: String, dial: String, length: Int
 
-        /// Foundation already carries every region name in every language, so
-        /// the country list is not ours to translate.
         var name: String { Locale.current.localizedString(forRegionCode: id) ?? id }
 
         static let cameroon = Country(id: "CM", flag: "🇨🇲", dial: "+237", length: 9)

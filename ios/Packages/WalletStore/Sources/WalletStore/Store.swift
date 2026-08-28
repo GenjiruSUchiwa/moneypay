@@ -118,8 +118,7 @@ public final class Store {
 // MARK: - Demo data
 
 public enum SampleData {
-    /// `var`, not `let`: the copy inside resolves at first access, and a
-    /// preview that swaps the locale has to see the other language.
+    /// `var` so a locale change in a preview re-resolves the copy.
     public static var methods: [TopUpMethod] {
         [
             .init(id: "mtn", name: "MTN Mobile Money",
