@@ -61,11 +61,14 @@ jobs:
       - name: Test packages
         run: |
           set -o pipefail
+          # Xcode passes -suppress-warnings to SwiftPM dependencies, which conflicts with
+          # DesignSystem's .treatAllWarnings(as: .error); keep dependency warnings visible.
           for pkg in Platform Money ApiClient DesignSystem Onboarding; do
             echo "::group::$pkg"
             (cd "Packages/$pkg" && xcodebuild test \
               -scheme "$pkg" \
               -destination "$DESTINATION" \
-              CODE_SIGNING_ALLOWED=NO)
+              CODE_SIGNING_ALLOWED=NO \
+              SWIFT_SUPPRESS_WARNINGS=NO)
             echo "::endgroup::"
           done
