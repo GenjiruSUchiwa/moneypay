@@ -47,6 +47,15 @@ Notes sandbox :
 - Endpoints Sudo utilisés : `GET /fundingsources`, `POST /customers`, `POST /cards`
   (docs : https://docs.sudo.africa/reference) — ajuster dans `server.js` si besoin.
 
+## Mode live du prototype UI
+
+Le prototype (`prototype/`, servi sur :8742) peut se brancher sur ce serveur :
+ouvrir `http://localhost:8742/index.html?live=<numéro MSISDN>` (ex. `?live=237670123456`).
+- **Recharger** → vraie collecte Campay (push USSD sur le numéro donné, ≤ 25 F en demo).
+- **Nouvelle carte** → vraie carte virtuelle Sudo de 5 $ (minimum 3 $) ; le solde serveur
+  est pré-crédité via `/simtopup` (le plafond Campay ne permet pas de financer une carte).
+Sans `?live`, tout reste simulé comme avant.
+
 ## Limites assumées du POC
 
 Taux de change codé en dur, état en mémoire (perdu au restart), polling au lieu de

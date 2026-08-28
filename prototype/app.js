@@ -206,6 +206,25 @@ const CATEGORIES = {
 };
 
 const KIND_LABELS = { payment: "Paiement carte", topUp: "Rechargement", conversion: "Conversion", refund: "Remboursement", fee: "Frais", transfer: "Transfert" };
+
+/* mode live : ?live=2376XXXXXXXX branche Recharger et Nouvelle carte sur le POC backend
+   (poc/server.js sur :8743 → Campay/Sudo sandbox). Sans paramètre, tout reste simulé. */
+const LIVE = (p => p ? { base: "http://localhost:8743", phone: /^\d{9,}$/.test(p) ? p : "237699123456", id: null } : null)(
+  new URLSearchParams(location.search).get("live"));
+async function liveApi(path, body) {
+  const r = await fetch(LIVE.base + path, { method: "POST", body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || "erreur serveur POC");
+  return j;
+}
+async function liveUser() {
+  if (!LIVE.id) LIVE.id = (await liveApi("/signup", {
+    name: S.user.first + " " + S.user.last, phone: LIVE.phone, email: S.user.email })).id;
+  return LIVE.id;
+}
+function liveFail(title, e) {
+  S.notifs.unshift({ id: uid(), title, body: e.message, date: Date.now(), icon: "x", cls: "debit", unread: true });
+}
 const STATUS_META = {
   approved: { label: "Réussi",     cls: "credit", icon: "check" },
   pending:  { label: "En attente", cls: "pend",   icon: "clock" },
@@ -2036,7 +2055,7 @@ function topupSheet() {
       </div>
       <div class="note-row gutter" style="padding-top:18px">${ico("phone", 15)}<span>Vous allez recevoir une demande de confirmation sur votre téléphone. Validez-la avec votre code ${m.id === "mtn" ? "MoMo" : "opérateur"}.</span></div>
     </div>
-    <div class="gutter" style="padding:10px 20px 16px">${btn("Confirmer le rechargement", "topupConfirm")}</div>`)}`;
+    <div class="gutter" style="padding:10px 20px 16px">${btn(F.topupBusy ? "Validez sur votre téléphone…" : "Confirmer le rechargement", "topupConfirm", { loading: !!F.topupBusy, disabled: !!F.topupBusy })}</div>`)}`;
   }
 
   return `<div class="sheet-grab"></div>
@@ -3035,10 +3054,18 @@ const ACTIONS = {
     const m = S.methods.find(x => x.id === (F.methodId || "mtn"));
     const fee = Math.round(amount * m.fee);
     const credited = amount - fee;
-    S.balance += credited;
-    S.txs.unshift({ id: uid(), merchant: m.name, logo: m.logo || null, icon: m.icon, kind: "topUp", cat: "other", status: m.instant ? "approved" : "pending", date: Date.now(), usd: 0, xaf: credited, card: null });
-    S.notifs.unshift({ id: uid(), title: "Rechargement reçu", body: `${fmtXAF(credited)} reçus depuis ${m.name}`, date: Date.now(), icon: "arrDn", cls: "credit", unread: true });
-    F.step = "done"; F.dir = "fwd"; rerenderSheet();
+    const done = () => {
+      S.balance += credited;
+      S.txs.unshift({ id: uid(), merchant: m.name, logo: m.logo || null, icon: m.icon, kind: "topUp", cat: "other", status: m.instant ? "approved" : "pending", date: Date.now(), usd: 0, xaf: credited, card: null });
+      S.notifs.unshift({ id: uid(), title: "Rechargement reçu", body: `${fmtXAF(credited)} reçus depuis ${m.name}`, date: Date.now(), icon: "arrDn", cls: "credit", unread: true });
+      F.step = "done"; F.dir = "fwd"; rerenderSheet();
+    };
+    if (!LIVE) return done();
+    if (F.topupBusy) return;
+    F.topupBusy = true; rerenderSheet();
+    liveUser().then(id => liveApi("/topup", { user_id: id, amount_fcfa: amount }))
+      .then(done, e => { liveFail("Échec du rechargement", e); F.step = "amount"; F.dir = "back"; })
+      .finally(() => { F.topupBusy = false; rerenderSheet(); });
   },
 
   /* convertir */
@@ -3085,19 +3112,31 @@ const ACTIONS = {
   ccIssue: () => {
     if (F.issuing) return;
     F.issuing = true; rerenderSheet();
-    after(900, () => {
+    const finish = (pan, cvv) => {
       const id = "c" + Math.floor(Math.random() * 9000 + 1000);
-      const pan = (F.ccNetwork === "visa" ? "4539" : "5399") + String(Math.floor(Math.random() * 1e12)).padStart(12, "0");
       const card = {
         id, label: F.ccLabel || "Ma carte", theme: F.ccTheme, network: F.ccNetwork,
-        pan, cvv: String(Math.floor(Math.random() * 900 + 100)), exp: "08/29",
+        pan, cvv, exp: "08/29",
         frozen: false, limit: LIMIT_PRESETS[F.ccLimit != null ? F.ccLimit : 1], spent: 0,
         singleUse: !!F.ccSingle, online: true, subs: true, declines: 0, created: Date.now()
       };
       S.cards.unshift(card);
       F.issuing = false; F.step = "created"; F.createdId = id;
       rerenderSheet();
-    });
+    };
+    if (LIVE) {
+      // Vraie carte Sudo : on crédite d'abord le solde serveur (plafond Campay 25 F oblige),
+      // puis /card émet une Visa virtuelle de 5 $ (minimum Sudo : 3 $). Le PAN complet n'est
+      // pas exposé par l'API (token sécurisé en prod) — on reconstitue depuis le masked_pan.
+      liveUser()
+        .then(id => liveApi("/simtopup", { user_id: id, amount_fcfa: 4000 }).then(() => id))
+        .then(id => liveApi("/card", { user_id: id, amount_usd: 5 }))
+        .then(r => { const mp = (r.card.masked_pan || "").replace(/\D/g, "").padEnd(10, "0"); finish(mp.slice(0, 6) + "000000".slice(0, 16 - mp.length) + mp.slice(6), "•••"); },
+              e => { liveFail("Échec de l’émission", e); F.issuing = false; rerenderSheet(); });
+      return;
+    }
+    after(900, () => finish((F.ccNetwork === "visa" ? "4539" : "5399") + String(Math.floor(Math.random() * 1e12)).padStart(12, "0"),
+                            String(Math.floor(Math.random() * 900 + 100))));
   },
   createDone: () => { closeSheet(); setTab("cards"); },
 

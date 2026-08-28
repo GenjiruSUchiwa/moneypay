@@ -157,21 +157,25 @@ async function issueCard(u, amountUsd) {
 const routes = {
   "POST /signup": (body) => signup(body),
   "POST /topup": (body) => topup(mustUser(body.user_id), Number(body.amount_fcfa)),
+  "POST /simtopup": (body) => { const u = mustUser(body.user_id); u.fcfa += Number(body.amount_fcfa) || 0; return { fcfa: u.fcfa }; }, // crédit sandbox sans MoMo (démo UI, plafond Campay 25 F)
   "POST /card": (body) => issueCard(mustUser(body.user_id), Number(body.amount_usd)),
   "GET /user": (_, q) => mustUser(q.get("id")),
 };
 const mustUser = (id) => users.get(id) ?? (() => { throw new Error("utilisateur inconnu"); })();
 
+const CORS = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type" };
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, "http://x");
+  if (req.method === "OPTIONS") { res.writeHead(204, CORS); return res.end(); }
   const handler = routes[`${req.method} ${url.pathname}`];
   try {
     if (!handler) throw new Error("route inconnue");
     const body = req.method === "POST" ? JSON.parse((await readBody(req)) || "{}") : null;
-    res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify(await handler(body, url.searchParams), null, 2));
+    const result = await handler(body, url.searchParams); // avant writeHead : une erreur ici doit répondre 400
+    res.writeHead(200, { "content-type": "application/json", ...CORS });
+    res.end(JSON.stringify(result, null, 2));
   } catch (e) {
-    res.writeHead(400, { "content-type": "application/json" });
+    res.writeHead(400, { "content-type": "application/json", ...CORS });
     res.end(JSON.stringify({ error: e.message }));
   }
 });
