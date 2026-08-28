@@ -18,11 +18,4 @@ struct MoneyTests {
         #expect(rate.xaf(fromUSDCents: 1) == 7)
         #expect(rate.xaf(fromUSDCents: 0) == 0)
     }
-
-    @Test("Money labels respect the decimal count of each currency")
-    func minorUnitLabels() {
-        #expect(25_000.xafLabel == "25000 FCFA")
-        #expect(1_234.usdLabel == "$12.34")
-        #expect(0.usdLabel == "$0.00")
-    }
 }

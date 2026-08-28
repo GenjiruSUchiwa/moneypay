@@ -70,10 +70,10 @@ public struct VirtualCard: Identifiable, Hashable, Sendable {
 public enum TxStatus: String, Sendable {
     case approved, pending, declined, refunded
 
-    public var label: String {
+    public var label: LocalizedStringResource {
         switch self {
-        case .approved: "Réussi"; case .pending: "En attente"
-        case .declined: "Refusé"; case .refunded: "Remboursé"
+        case .approved: .money("Approved"); case .pending: .money("Pending")
+        case .declined: .money("Declined"); case .refunded: .money("Refunded")
         }
     }
     public var tint: Color {
@@ -99,10 +99,11 @@ public enum TxStatus: String, Sendable {
 public enum TxKind: String, Sendable {
     case payment, topUp, conversion, refund, fee
 
-    public var label: String {
+    public var label: LocalizedStringResource {
         switch self {
-        case .payment: "Paiement carte"; case .topUp: "Rechargement"
-        case .conversion: "Conversion"; case .refund: "Remboursement"; case .fee: "Frais"
+        case .payment: .money("Card payment"); case .topUp: .money("Top-up")
+        case .conversion: .money("Conversion"); case .refund: .money("Refund")
+        case .fee: .money("Fee")
         }
     }
 }
@@ -111,12 +112,12 @@ public enum TxCategory: String, CaseIterable, Identifiable, Sendable {
     case streaming, software, shopping, transport, food, ads, travel, other
     public var id: String { rawValue }
 
-    public var label: String {
+    public var label: LocalizedStringResource {
         switch self {
-        case .streaming: "Divertissement"; case .software: "Logiciels"
-        case .shopping: "Achats"; case .transport: "Transport"
-        case .food: "Restauration"; case .ads: "Publicité"
-        case .travel: "Voyage"; case .other: "Autre"
+        case .streaming: .money("Entertainment"); case .software: .money("Software")
+        case .shopping: .money("Shopping"); case .transport: .money("Transport")
+        case .food: .money("Dining"); case .ads: .money("Advertising")
+        case .travel: .money("Travel"); case .other: .money("Other")
         }
     }
     public var symbol: String {
