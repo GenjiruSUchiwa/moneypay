@@ -143,11 +143,11 @@ typography:
     letterSpacing: 0
   eyebrow:
     fontFamily: "Google Sans Flex, sans-serif"
-    fontSize: 11px
+    fontSize: 13px
     fontWeight: 500
     lineHeight: 1.4
-    letterSpacing: 0.14em
-    textTransform: uppercase
+    letterSpacing: 0
+    textTransform: none
   button:
     fontFamily: "Google Sans Flex, sans-serif"
     fontSize: 16px
@@ -178,9 +178,7 @@ rounded:
   control: 14px
   card: 16px
   panel: 24px
-  menu: 28px
-  action-sheet: 30px
-  sheet: 34px
+  float: 30px
   pill: 999px
 
 spacing:
@@ -287,16 +285,16 @@ components:
     rounded: "{rounded.pill}"
   widget-menu:
     backgroundColor: "{colors.glass-menu}"
-    rounded: "{rounded.menu}"
+    rounded: "{rounded.float}"
     grid: "2 x 84px"
   sheet:
     backgroundColor: "{colors.glass-menu}"
     backdropFilter: "blur(26px) saturate(1.8)"
-    rounded: "{rounded.sheet} {rounded.sheet} 0 0"
+    rounded: "{rounded.float} {rounded.float} 0 0"
     topInset: 14px
   action-sheet:
     backgroundColor: "{colors.glass-menu}"
-    rounded: "{rounded.action-sheet}"
+    rounded: "{rounded.float}"
     inset: 10px
   toast:
     backgroundColor: "{colors.glass-menu}"
@@ -361,6 +359,15 @@ components:
     fillColor: "{colors.green}"
     height: 4px
     rounded: "{rounded.pill}"
+  limit-ring:
+    trackColor: "{colors.well-2}"
+    fillColor: "{colors.green}"
+    warnColor: "{colors.debit}"
+    size: 58px
+    strokeWidth: 5.5px
+  card-detail-panel:
+    backgroundColor: "{colors.paper}"
+    rounded: "{rounded.float} {rounded.float} 0 0"
   success-mark:
     backgroundColor: "{colors.credit}"
     textColor: "#FFFFFF"
@@ -407,10 +414,12 @@ profonde** (#0C0F13) en sombre. Trois registres de surface rythment l'app :
   sélectionné. Jamais en fond de page.
 - En sombre, le vert devient vif (#2FC988) et son texte devient **vert profond**
   (#04301F) — jamais blanc sur vert vif.
-- Police **unique** : Google Sans Flex. Les rôles « techniques » (eyebrow, PAN, ticks) se
-  distinguent par les capitales et la chasse élargie, pas par une seconde famille.
+- Police **unique** : Google Sans Flex. Les rôles « techniques » (PAN, références, ticks)
+  se distinguent par la chasse élargie et les chiffres tabulaires, pas par une seconde
+  famille. Les capitales sont réservées aux **marquages gravés de la carte**
+  (VIRTUELLE, EXPIRE, CVV) — jamais aux libellés de section.
 - Boutons, chips, pills, segments, barre d'onglets : **capsules** (999px). Les rayons
-  rectangulaires sont réservés aux surfaces (tuiles 12 → feuilles 34).
+  rectangulaires sont réservés aux surfaces (tuiles 12 → surfaces flottantes 30).
 - Motif **guilloché « rosace »** (cercles concentriques SVG, opacité ~5 %) sur l'atelier,
   le héro et les cartes — la signature « billet de banque » du produit.
 - Cartes virtuelles à **aplats fixes** (insensibles au thème), dont la collection
@@ -436,7 +445,7 @@ profonde** (#0C0F13) en sombre. Trois registres de surface rythment l'app :
 - **Creux 2** (`{colors.well-2}` — #DFE2E7 · #2A3340) : rails de jauge, points inactifs,
   fond du toggle.
 - **Encre** (`{colors.ink}` / `{colors.ink-2}` / `{colors.ink-3}`) : texte principal /
-  secondaire / récessif (chevrons, eyebrows, placeholders).
+  secondaire (dont les eyebrows) / récessif (chevrons, placeholders).
 
 ### Vert — action & identité
 - **Vert** (`{colors.green}` — #067647 · #2FC988) : l'aplat d'action. CTA primaire, chip
@@ -487,10 +496,10 @@ Restauration `cat-food` · Transport `cat-transport` · Voyage `cat-travel` · P
 ## Typography
 
 ### Font Family
-**Google Sans Flex** est la seule famille (Google Fonts, `wght 300..800`). `--mono` est un
-**alias de `--sans`** : les rôles techniques (eyebrow, PAN, références, ticks d'axe) gardent
-la même famille et se distinguent par `letter-spacing` élargi + capitales +
-`tabular-nums`. Google Sans Code a été essayée puis retirée. Fallback :
+**Google Sans Flex** est la seule famille (Google Fonts, `wght 300..800`). Les rôles
+techniques (PAN, références, ticks d'axe) gardent la même famille et se distinguent par
+`letter-spacing` élargi + `tabular-nums`. L'ancien alias `--mono` a été **supprimé**
+(Google Sans Code essayée puis retirée). Fallback :
 `-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`.
 
 ### Hierarchy
@@ -507,7 +516,7 @@ la même famille et se distinguent par `letter-spacing` élargi + capitales +
 | `{typography.body-strong}` | 15px | 500 | 0 | libellés appuyés |
 | `{typography.body-sm}` | 13.5px | 400 | 0 | sous-titres, notes |
 | `{typography.caption}` | 12px | 400 | 0 | micro-notes, fine-print |
-| `{typography.eyebrow}` | 11px | 500 | +0.14em | surtitre en capitales |
+| `{typography.eyebrow}` | 13px | 500 | 0 | libellé de section, sentence case (`{colors.ink-2}`) |
 | `{typography.button}` | 16px | 500 | -0.005em | CTA |
 | `{typography.keypad}` | 23px | 500 | tabular | touches du pavé |
 
@@ -524,8 +533,9 @@ nombres s'alignent (`.tnum`).
 
 ### Principles
 Poids 600 maximum pour les titres (jamais 700+). Chasse négative croissante avec la
-taille (-0.005em → -0.02em). Capitales **uniquement** via `.eyebrow`. `text-wrap: pretty`
-sur les paragraphes, `balance` sur les titres.
+taille (-0.005em → -0.02em). **Aucune capitale dans l'UI** — seules exceptions : les
+marquages gravés de la carte (`.vc-virtual`, `.s-l`), à la manière d'une carte physique.
+`text-wrap: pretty` sur les paragraphes, `balance` sur les titres.
 ⚠ QA : normaliser U+00A0 / U+202F avant toute comparaison de chaînes.
 
 ## Layout
@@ -576,10 +586,8 @@ autour des groupes de lignes ; les seuls « conteneurs » sont les creux fonctio
 | `{rounded.tile}` | 12px | pastilles de logo, touches du pavé, jours du calendrier |
 | `{rounded.control}` | 14px | champs, options réseau |
 | `{rounded.card}` | 16px | carte virtuelle, cartes d'alerte |
-| `{rounded.panel}` | 24px | héro du solde |
-| `{rounded.menu}` | 28px | menu widget |
-| `{rounded.action-sheet}` | 30px | panneau d'action ancré |
-| `{rounded.sheet}` | 34px (haut) | feuilles modales |
+| `{rounded.panel}` | 24px | héro du solde (carte posée dans la page) |
+| `{rounded.float}` | 30px | surfaces flottantes : feuilles modales (haut), panneau d'action, menu widget, panneau du détail de carte (`--r-float`) |
 | `{rounded.pill}` | 999px | boutons, chips, pills, segments, tabbar, toggles, avatars ronds |
 | 20px | — | `.method-card`, `.fx-card` (hors barème, assumé) |
 
@@ -600,7 +608,7 @@ textuelles (« Annuler », `.strong` pour l'action d'engagement).
 **`tab-bar-glass`** — capsule de verre flottante (`left/right:14px, bottom:24px`), 5px de
 padding interne. Onglet actif : icône + libellé en `{colors.green}` sur fond
 `color-mix(green 14%)`, rebond `tabPop` 0,32s. À sa droite, **`widget-trigger`** (54px)
-déplie **`widget-menu`** : grille 2×84px de tuiles (`.wm-ico` 58px, `{rounded.menu}`),
+déplie **`widget-menu`** : grille 2×84px de tuiles (`.wm-ico` 58px, coins 19px),
 `transform-origin: 88% 100%`, scrim flouté.
 
 **`stack-view`** — poussée de pile : entrant `translateX(100%)→0`, sous-jacent recule de
@@ -642,7 +650,7 @@ conversion (`.warn` si solde insuffisant), pulsation `digitPop` à chaque frappe
 `shake` 0,4s à l'erreur.
 
 ### Surfaces modales
-**`sheet`** — plein écran moins 14px, verre, coins 34px, entrée 380ms
+**`sheet`** — plein écran moins 14px, verre, coins `{rounded.float}`, entrée 380ms
 `cubic-bezier(.26,1.06,.34,1)`, poignée `.sheet-grab`. Variante `.fit` à hauteur de
 contenu (calendrier, filtres). **`action-sheet`** — panneau de verre ancré à 10px des
 bords, tuiles 44px sur `{colors.green-deep}` avec icône `{colors.accent-bright}`
@@ -665,13 +673,33 @@ fil `{colors.rule}`), délais .35/.55/.75s, sur l'écran de succès d'un envoi.
 
 ### Carte virtuelle
 **`vcard`** — ratio 1.586, coins `{rounded.card}`, liseré intérieur + ombre portée.
-Contenu : marque + « MoniPay », mention `virtuelle` en eyebrow, libellé, PAN masqué
-(`•• 1234`, chasse .1em), expiration + marque réseau, rosace au coin. Habillages clairs :
-`.light-art` (liseré `{colors.edge}`, ombre allégée).
-- **Révélation** : retournement 3D `rotateY(180°)` 0,55s ; le dos porte la bande
-  magnétique et `exp` / `cvv` en eyebrow + valeur.
-- **Gel** : voile clair + `blur(7px) saturate(.65) brightness(1.1)`, animation `frostIn`
-  puis `popIn` du disque flocon.
+Contenu : marque + « MoniPay », marquage `VIRTUELLE` gravé en capitales, libellé, PAN
+masqué (`•• 1234`, chasse .1em), marque réseau (h 26px, compact 18px), rosace au coin.
+Habillages clairs : `.light-art` (liseré `{colors.edge}`, ombre allégée).
+- **Révélation sur la face** (réf. `contentTransition(.numericText())` SwiftUI) : pas de
+  flip — le PAN complet et les marquages `EXPIRE` / `CVV` apparaissent **sur** la carte,
+  animés par `panRoll` (0,45s : montée + flou qui se dissipe, secrets décalés de 0,08s).
+- **Gel** : voile glacé (reflets radiaux bleutés + liseré givré interne) +
+  `blur(7px) saturate(.55) brightness(1.12)`, **givre SVG `.vf-ice`** (fougères de glace
+  aux coins + cristaux épars) qui pousse en cascade (`iceGrow` .1/.28/.5s), puis `popIn`
+  du disque flocon.
+
+**Détail de carte — scène ambiante (réf. Revolut) :**
+- **`cd-ambient`** : dégradé plein haut d'écran teinté par l'aplat de la carte —
+  `--cd-tint` (carte gelée → ardoise #5D6F7E), dosé par `--cd-mix` (24 % clair / 32 %
+  sombre) et `--cd-mix2`, fondu vers `{colors.paper}`. L'ombre de la carte héro reprend
+  la teinte (`color-mix` 50 %).
+- **`cd-panel`** (`{components.card-detail-panel}`) : le contenu monte sur la scène dans
+  un panneau `{colors.paper}` à coins `{rounded.float}`. Ordre : actions rapides →
+  détails repliables → dépense + anneau → transactions → réglages.
+- **`limit-ring`** (`.cd-ring`) : anneau de plafond 58px, trait 5,5, se dessine en 0,9s
+  à l'arrivée ; `> 85 %` → `{colors.debit}` ; % centré ; tap → contrôles.
+- **Détails repliables** (`.cd-collapse`) : dépliage `grid-template-rows 0fr→1fr` 0,42s
+  — le contenu dessous est **poussé en douceur**, jamais brutalement ; le repli est animé
+  AVANT le re-rendu (garde `F._cdBusy`).
+- **Défilement** : parallaxe + fondu du héros (`translateY ×.38`, scale ≥ .86), titre de
+  navbar qui apparaît après 170px avec voile de verre sous barre d'état + navbar.
+- Sous la carte : pilule d'état seule (Active / Gelée) — pas de rappel réseau/PAN.
 - **Sélecteur (assistant 4 étapes)** : carrousel **coverflow portrait** — carte 289×182
   tournée de 90°, slides 216px, scroll-snap, inclinaison JS `rotateY(-46°×ratio)`,
   perspective 1100px, méta en fondu, chips de collections.
@@ -701,9 +729,9 @@ choix Visa/Mastercard, sélection = liseré encre 1,5px + `{colors.surface}`.
 
 ### Graphiques (Analyse)
 **`bars-chart`** — barres `{colors.ink}` à 13 %, **active en `{colors.green}`** + étiquette,
-grille pointillée `{colors.hairline}`, ticks eyebrow. Pousse `barUp` 0,5s en cascade.
+grille pointillée `{colors.hairline}`, ticks 9,5px `{colors.ink-3}`. Pousse `barUp` 0,5s en cascade.
 **`donut`** — segments 21px (25px sélectionné, non-sélectionnés à 22 %), centre :
-eyebrow + montant 29px + libellé. Balayage `donutIn` 0,8s.
+libellé 11px + montant 29px + sous-libellé. Balayage `donutIn` 0,8s.
 **`cat-row`** — disque catégorie teinté `--cat-*` + jauge `meter`.
 **`delta-chip`** — hausse = `{colors.pend}`, baisse = `{colors.credit}` (une hausse de
 dépenses n'est pas une erreur, une baisse n'est pas un crédit).
@@ -730,7 +758,11 @@ Tout est conditionné par `.anim` sur la racine ; `prefers-reduced-motion` neutr
 | Frappe `digitPop` | 0,2s, scale 1.045 |
 | Barres / anneau / jauges | 0,5s / 0,8s / 0,8s, délais `--i` |
 | Coche : tracé + onde | 0,4s + 0,7s |
-| Gel de carte `frostIn` | 0,55s |
+| Gel : voile `frostIn` + givre `iceGrow` | 0,55s + 0,8s en cascade (.1/.28/.5s) |
+| Révélation `panRoll` (PAN + secrets) | 0,45s `cubic-bezier(.25,.9,.3,1)`, secrets +0,08s |
+| Dépliage des détails `.cd-collapse` | 0,42s `cubic-bezier(.3,.8,.3,1)` (grid-rows 0fr→1fr) |
+| Anneau de plafond | 0,9s `cubic-bezier(.3,.7,.3,1)` (stroke-dashoffset) |
+| Entrée du détail de carte `cdHero` | 0,5s, uniquement au push (`[data-anim="push"]`) |
 | Retours de pression | scale .92–.985, 0,12–0,14s |
 | Bascule de thème `.theme-anim` | fondu 0,3s |
 
@@ -754,7 +786,8 @@ Tout est conditionné par `.anim` sur la racine ; `prefers-reduced-motion` neutr
 ### Don't
 - Pas de vert en fond de page ; le vert profond est un panneau, pas un thème.
 - Pas de blanc sur `{colors.green}` en mode sombre — le texte y est vert profond #04301F.
-- Pas de deuxième famille de police ; pas de capitales hors `.eyebrow` ; pas de poids > 600.
+- Pas de deuxième famille de police ; pas de capitales hors marquages gravés de la carte
+  (VIRTUELLE, EXPIRE, CVV) ; pas de poids > 600.
 - Pas d'emoji dans l'UI ; pas de faux logos.
 - Pas de couleurs de statut comme teintes de série dans les graphiques.
 - Pas de dégradés décoratifs ; la matière vient du guilloché et du verre.
@@ -805,8 +838,7 @@ creux = `{colors.well}` · capsule = 999px · gutter = 20px.
   sensiblement la voix typographique.
 - `rounded: 20px` (`.method-card`, `.fx-card`) est hors barème — assumé, non tokenisé.
 - Les états hover n'existent pas (mobile-first) ; un portage desktop devrait les définir.
-- Non tranchés : dos de carte visible à mi-rotation pendant les swipes rapides ; galerie
-  « toutes les collections » en grille avant le carrousel ; keypad à opérateurs (+ − × ÷)
-  façon Revolut ; étape confirm sur Envoyer.
+- Non tranchés : galerie « toutes les collections » en grille avant le carrousel ;
+  keypad à opérateurs (+ − × ÷) façon Revolut ; étape confirm sur Envoyer.
 - Les icônes sont un jeu SVG interne à `app.js` (traits 1,8–2px) — non formalisées en
   tokens ici.

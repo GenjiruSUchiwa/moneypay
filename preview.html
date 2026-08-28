@@ -32,7 +32,7 @@ body{background:var(--paper);scroll-behavior:smooth}
 }
 .pv-mark{width:26px;height:26px;border-radius:8px;background:var(--green-deep);display:flex;align-items:center;justify-content:center;color:var(--accent-bright);flex-shrink:0}
 .pv-head h1{font-size:15px;font-weight:600;letter-spacing:-.01em}
-.pv-head .pv-hsub{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:1px}
+.pv-head .pv-hsub{font-family:var(--sans);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:1px}
 .pv-hfill{flex:1}
 .pv-theme{display:flex;gap:2px;background:var(--well);border-radius:99px;padding:3px}
 .pv-theme button{height:28px;padding:0 13px;border-radius:99px;font-size:12px;font-weight:500;color:var(--ink-2)}
@@ -41,7 +41,7 @@ body{background:var(--paper);scroll-behavior:smooth}
 /* ---- gabarit : sommaire + contenu ---- */
 .pv-wrap{display:flex;gap:44px;max-width:1180px;margin:0 auto;padding:36px 28px 120px}
 .pv-toc{width:190px;flex-shrink:0;position:sticky;top:86px;align-self:flex-start}
-.pv-toc .t-lbl{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:0 10px 8px}
+.pv-toc .t-lbl{font-family:var(--sans);font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:0 10px 8px}
 .pv-toc a{display:block;padding:6px 10px;border-radius:8px;font-size:13px;color:var(--ink-2);text-decoration:none}
 .pv-toc a:hover{background:var(--well);color:var(--ink)}
 .pv-main{flex:1;min-width:0}
@@ -51,7 +51,7 @@ body{background:var(--paper);scroll-behavior:smooth}
 .pv-intro h2{font-size:27px;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
 .pv-intro p{font-size:14px;line-height:1.6;color:var(--ink-2);margin-top:10px;max-width:640px;text-wrap:pretty}
 .pv-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-.pv-meta span{display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:99px;background:var(--well);font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-2)}
+.pv-meta span{display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:99px;background:var(--well);font-family:var(--sans);font-size:10.5px;letter-spacing:.04em;color:var(--ink-2)}
 
 /* ---- sections & specimens ---- */
 .pv-sec{margin-top:64px;scroll-margin-top:86px}
@@ -69,7 +69,7 @@ body{background:var(--paper);scroll-behavior:smooth}
 .spec .sp-zone>*{max-width:100%}
 .spec .sp-cap{border-top:1px solid var(--hairline);padding:10px 16px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .spec .sp-cap b{font-size:12.5px;font-weight:600;letter-spacing:-.005em}
-.spec .sp-cap code{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;color:var(--ink-3)}
+.spec .sp-cap code{font-family:var(--sans);font-size:10.5px;letter-spacing:.03em;color:var(--ink-3)}
 .sp-w{width:100%;max-width:345px}
 
 /* ---- nuancier ---- */
@@ -77,14 +77,14 @@ body{background:var(--paper);scroll-behavior:smooth}
 .sw .sw-c{height:64px}
 .sw .sw-b{padding:9px 13px 11px}
 .sw .sw-n{font-size:12.5px;font-weight:600;letter-spacing:-.005em}
-.sw .sw-h{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--ink-3);margin-top:3px;line-height:1.6}
+.sw .sw-h{font-family:var(--sans);font-size:10px;letter-spacing:.04em;color:var(--ink-3);margin-top:3px;line-height:1.6}
 .pv-grid.colors{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
 
 /* ---- typographie ---- */
 .ty{display:flex;align-items:baseline;gap:18px;padding:13px 0;border-bottom:1px solid var(--hairline)}
 .ty:last-child{border-bottom:0}
 .ty .ty-s{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ty .ty-m{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;color:var(--ink-3);text-align:right;flex-shrink:0;line-height:1.6}
+.ty .ty-m{font-family:var(--sans);font-size:10.5px;letter-spacing:.03em;color:var(--ink-3);text-align:right;flex-shrink:0;line-height:1.6}
 
 /* ---- composants absolus rendus statiques ---- */
 .spec .toast{position:static;opacity:1;transform:none;display:inline-flex;pointer-events:auto}
@@ -185,8 +185,9 @@ body{background:var(--paper);scroll-behavior:smooth}
     <!-- ======================= TYPOGRAPHIE ======================= -->
     <section class="pv-sec" id="typographie">
       <h3>Typographie</h3>
-      <div class="s-note">Google Sans Flex, famille unique. Les rôles techniques (eyebrow, PAN, références)
-      se distinguent par capitales + chasse élargie + chiffres tabulaires, pas par une seconde famille.
+      <div class="s-note">Google Sans Flex, famille unique. Les rôles techniques (PAN, références, ticks)
+      se distinguent par la chasse élargie et les chiffres tabulaires, pas par une seconde famille.
+      Les capitales sont réservées aux marquages gravés de la carte (VIRTUELLE, EXPIRE, CVV).
       Poids maximal des titres : 600.</div>
 
       <div class="pv-grid wide">
@@ -198,7 +199,7 @@ body{background:var(--paper);scroll-behavior:smooth}
             <div class="ty"><span class="ty-s t-section">Titre de section</span><span class="ty-m">19 / 600 / −0.015em</span></div>
             <div class="ty"><span class="ty-s" style="font-size:15px">Corps courant, titres de ligne</span><span class="ty-m">15 / 400</span></div>
             <div class="ty"><span class="ty-s" style="font-size:13.5px;color:var(--ink-2)">Sous-titres et notes</span><span class="ty-m">13,5 / 400 / lh 1.5</span></div>
-            <div class="ty"><span class="ty-s eyebrow">Eyebrow en capitales</span><span class="ty-m">11 / 500 / +0.14em</span></div>
+            <div class="ty"><span class="ty-s eyebrow">Libellé de section</span><span class="ty-m">13 / 500 / sentence case</span></div>
           </div>
           <div class="sp-cap"><b>Échelle</b><code>.t-page · .t-section · .eyebrow · .display</code></div>
         </div>
@@ -217,7 +218,7 @@ body{background:var(--paper);scroll-behavior:smooth}
             <span class="mono" style="font-size:14px;letter-spacing:.1em">5312 8801 4417 0093</span>
             <span class="mono tnum" style="font-size:13px;color:var(--ink-2)">MP-2026-08-4471</span>
           </div>
-          <div class="sp-cap"><b>Données brutes</b><code>.mono — PAN chasse .1em, références</code></div>
+          <div class="sp-cap"><b>Données brutes</b><code>PAN — chasse .1em · références en .tnum (même famille)</code></div>
         </div>
       </div>
     </section>
@@ -307,6 +308,19 @@ body{background:var(--paper);scroll-behavior:smooth}
             <div class="sp-w meter"><div class="m-fill warn" style="width:88%"></div></div>
           </div>
           <div class="sp-cap"><b>Jauge</b><code>.meter — 4px · .warn = {colors.debit}</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone row" style="gap:30px">
+            <span class="cd-ring" style="display:inline-block;pointer-events:none">
+              <svg width="58" height="58" viewBox="0 0 58 58"><circle cx="29" cy="29" r="24" fill="none" stroke="var(--well-2)" stroke-width="5.5"/><circle cx="29" cy="29" r="24" fill="none" stroke="var(--green)" stroke-width="5.5" stroke-linecap="round" transform="rotate(-90 29 29)" stroke-dasharray="150.8" stroke-dashoffset="102.5"/></svg>
+              <span class="cdr-pct tnum">32<span style="font-size:8px">%</span></span>
+            </span>
+            <span class="cd-ring" style="display:inline-block;pointer-events:none">
+              <svg width="58" height="58" viewBox="0 0 58 58"><circle cx="29" cy="29" r="24" fill="none" stroke="var(--well-2)" stroke-width="5.5"/><circle cx="29" cy="29" r="24" fill="none" stroke="var(--debit)" stroke-width="5.5" stroke-linecap="round" transform="rotate(-90 29 29)" stroke-dasharray="150.8" stroke-dashoffset="15.1"/></svg>
+              <span class="cdr-pct tnum">90<span style="font-size:8px">%</span></span>
+            </span>
+          </div>
+          <div class="sp-cap"><b>Anneau de plafond</b><code>.cd-ring 58px — se dessine en 0,9s · &gt; 85 % = {colors.debit}</code></div>
         </div>
         <div class="spec">
           <div class="sp-zone row" style="gap:22px">
@@ -469,12 +483,18 @@ body{background:var(--paper);scroll-behavior:smooth}
               <div class="vc-inner">
                 <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
                 <span class="vc-label" style="font-size:15px">Abonnements</span>
-                <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;4417</span>
-                <div class="vc-bottom"><span class="vc-exp">08/29</span><span style="font-weight:800;font-style:italic;font-size:15px;letter-spacing:-.02em">VISA</span></div>
+                <span class="vc-pan" style="font-size:13px">5312 8801 4417 0093</span>
+                <div class="vc-bottom">
+                  <span class="vc-secret-row" style="gap:18px;margin-top:0">
+                    <span class="vc-secret"><span class="s-l">Expire</span><span class="s-v" style="display:block">08/29</span></span>
+                    <span class="vc-secret"><span class="s-l">CVV</span><span class="s-v" style="display:block">417</span></span>
+                  </span>
+                  <span style="font-weight:800;font-style:italic;font-size:17px;letter-spacing:-.02em">VISA</span>
+                </div>
               </div>
             </div>
           </div>
-          <div class="sp-cap"><b>Sapin</b><code>Originales — #053826 / #FFFFFF</code></div>
+          <div class="sp-cap"><b>Sapin — révélée</b><code>révélation sur la face : PAN complet + Expire / CVV (roll panRoll 0,45s)</code></div>
         </div>
         <div class="spec">
           <div class="sp-zone">
@@ -484,8 +504,8 @@ body{background:var(--paper);scroll-behavior:smooth}
                 <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
                 <span class="vc-label" style="font-size:15px">Voyage</span>
                 <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;803</span>
-                <div class="vc-bottom"><span class="vc-exp">03/30</span>
-                  <span style="display:inline-flex"><span style="width:20px;height:20px;border-radius:99px;background:#EB001B"></span><span style="width:20px;height:20px;border-radius:99px;background:#F79E1B;margin-left:-8px;mix-blend-mode:hard-light"></span></span></div>
+                <div class="vc-bottom"><span></span>
+                  <span style="display:inline-flex"><span style="width:24px;height:24px;border-radius:99px;background:#EB001B"></span><span style="width:24px;height:24px;border-radius:99px;background:#F79E1B;margin-left:-9px;mix-blend-mode:hard-light"></span></span></div>
               </div>
             </div>
           </div>
@@ -498,12 +518,31 @@ body{background:var(--paper);scroll-behavior:smooth}
                 <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
                 <span class="vc-label" style="font-size:15px">Courses</span>
                 <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;1129</span>
-                <div class="vc-bottom"><span class="vc-exp">11/28</span><span style="font-weight:800;font-style:italic;font-size:15px">VISA</span></div>
+                <div class="vc-bottom"><span></span><span style="font-weight:800;font-style:italic;font-size:17px">VISA</span></div>
               </div>
-              <div class="vc-frozen"><span class="vf-disc"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#12161C" stroke-width="1.5"><path d="M8 1v14M2 4l12 8M14 4 2 12"/></svg></span>Carte gelée</div>
+              <div class="vc-frozen">
+                <svg class="vf-ice" viewBox="0 0 289 182" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                  <g fill="none" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round">
+                    <g stroke-opacity=".62">
+                      <path d="M6 4 L74 72"/>
+                      <path d="M18 16 l-3 15 M18 16 l15 -3 M32 30 l-4 17 M32 30 l17 -4 M48 46 l-4 15 M48 46 l15 -4 M62 60 l-3 12 M62 60 l12 -3"/>
+                      <path d="M4 36 L44 76 M13 45 l-2 12 M13 45 l12 -2 M27 59 l-3 13 M27 59 l13 -3"/>
+                    </g>
+                    <g stroke-opacity=".62">
+                      <path d="M283 178 L215 110"/>
+                      <path d="M271 166 l3 -15 M271 166 l-15 3 M257 152 l4 -17 M257 152 l-17 4 M241 136 l4 -15 M241 136 l-15 4"/>
+                      <path d="M285 146 L245 106 M276 137 l2 -12 M276 137 l-12 2"/>
+                    </g>
+                    <g stroke-opacity=".5">
+                      <path d="M226 34 v20 M216 44 h20 M219 37 l14 14 M233 37 l-14 14"/>
+                      <path d="M66 138 v16 M58 146 h16 M60 140 l12 12 M72 140 l-12 12"/>
+                    </g>
+                  </g>
+                </svg>
+                <span class="vf-disc"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#12161C" stroke-width="1.5"><path d="M8 1v14M2 4l12 8M14 4 2 12"/></svg></span>Gelée</div>
             </div>
           </div>
-          <div class="sp-cap"><b>Argent — gelée</b><code>.light-art · .vc-frozen : voile + blur(7px) saturate(.65)</code></div>
+          <div class="sp-cap"><b>Argent — gelée</b><code>.vc-frozen : voile glacé + givre SVG .vf-ice (pousse iceGrow en cascade)</code></div>
         </div>
       </div>
       <div class="pv-grid half">
