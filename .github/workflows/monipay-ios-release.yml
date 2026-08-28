@@ -1,0 +1,40 @@
+name: monipay-ios-release
+
+# Escape hatch for hand-pushed `monipay.ios-v*` tags: publishes a GitHub
+# release with git-cliff notes covering ios/**. No store deployment.
+# The normal path is monipay-ios-version.yml. Manual like every workflow in
+# this repo: dispatch it with the tag to release once the tag exists.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing monipay.ios-v* tag to release'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          # git-cliff needs full history to walk from the previous tag.
+          fetch-depth: 0
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
+
+      - name: Generate release notes
+        # --strip header keeps the pinned changelog header out of the notes.
+        run: git-cliff --config ios/cliff.toml --latest --strip header --output "$RUNNER_TEMP/release-notes.md"
+
+      - name: Create GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/release-notes.md"

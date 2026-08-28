@@ -1,0 +1,5 @@
+// Release configuration settings.
+// Empty until a backend is deployed: the app stays in mock mode.
+API_BASE_URL =
+
+SWIFT_COMPILATION_MODE = wholemodule

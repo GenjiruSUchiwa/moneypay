@@ -1,0 +1,56 @@
+name: monipay-api-ci
+
+# Manual only: every workflow in this repo runs on demand, from the Actions tab or
+# with `gh workflow run monipay-api-ci.yml --ref <branch>`. Automatic pull_request and
+# push triggers are deliberately absent; the same checks are run locally before a merge.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: monipay-api-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CI: true
+  # The commit hooks belong to a working clone, not to a runner.
+  HUSKY: 0
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-and-test:
+    name: build, test and format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # MinVer derives the version from tag history, which a shallow clone does not have.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore server/MoniPay.slnx
+
+      # -warnaserror is redundant with TreatWarningsAsErrors in Directory.Build.props and
+      # passed anyway: it states the rule at the gate that enforces it, so weakening the props
+      # cannot quietly weaken CI too.
+      - name: Build
+        run: dotnet build server/MoniPay.slnx --no-restore --configuration Release -warnaserror
+
+      # The committed document is the Swift client's contract; drift must fail here.
+      - name: Verify OpenAPI contract
+        run: |
+          ./scripts/update-openapi.sh
+          git diff --exit-code -- docs/api/openapi.json
+
+      - name: Verify formatting
+        run: dotnet format server/MoniPay.slnx --no-restore --verify-no-changes
+
+      - name: Test
+        run: dotnet test server/MoniPay.slnx --no-build --configuration Release

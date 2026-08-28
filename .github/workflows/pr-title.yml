@@ -1,0 +1,51 @@
+name: pr-title
+
+# Squash merge makes the PR title the commit message on main, so this check decides
+# whether history stays conventional. Parked on manual dispatch like every workflow in
+# this repo; the semantic action needs a pull_request event payload, so a manual run
+# only proves the file parses. Titles are checked by hand until automatic triggers return.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: pr-title-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-title:
+    name: conventional PR title
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          scopes: |
+            ios
+            api
+            ds
+            docs
+            ci
+            agents
+            poc
+          requireScope: false
+          subjectPattern: '^.{1,72}$'
+          subjectPatternError: |
+            The subject "{subject}" of pull request title "{title}" must be between 1 and 72 characters.

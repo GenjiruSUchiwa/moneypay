@@ -1,0 +1,12 @@
+# Thresholds for the code-metrics analyzers (CA1501, CA1502, CA1505, CA1506).
+#
+# These rules do NOT read dotnet_code_quality.*.threshold from .editorconfig: that key is
+# silently ignored and the rule keeps its built-in default. This file is the documented
+# mechanism, and Directory.Build.props registers it as an AdditionalFiles item.
+# The severities still come from .editorconfig, and warnings are errors, so a breach fails
+# the build.
+
+# Cyclomatic complexity. 10 independent paths through one method is the point past which a
+# reader stops holding it in their head, and past which the tests stop covering the branches.
+# Built-in default is 25.
+CA1502: 10

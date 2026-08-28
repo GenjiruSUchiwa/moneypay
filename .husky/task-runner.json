@@ -1,0 +1,28 @@
+{
+   "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+   "tasks": [
+      {
+         "name": "commit-message-linter",
+         "command": "bash",
+         "args": [ ".husky/commit-lint.sh", "${args}" ]
+      },
+      {
+         "name": "format-staged-sources",
+         "group": "pre-commit",
+         "pathMode": "absolute",
+         "cwd": "server",
+         "command": "dotnet",
+         "args": [ "format", "--no-restore", "--verify-no-changes", "--include", "${staged}" ],
+         "include": [ "server/**/*.cs" ]
+      },
+      {
+         "name": "swiftlint",
+         "group": "pre-commit",
+         "pathMode": "absolute",
+         "cwd": "ios",
+         "command": "swiftlint",
+         "args": [ "lint", "${staged}" ],
+         "include": [ "ios/**/*.swift" ]
+      }
+   ]
+}

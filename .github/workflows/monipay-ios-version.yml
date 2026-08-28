@@ -1,0 +1,79 @@
+name: monipay-ios-version
+
+# Manual counterpart of semantic-release for the iOS app: releases are cut
+# on demand, not on merge. Run it from the Actions tab or with
+# `gh workflow run monipay-ios-version.yml`; git-cliff computes the next
+# `monipay.ios-v*` version from the iOS-only commits landed since the last
+# tag (include_paths in ios/cliff.toml), refreshes ios/CHANGELOG.md,
+# tags, and publishes the GitHub release directly.
+# The release is created here rather than left to monipay-ios-release.yml
+# because tags pushed with GITHUB_TOKEN never trigger other workflows;
+# that workflow remains the escape hatch for hand-pushed tags.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: monipay-ios-version
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # git-cliff needs full history to walk from the previous tag.
+          fetch-depth: 0
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
+
+      - name: Compute next version
+        id: bump
+        run: |
+          # git-cliff --bumped-version patch-bumps on ANY commit type; align
+          # with semantic-release by releasing only on feat, fix or breaking.
+          last="$(git describe --tags --abbrev=0 --match 'monipay.ios-v*')"
+          if ! git log "$last"..HEAD --format='%s%n%b' -- ios/ \
+              | grep -E '^(feat|fix)(\([^)]*\))?!?:|^[a-z]+(\([^)]*\))?!:|^BREAKING[ -]CHANGE:' >/dev/null; then
+            echo "No release-worthy iOS commits since $last."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          next="$(git-cliff --config ios/cliff.toml --bumped-version)"
+          if git rev-parse -q --verify "refs/tags/$next" >/dev/null; then
+            echo "No version bump computed since $next."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Next release: $next"
+            echo "tag=$next" >> "$GITHUB_OUTPUT"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update changelog, commit and tag
+        if: steps.bump.outputs.release == 'true'
+        env:
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          git-cliff --config ios/cliff.toml --tag "$TAG" --output ios/CHANGELOG.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ios/CHANGELOG.md
+          git commit -m "chore(release): $TAG [skip ci]"
+          # Rebase before tagging: a tag laid before the rebase would keep
+          # pointing at the rewritten (orphaned) commit.
+          git pull --rebase origin main
+          git tag "$TAG"
+          git push origin HEAD:main "refs/tags/$TAG"
+
+      - name: Create GitHub release
+        if: steps.bump.outputs.release == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          # --strip header keeps the pinned changelog header out of the notes.
+          git-cliff --config ios/cliff.toml --latest --strip header --output "$RUNNER_TEMP/release-notes.md"
+          gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/release-notes.md"

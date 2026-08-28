@@ -1,0 +1,90 @@
+name: monipay-api-release
+
+# Manual, like every workflow in this repo: releases are cut on demand, not
+# on merge. Run it from the Actions tab or with
+# `gh workflow run monipay-api-release.yml`; git-cliff computes the next
+# `monipay.api-v*` version from the API commits landed since the last tag
+# (ios/** is excluded via exclude_paths in server/cliff.toml), refreshes
+# server/CHANGELOG.md, tags, and publishes the GitHub release directly.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency: monipay-api-release
+
+env:
+  CI: true
+  HUSKY: 0
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # git-cliff needs full history to walk from the previous tag.
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet restore server/MoniPay.slnx
+      - run: dotnet build server/MoniPay.slnx --no-restore --configuration Release
+      - run: dotnet test server/MoniPay.slnx --no-build --configuration Release
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
+
+      - name: Compute next version
+        id: bump
+        run: |
+          # git-cliff --bumped-version patch-bumps on ANY commit type; align
+          # with semantic-release by releasing only on feat, fix or breaking.
+          last="$(git describe --tags --abbrev=0 --match 'monipay.api-v*')"
+          if ! git log "$last"..HEAD --format='%s%n%b' -- . ':(exclude)ios' ':(exclude)prototype' \
+              | grep -qE '^(feat|fix)(\([^)]*\))?!?:|^[a-z]+(\([^)]*\))?!:|^BREAKING[ -]CHANGE:'; then
+            echo "No release-worthy API commits since $last."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          next="$(git-cliff --config server/cliff.toml --bumped-version)"
+          if git rev-parse -q --verify "refs/tags/$next" >/dev/null; then
+            echo "No version bump computed since $next."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Next release: $next"
+            echo "tag=$next" >> "$GITHUB_OUTPUT"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update changelog, commit and tag
+        if: steps.bump.outputs.release == 'true'
+        env:
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          git-cliff --config server/cliff.toml --tag "$TAG" --output server/CHANGELOG.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add server/CHANGELOG.md
+          git commit -m "chore(release): $TAG [skip ci]"
+          # Rebase before tagging: a tag laid before the rebase would keep
+          # pointing at the rewritten (orphaned) commit.
+          git pull --rebase origin main
+          git tag "$TAG"
+          git push origin HEAD:main "refs/tags/$TAG"
+
+      - name: Create GitHub release
+        if: steps.bump.outputs.release == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.bump.outputs.tag }}
+        run: |
+          # --strip header keeps the pinned changelog header out of the notes.
+          git-cliff --config server/cliff.toml --latest --strip header --output "$RUNNER_TEMP/release-notes.md"
+          gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/release-notes.md"

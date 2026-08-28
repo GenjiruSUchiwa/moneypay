@@ -1,0 +1,8 @@
+// Debug configuration settings.
+// API_BASE_URL surfaces in Info.plist under the key APIBaseURL (project.yml).
+// The POC runs locally: `node poc/server.js` listens on :8743.
+// `//` starts an xcconfig comment, so the scheme separator is rebuilt below.
+API_SCHEME = http:/
+API_BASE_URL = $(API_SCHEME)/localhost:8743
+
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) DEBUG

@@ -1,0 +1,95 @@
+# SwiftLint - MoniPay (Swift 6, iOS 26). Run from ios/: `swiftlint lint`.
+# CI runs it from the same directory (.github/workflows/ci.yml).
+
+included:
+  - App
+  - Tests
+  - "Packages/*/Sources"
+  - "Packages/*/Tests"
+
+excluded:
+  - "**/.build"
+  - "**/Package.resolved"
+  - MoniPay.xcodeproj
+  - scripts
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - empty_count
+  - explicit_init
+  - first_where
+  - last_where
+  - contains_over_first_not_nil
+  - redundant_nil_coalescing
+  - toggle_bool
+  - unneeded_parentheses_in_closure_argument
+  - closure_spacing
+  - operator_usage_whitespace
+  - vertical_whitespace_closing_braces
+  - sorted_first_last
+  - joined_default_parameter
+  - literal_expression_end_indentation
+
+analyzer_rules:
+  - unused_import
+
+# Money must never crash in production: every unsafe unwrap is an error.
+force_unwrapping:
+  severity: error
+force_try:
+  severity: error
+force_cast:
+  severity: error
+implicitly_unwrapped_optional:
+  severity: error
+
+line_length:
+  warning: 140
+  error: 200
+  ignores_urls: true
+  ignores_comments: false
+
+# Single-letter locals (i, s, v, d...) are common in this code's closures and
+# loops; type names stay explicit.
+identifier_name:
+  min_length:
+    warning: 1
+    error: 1
+  excluded: [id, x, y, r, g, b, dx, dy, to, at]
+
+large_tuple:
+  warning: 4
+  error: 6
+
+type_name:
+  min_length: 3
+  max_length: 50
+
+# SwiftUI views are long by nature: a ceiling, not a straitjacket.
+file_length:
+  warning: 600
+  error: 800
+type_body_length:
+  warning: 400
+  error: 600
+function_body_length:
+  warning: 50
+  error: 80
+# closure_body_length is deliberately NOT enabled: SwiftUI @ViewBuilder closures are
+# markup, not logic. Complexity is gated by cyclomatic_complexity, function_body_length
+# and nesting instead.
+cyclomatic_complexity:
+  warning: 10
+  error: 15
+
+nesting:
+  type_level: 2
+  function_level: 3
+
+# Todos stay a warning rather than an error.
+disabled_rules:
+  - todo
+  - statement_position          # one-line `if x { a } else { b }` in ViewBuilders
+  - implicit_optional_initialization  # `var x: T? = nil` is explicit on purpose
+  - switch_case_alignment       # false positives on inline `switch` expressions

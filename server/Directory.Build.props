@@ -1,0 +1,59 @@
+<Project>
+
+  <!-- Cross-cutting invariants for every .NET project in the monorepo. TargetFramework lives in
+       src/ and tests/ so that the mobile head keeps picking its own toolchain. -->
+
+  <PropertyGroup>
+    <!-- MSBuildThisFileDirectory resolves against this file, not the importing one, so this
+         stays the repository root however deep the importing project sits. This file lives in
+         server/, and the tool manifest and .husky/ are repo-wide, one level up. -->
+    <MoniPayRepositoryRoot>$(MSBuildThisFileDirectory)../</MoniPayRepositoryRoot>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Reproducible builds">
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Versioning">
+    <!-- Versions come from git tags. Components are named after the artefacts they ship:
+         monipay.api here, monipay.ios for the app, so an iOS tag never bumps this build.
+         MinVer matches tags by prefix, which is why the component name comes first. -->
+    <MinVerTagPrefix>monipay.api-v</MinVerTagPrefix>
+    <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MinVer" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MoniPay.Tests" />
+  </ItemGroup>
+
+  <!-- The code-metrics analyzers (CA1502 and friends) read their thresholds from this file
+       only. The equivalent dotnet_code_quality.*.threshold key in .editorconfig is ignored
+       without any diagnostic, which is why the threshold lives here and the severity there. -->
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)CodeMetricsConfig.txt" />
+  </ItemGroup>
+
+  <!-- A clone becomes hook-enabled on its first restore, so the commit convention does not
+       depend on anyone remembering a setup step. HUSKY=0 disables it, which is what CI and
+       any container build should set. -->
+  <Target Name="husky" BeforeTargets="Restore;CollectPackageReferences" Condition="'$(HUSKY)' != '0'">
+    <Exec Command="dotnet tool restore" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="$(MoniPayRepositoryRoot)" ContinueOnError="true" />
+    <Exec Command="dotnet husky install" StandardOutputImportance="Low" StandardErrorImportance="High" WorkingDirectory="$(MoniPayRepositoryRoot)" ContinueOnError="true" />
+  </Target>
+
+</Project>

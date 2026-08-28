@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>MoniPay.Wallet</RootNamespace>
+  </PropertyGroup>
+
+  <!-- A module owns its own endpoints, so it compiles against ASP.NET Core. It is still a
+       class library: the host is the only executable, and the only project that boots. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- Microsoft.Extensions.Options.ConfigurationExtensions and the OpenAPI metadata extensions
+       are not referenced here: the ASP.NET Core framework reference above already ships both. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MoniPay.Data/MoniPay.Data.csproj" />
+    <ProjectReference Include="../MoniPay.Kernel/MoniPay.Kernel.csproj" />
+  </ItemGroup>
+
+</Project>

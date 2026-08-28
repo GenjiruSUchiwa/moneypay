@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <UserSecretsId>3f1c9d20-6a4b-4d8e-9c17-2b5a0f7e4d31</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MoniPay.Data/MoniPay.Data.csproj" />
+    <ProjectReference Include="../MoniPay.Kernel/MoniPay.Kernel.csproj" />
+    <ProjectReference Include="../MoniPay.Wallet/MoniPay.Wallet.csproj" />
+  </ItemGroup>
+
+  <!-- The OpenAPI document is a build artefact only when scripts/update-openapi.sh asks for
+       it: generating it on every build would run the host at compile time. -->
+  <PropertyGroup>
+    <OpenApiGenerateDocuments Condition="'$(GenerateOpenApiDocs)' != 'true'">false</OpenApiGenerateDocuments>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GenerateOpenApiDocs)' == 'true'">
+    <OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+    <OpenApiDocumentsDirectory>$(MSBuildThisFileDirectory)obj/openapi</OpenApiDocumentsDirectory>
+    <OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
+  </PropertyGroup>
+
+</Project>
