@@ -111,6 +111,12 @@ public struct ComponentsShowcase: View {
                                    tint: Brand.debit, soft: Brand.debitSoft)
                     }
                 }
+                block("Segmented progress") {
+                    SegmentedProgress(count: 5, current: 0)
+                    SegmentedProgress(count: 5, current: 2)
+                    SegmentedProgress(count: 5, current: 4)
+                    SegmentedProgress(count: 3, current: 1, style: .story(dwell: .seconds(4)))
+                }
                 block("Amounts") {
                     MoneyText.xaf(428_500, size: 34)
                     MoneyText.usd(109_945, size: 28)
