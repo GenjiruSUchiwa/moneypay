@@ -207,10 +207,11 @@ const CATEGORIES = {
 
 const KIND_LABELS = { payment: "Paiement carte", topUp: "Rechargement", conversion: "Conversion", refund: "Remboursement", fee: "Frais", transfer: "Transfert" };
 
-/* mode live : ?live=2376XXXXXXXX branche Recharger et Nouvelle carte sur le POC backend
-   (poc/server.js sur :8743 → Campay/Sudo sandbox). Sans paramètre, tout reste simulé. */
-const LIVE = (p => p ? { base: "http://localhost:8743", phone: /^\d{9,}$/.test(p) ? p : "237699123456", id: null } : null)(
-  new URLSearchParams(location.search).get("live"));
+/* mode live : s'active quand un compte a été créé via le parcours d'inscription de la
+   maquette (profil stocké en localStorage). Recharger et Nouvelle carte passent alors
+   par le POC backend (poc/server.js sur :8743 → Campay/Sudo sandbox). Sinon, tout
+   reste simulé. Réinitialiser : localStorage.removeItem("moniProfile"). */
+const LIVE = { base: "http://localhost:8743", on: false, phone: null, id: null };
 async function liveApi(path, body) {
   const r = await fetch(LIVE.base + path, { method: "POST", body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({}));
@@ -219,7 +220,7 @@ async function liveApi(path, body) {
 }
 async function liveUser() {
   if (!LIVE.id) LIVE.id = (await liveApi("/signup", {
-    name: S.user.first + " " + S.user.last, phone: LIVE.phone, email: S.user.email })).id;
+    name: S.user.first + " " + S.user.last, phone: LIVE.phone || "237699123456", email: S.user.email })).id;
   return LIVE.id;
 }
 function liveFail(title, e) {
@@ -306,6 +307,15 @@ const S = {
     { q: "Que se passe-t-il si je gèle une carte ?", a: "Toutes les autorisations sont refusées immédiatement. Les abonnements en cours échoueront tant que la carte reste gelée. Vous pouvez la dégeler à tout moment." }
   ]
 };
+
+/* compte réel créé lors d'une session précédente → mode live d'office */
+try {
+  const savedProfile = JSON.parse(localStorage.getItem("moniProfile") || "null");
+  if (savedProfile && savedProfile.phone) {
+    Object.assign(S.user, { first: savedProfile.first, last: savedProfile.last, email: savedProfile.email, phone: "+" + savedProfile.phone });
+    LIVE.on = true; LIVE.phone = savedProfile.phone;
+  }
+} catch (_) {}
 
 /* ================================================================
    Formatage
@@ -768,7 +778,7 @@ function fmtPhoneDigits(d) {
 }
 
 function splashScreen() {
-  after(1500, () => setPhase("welcome"));
+  after(1500, () => setPhase(LIVE.on ? "lock" : "welcome"));
   return `<div class="layer dark-bg on-green">
     ${statusBar(true)}
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
@@ -2826,7 +2836,23 @@ const ACTIONS = {
   goSignup: () => setPhase("signup", { step: 0 }),
   goLock: () => setPhase("lock"),
   goLockFromApp: () => { resetStacks(); setPhase("lock"); },
-  goKYC: () => setPhase("kyc", { step: 0 }),
+  goKYC: () => {
+    /* fin du parcours d'inscription : on fige le profil saisi, on le stocke, et on crée
+       le compte réel sur le POC backend. Si le serveur est injoignable, on reste simulé. */
+    const val = n => { const el = phone.querySelector(`input[name="${n}"]`); return el ? el.value.trim() : ""; };
+    const dial = (COUNTRIES.find(x => x.id === (F.country || "CM")) || { dial: "+237" }).dial.replace(/\D/g, "");
+    const profile = {
+      first: val("first") || S.user.first, last: val("last") || S.user.last,
+      email: val("email") || S.user.email, phone: dial + (F.phoneDigits || "699123456"),
+    };
+    try { localStorage.setItem("moniProfile", JSON.stringify(profile)); } catch (_) {}
+    Object.assign(S.user, { first: profile.first, last: profile.last, email: profile.email, phone: "+" + profile.phone });
+    LIVE.on = true; LIVE.phone = profile.phone; LIVE.id = null;
+    liveUser().then(
+      () => S.notifs.unshift({ id: uid(), title: "Compte créé", body: `Compte réel ouvert pour ${profile.first} · +${profile.phone} (sandbox)`, date: Date.now(), icon: "check", cls: "credit", unread: true }),
+      e => { LIVE.on = false; liveFail("Serveur POC injoignable — mode simulé", e); });
+    setPhase("kyc", { step: 0 });
+  },
   enterApp: () => { resetStacks(); TAB = "home"; setPhase("main"); },
   signupBack: () => { F.step = Math.max(0, (F.step || 0) - 1); renderPhone(); },
   signupNext: () => { F.step = (F.step || 0) + 1; renderPhone(); },
@@ -3060,7 +3086,7 @@ const ACTIONS = {
       S.notifs.unshift({ id: uid(), title: "Rechargement reçu", body: `${fmtXAF(credited)} reçus depuis ${m.name}`, date: Date.now(), icon: "arrDn", cls: "credit", unread: true });
       F.step = "done"; F.dir = "fwd"; rerenderSheet();
     };
-    if (!LIVE) return done();
+    if (!LIVE.on) return done();
     if (F.topupBusy) return;
     F.topupBusy = true; rerenderSheet();
     liveUser().then(id => liveApi("/topup", { user_id: id, amount_fcfa: amount }))
@@ -3124,7 +3150,7 @@ const ACTIONS = {
       F.issuing = false; F.step = "created"; F.createdId = id;
       rerenderSheet();
     };
-    if (LIVE) {
+    if (LIVE.on) {
       // Vraie carte Sudo : on crédite d'abord le solde serveur (plafond Campay 25 F oblige),
       // puis /card émet une Visa virtuelle de 5 $ (minimum Sudo : 3 $). Le PAN complet n'est
       // pas exposé par l'API (token sécurisé en prod) — on reconstitue depuis le masked_pan.

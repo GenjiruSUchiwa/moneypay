@@ -49,12 +49,16 @@ Notes sandbox :
 
 ## Mode live du prototype UI
 
-Le prototype (`prototype/`, servi sur :8742) peut se brancher sur ce serveur :
-ouvrir `http://localhost:8742/index.html?live=<numéro MSISDN>` (ex. `?live=237670123456`).
-- **Recharger** → vraie collecte Campay (push USSD sur le numéro donné, ≤ 25 F en demo).
+Le prototype (`prototype/`, servi sur :8742) se branche sur ce serveur via son propre
+parcours d'inscription : Bienvenue → « Quel est votre numéro ? » (mettre le VRAI numéro
+MTN/Orange) → OTP/code/Face ID (simulés) → « Vos informations » (nom/email modifiables,
+défauts OK) → **Continuer** crée le compte réel et stocke le profil en localStorage.
+Aux visites suivantes : splash → écran de verrouillage, compte retenu.
+- **Recharger** → vraie collecte Campay (push USSD sur le numéro du compte, ≤ 25 F en demo).
 - **Nouvelle carte** → vraie carte virtuelle Sudo de 5 $ (minimum 3 $) ; le solde serveur
   est pré-crédité via `/simtopup` (le plafond Campay ne permet pas de financer une carte).
-Sans `?live`, tout reste simulé comme avant.
+Serveur éteint ou injoignable → la maquette reste 100 % simulée.
+Réinitialiser le compte : `localStorage.removeItem("moniProfile")` dans la console.
 
 ## Limites assumées du POC
 
