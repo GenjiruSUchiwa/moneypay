@@ -58,6 +58,10 @@
   --sans:"Google Sans Flex","Google Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
   --mono:var(--sans);  /* famille unique — les rôles « techniques » restent en Sans Flex */
 
+  /* scène ambiante du détail de carte : part de teinte mêlée au fond */
+  --cd-mix:24%;
+  --cd-mix2:11%;
+
   --gutter:20px;
   --r-panel:24px;
   --r-card:16px;
@@ -911,6 +915,8 @@ input:focus-visible{outline:none}
   --shadow-pop:0 12px 40px rgba(0,0,0,.55);
   --shadow-sheet:0 -8px 40px rgba(0,0,0,.5);
   --net-visa:#F0F3F6;
+  --cd-mix:32%;
+  --cd-mix2:14%;
 
   --glass:rgba(26,32,40,.58);
   --glass-menu:rgba(20,25,31,.74);
@@ -958,6 +964,8 @@ input:focus-visible{outline:none}
   --shadow-pop:0 12px 40px rgba(0,0,0,.55);
   --shadow-sheet:0 -8px 40px rgba(0,0,0,.5);
   --net-visa:#F0F3F6;
+  --cd-mix:32%;
+  --cd-mix2:14%;
 
   --glass:rgba(26,32,40,.58);
   --glass-menu:rgba(20,25,31,.74);
@@ -1113,6 +1121,54 @@ input:focus-visible{outline:none}
 .recent{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:66px;padding:8px 2px;border-radius:14px;transition:transform .12s ease}
 .recent:active{transform:scale(.94)}
 .recent .rc-name{font-size:11.5px;color:var(--ink-2);max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------------- Détail de carte — scène ambiante (réf. Revolut) */
+.cd-ambient{
+  position:absolute;top:0;left:0;right:0;height:430px;pointer-events:none;
+  background:linear-gradient(180deg,
+    color-mix(in srgb, var(--cd-tint) var(--cd-mix), var(--paper)) 0%,
+    color-mix(in srgb, var(--cd-tint) var(--cd-mix2), var(--paper)) 58%,
+    var(--paper) 96%);
+}
+.cd-hero{position:relative;padding-top:6px;will-change:transform,opacity;transform-origin:top center}
+.cd-hero .flip-scene{display:block;width:min(316px, calc(100% - 2*var(--gutter)));margin:0 auto}
+.cd-hero .vcard{
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),
+    0 24px 44px -20px color-mix(in srgb, var(--cd-tint) 50%, rgba(12,17,23,.5));
+}
+.cd-hero .vcard.light-art{
+  box-shadow:inset 0 0 0 1px var(--edge),
+    0 24px 44px -20px color-mix(in srgb, var(--cd-tint) 34%, rgba(12,17,23,.4));
+}
+.cd-sub{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;font-size:13px;color:var(--ink-2)}
+.cd-panel{position:relative;margin-top:20px;border-radius:28px 28px 0 0;background:var(--paper)}
+.cd-spend{display:flex;align-items:center;gap:18px;margin-top:10px}
+.cd-spend .cds-body{flex:1;min-width:0}
+.cd-spend .cds-sub{font-size:12.5px;color:var(--ink-2);margin-top:6px}
+.cd-ring{position:relative;flex-shrink:0;transition:transform .12s ease}
+.cd-ring:active{transform:scale(.94)}
+.cd-ring #cdring{transition:stroke-dashoffset .9s cubic-bezier(.3,.7,.3,1)}
+.cd-ring .cdr-pct{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:12.5px;font-weight:600;letter-spacing:-.02em;
+}
+/* titre de la barre : n'apparaît qu'une fois le héros défilé */
+.cd-ambient ~ .navbar .nb-title{opacity:0;transform:translateY(5px);transition:opacity .22s ease,transform .22s ease}
+.cd-ambient ~ .navbar.scrolled .nb-title{opacity:1;transform:none}
+/* voile de verre sous la barre (couvre aussi la barre d'état) une fois défilé */
+.cd-ambient ~ .navbar::before{
+  content:"";position:absolute;left:0;right:0;top:-54px;bottom:-1px;z-index:-1;
+  background:var(--glass);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  box-shadow:0 1px 0 var(--hairline);
+  opacity:0;transition:opacity .25s ease;
+}
+.cd-ambient ~ .navbar.scrolled::before{opacity:1}
+/* détails révélés : montée douce */
+.anim .cd-reveal{animation:riseIn .34s cubic-bezier(.22,.9,.3,1)}
+/* entrée de l'écran : la carte se pose sur la scène */
+@keyframes cdHero{from{opacity:0;transform:translateY(18px) scale(.94)}}
+.anim [data-anim="push"] .cd-hero{animation:cdHero .5s .06s cubic-bezier(.3,1.06,.4,1) backwards}
 
 /* commutateur de thème (rail de l'atelier) */
 .rail-theme{display:flex;gap:2px;background:var(--well);border-radius:9px;padding:2px;margin-bottom:10px}

@@ -1568,74 +1568,97 @@ function profileScreen() {
 function cardDetailScreen(params) {
   const c = cardById(params.id);
   if (!c) return `${navBar({ back: "pop" })}<div class="gutter">Carte introuvable.</div>`;
+  const th = CARD_THEMES[c.theme];
   const revealed = !!F.revealed;
   const holder = (S.user.first + " " + S.user.last).toUpperCase();
-  return `${statusBar()}
+  const tint = c.frozen ? "#5D6F7E" : th.fill;
+  const txs = txsOfCard(c.id);
+  const pct = c.limit ? Math.min(1, c.spent / c.limit) : 0;
+  const warn = pct > .85;
+  const CIRC = 150.8; /* 2π·24 */
+  const ringOff = (CIRC * (1 - pct)).toFixed(1);
+  const flipped = F._flipAnim ? !revealed : revealed;
+  const month = MONTHS_FR[new Date(now).getMonth()];
+  return `<div class="cd-ambient" style="--cd-tint:${tint}"></div>
+  ${statusBar()}
   ${navBar({ back: "pop", title: c.label, right: `<button type="button" class="nb-btn" data-act="cardMenu" data-arg="${c.id}" aria-label="Plus d’options">${ico("dots", 20)}</button>` })}
-  <div class="scroll">
-    <div class="gutter" style="padding-top:4px">
-      <div class="flip-scene ${revealed ? "flipped" : ""}" style="max-width:300px;margin:0 auto">
+  <div class="scroll" id="cdscroll">
+    <div class="cd-hero" id="cdhero" style="--cd-tint:${tint}">
+      <button type="button" class="flip-scene ${flipped ? "flipped" : ""}" id="cdflip" data-act="cardReveal" aria-label="${revealed ? "Masquer les détails" : "Afficher les détails"}">
         <div class="flip-inner" style="aspect-ratio:1.586">
           <div class="flip-face" style="position:absolute;inset:0">${vcardHTML(c)}</div>
           <div class="flip-back">${vcardBackHTML(c, holder)}</div>
         </div>
+      </button>
+      <div class="cd-sub tnum">
+        <span class="pill ${c.frozen ? "neutral" : "credit"} no-ico">${c.frozen ? "Gelée" : "Active"}</span>
+        <span>${c.network === "mastercard" ? "Mastercard" : "Visa"} · Virtuelle${NBSP}··${NBSP}${c.pan.slice(-4)}</span>
       </div>
     </div>
-    <div class="quick-actions gutter" style="margin-top:22px">
-      ${quickAction(revealed ? "eyeOff" : "eye", revealed ? "Masquer" : "Détails", "cardReveal")}
-      ${quickAction(c.frozen ? "sun" : "snow", c.frozen ? "Dégeler" : "Geler", "cardFreezeAsk", c.id)}
-      ${quickAction("sliders", "Contrôles", "openControls", c.id)}
-      ${quickAction("wallet", "Wallet", "toastWallet")}
-    </div>
-    <div class="rule" style="margin:24px var(--gutter) 0"></div>
-
-    ${revealed ? `
-      ${eyebrow("Détails de la carte", "gutter")}
-      <div style="margin-top:-6px">
-        ${kvRow("Titulaire", esc(holder), { copy: holder })}
-        <div class="rule" style="margin:0 var(--gutter)"></div>
-        ${kvRow("Numéro", chunkPan(c.pan), { mono: true, copy: c.pan })}
-        <div class="rule" style="margin:0 var(--gutter)"></div>
-        ${kvRow("Expiration", c.exp, { mono: true, copy: c.exp })}
-        <div class="rule" style="margin:0 var(--gutter)"></div>
-        ${kvRow("CVV", c.cvv, { mono: true, copy: c.cvv })}
+    <div class="cd-panel">
+      <div class="quick-actions gutter" style="padding-top:18px">
+        ${quickAction(revealed ? "eyeOff" : "eye", revealed ? "Masquer" : "Détails", "cardReveal")}
+        ${quickAction(c.frozen ? "sun" : "snow", c.frozen ? "Dégeler" : "Geler", "cardFreezeAsk", c.id)}
+        ${quickAction("sliders", "Contrôles", "openControls", c.id)}
+        ${quickAction("wallet", "Wallet", "toastWallet")}
       </div>
-      <div class="note-micro gutter" style="padding-bottom:16px">MoniPay ne vous demandera jamais ces informations.</div>
-      <div class="rule" style="margin:0 var(--gutter)"></div>` : ""}
+      ${c.frozen ? `<div class="note-row gutter" style="padding-top:16px"><span style="color:var(--ink-3)">${ico("snow", 15)}</span><span>Carte gelée : tous les paiements sont refusés. Dégelez-la à tout moment.</span></div>` : ""}
 
-    <div class="gutter" style="padding-top:22px;display:flex;align-items:baseline">
-      ${eyebrow("Plafond mensuel")}
-      <span style="flex:1"></span>
-      <button type="button" class="sh-link" data-act="openControls" data-arg="${c.id}" style="font-size:13px;font-weight:500;color:var(--accent)">Modifier</button>
-    </div>
-    <div class="gutter" style="margin-top:10px;display:flex;align-items:baseline;gap:8px">
-      ${moneyUSD(c.spent, 27)}
-      <span style="font-size:13.5px;color:var(--ink-2)" class="tnum">${c.limit ? "sur " + fmtUSD(c.limit) : "sans plafond"}</span>
-    </div>
-    ${c.limit ? `
-      <div class="gutter" style="margin-top:12px">${meter(c.spent / c.limit, { warn: c.spent / c.limit > .85 })}</div>
-      <div class="gutter tnum" style="display:flex;margin-top:8px;font-size:12px;color:var(--ink-2)">
-        <span class="tnum">Reste ${fmtUSD(Math.max(0, c.limit - c.spent))}</span><span style="flex:1"></span><span style="color:var(--ink-3)">Réinitialisé le 1ᵉʳ</span>
+      ${revealed ? `
+      <div class="cd-reveal">
+        <div class="rule" style="margin:20px var(--gutter) 0"></div>
+        <div class="gutter" style="padding-top:20px">${eyebrow("Détails de la carte")}</div>
+        <div style="margin-top:-2px">
+          ${kvRow("Titulaire", esc(holder), { copy: holder })}
+          <div class="rule" style="margin:0 var(--gutter)"></div>
+          ${kvRow("Numéro", chunkPan(c.pan), { mono: true, copy: c.pan })}
+          <div class="rule" style="margin:0 var(--gutter)"></div>
+          ${kvRow("Expiration", c.exp, { mono: true, copy: c.exp })}
+          <div class="rule" style="margin:0 var(--gutter)"></div>
+          ${kvRow("CVV", c.cvv, { mono: true, copy: c.cvv })}
+        </div>
+        <div class="note-micro gutter">MoniPay ne vous demandera jamais ces informations.</div>
       </div>` : ""}
-    ${c.declines > 0 ? `<div class="note-row gutter" style="margin-top:14px"><span style="color:var(--pend)">${ico("warn", 15)}</span><span>${c.declines} refus ce mois · la carte se bloque à 3.</span></div>` : ""}
-    <div class="rule" style="margin:20px var(--gutter) 0"></div>
 
-    <div style="padding-top:6px">
-      ${listRow({ icon: "globe", title: "Paiements en ligne", value: c.online ? "Autorisés" : "Bloqués", act: "openControls", arg: c.id })}
-      ${rule(true)}
-      ${listRow({ icon: "recur", title: "Abonnements récurrents", value: c.subs ? "Autorisés" : "Bloqués", act: "openControls", arg: c.id })}
-      ${rule(true)}
-      ${listRow({ icon: "sliders", title: "Tous les contrôles", chevron: true, act: "openControls", arg: c.id })}
+      <div class="rule" style="margin:20px var(--gutter) 0"></div>
+      <div class="gutter" style="padding-top:20px;display:flex;align-items:baseline">
+        ${eyebrow("Dépensé en " + month)}
+        <span style="flex:1"></span>
+        <button type="button" class="sh-link" data-act="openControls" data-arg="${c.id}" style="font-size:13px;font-weight:500;color:var(--accent)">Modifier</button>
+      </div>
+      <div class="cd-spend gutter">
+        <div class="cds-body">
+          ${moneyUSD(c.spent, 30)}
+          <div class="cds-sub tnum">${c.limit ? `Reste ${fmtUSD(Math.max(0, c.limit - c.spent))} sur ${fmtUSD(c.limit)}<br><span style="color:var(--ink-3)">Plafond réinitialisé le 1ᵉʳ du mois</span>` : "Sans plafond mensuel"}</div>
+        </div>
+        ${c.limit ? `
+        <button type="button" class="cd-ring" data-act="openControls" data-arg="${c.id}" aria-label="Modifier le plafond">
+          <svg width="58" height="58" viewBox="0 0 58 58" aria-hidden="true">
+            <circle cx="29" cy="29" r="24" fill="none" stroke="var(--well-2)" stroke-width="5.5"/>
+            <circle id="cdring" cx="29" cy="29" r="24" fill="none" stroke="${warn ? "var(--debit)" : "var(--green)"}" stroke-width="5.5" stroke-linecap="round"
+              transform="rotate(-90 29 29)" stroke-dasharray="${CIRC}" stroke-dashoffset="${F._cdSeen ? ringOff : CIRC}" data-off="${ringOff}"/>
+          </svg>
+          <span class="cdr-pct tnum">${Math.round(pct * 100)}<span style="font-size:8px">%</span></span>
+        </button>` : ""}
+      </div>
+      ${c.declines > 0 ? `<div class="note-row gutter" style="margin-top:12px"><span style="color:var(--pend)">${ico("warn", 15)}</span><span>${c.declines} refus ce mois · la carte se bloque à 3.</span></div>` : ""}
+      <div class="rule" style="margin:20px var(--gutter) 0"></div>
+
+      <div style="padding-top:6px">
+        ${listRow({ icon: "globe", title: "Paiements en ligne", value: c.online ? "Autorisés" : "Bloqués", act: "openControls", arg: c.id })}
+        ${rule(true)}
+        ${listRow({ icon: "recur", title: "Abonnements récurrents", value: c.subs ? "Autorisés" : "Bloqués", act: "openControls", arg: c.id })}
+        ${rule(true)}
+        ${listRow({ icon: "sliders", title: "Tous les contrôles", chevron: true, act: "openControls", arg: c.id })}
+      </div>
+      <div class="rule" style="margin:0 var(--gutter)"></div>
+
+      ${sectionHead("Transactions", { count: txs.length || null })}
+      ${txs.length
+        ? txs.slice(0, 6).map(t => txRow(t)).join("")
+        : emptyNote("Aucune transaction", "Les paiements effectués avec cette carte apparaîtront ici.")}
+      <div style="height:26px"></div>
     </div>
-    <div class="rule" style="margin:0 var(--gutter)"></div>
-
-    ${sectionHead("Transactions", { count: txsOfCard(c.id).length || null })}
-    ${txsOfCard(c.id).length
-      ? txsOfCard(c.id).slice(0, 6).map(t => txRow(t)).join("")
-      : emptyNote("Aucune transaction", "Les paiements effectués avec cette carte apparaîtront ici.")}
-    <div class="rule" style="margin:8px var(--gutter) 0"></div>
-    ${listRow({ icon: "trash", title: "Supprimer cette carte", destructive: true, act: "cardDeleteAsk", arg: c.id })}
-    <div style="height:26px"></div>
   </div>
   <div class="homebar"></div>`;
 }
@@ -2716,6 +2739,46 @@ function renderPhone(mode) {
       requestAnimationFrame(() => { cwTick = false; update(); });
     }, { passive: true });
   }
+
+  /* détail de carte : parallaxe du héros, titre au défilement, anneau, flip */
+  const cds = phone.querySelector("#cdscroll");
+  if (cds) {
+    const view = cds.closest(".stack-view") || phone;
+    const hero = view.querySelector("#cdhero");
+    const nav = view.querySelector(".navbar");
+    const rm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const upd = () => {
+      const y = cds.scrollTop;
+      if (!rm && hero) {
+        hero.style.transform = `translateY(${(y * .38).toFixed(1)}px) scale(${Math.max(.86, 1 - y / 1400).toFixed(3)})`;
+        hero.style.opacity = Math.max(0, 1 - y / 300).toFixed(2);
+      }
+      if (nav) nav.classList.toggle("scrolled", y > 170);
+    };
+    upd();
+    let cdTick = false;
+    cds.addEventListener("scroll", () => {
+      if (cdTick) return;
+      cdTick = true;
+      requestAnimationFrame(() => { cdTick = false; upd(); });
+    }, { passive: true });
+    /* l'anneau de plafond se dessine à l'arrivée */
+    const ring = view.querySelector("#cdring");
+    if (ring && !F._cdSeen) {
+      F._cdSeen = 1;
+      if (rm) ring.style.strokeDashoffset = ring.dataset.off;
+      else requestAnimationFrame(() => requestAnimationFrame(() => { ring.style.strokeDashoffset = ring.dataset.off; }));
+    }
+    /* flip déclenché APRÈS le rendu pour que la transition joue */
+    if (F._flipAnim) {
+      delete F._flipAnim;
+      const fs = view.querySelector("#cdflip");
+      if (fs) {
+        if (rm) fs.classList.toggle("flipped", !!F.revealed);
+        else requestAnimationFrame(() => requestAnimationFrame(() => fs.classList.toggle("flipped", !!F.revealed)));
+      }
+    }
+  }
 }
 
 /* ================================================================
@@ -2815,8 +2878,8 @@ const ACTIONS = {
 
   /* cartes */
   cardScope: i => { F.cardScope = +i; F.cardSel = 0; F._cwAnim = true; renderPhone(); },
-  openCard: id => { delete F.revealed; pushScreen("cardDetail", { id }); },
-  cardReveal: () => { F.revealed = !F.revealed; renderPhone(); },
+  openCard: id => { delete F.revealed; delete F._cdSeen; pushScreen("cardDetail", { id }); },
+  cardReveal: () => { F.revealed = !F.revealed; F._flipAnim = 1; renderPhone(); },
   cardFreezeAsk: id => {
     const c = cardById(id);
     showDialog({
