@@ -29,5 +29,15 @@ let package = Package(
                 .treatAllWarnings(as: .error),
             ]
         ),
+        .testTarget(
+            name: "OnboardingTests",
+            dependencies: [
+                "Onboarding",
+            ],
+            swiftSettings: [
+                .defaultIsolation(MainActor.self),
+                .treatAllWarnings(as: .error),
+            ]
+        ),
     ]
 )

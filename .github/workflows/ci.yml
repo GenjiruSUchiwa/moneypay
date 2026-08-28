@@ -61,7 +61,7 @@ jobs:
       - name: Test packages
         run: |
           set -o pipefail
-          for pkg in Platform Money ApiClient DesignSystem; do
+          for pkg in Platform Money ApiClient DesignSystem Onboarding; do
             echo "::group::$pkg"
             (cd "Packages/$pkg" && xcodebuild test \
               -scheme "$pkg" \
