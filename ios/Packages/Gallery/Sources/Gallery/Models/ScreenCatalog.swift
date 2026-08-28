@@ -84,7 +84,8 @@ public enum ScreenCatalog {
         e(.init("kyc-capture", "Capture de la pièce", "Vérification d'identité", "camera.viewfinder", Viz.categorical[3])) { _ in
             KYCCaptureView(mode: .document, onNext: {}, onBack: {}).padding(.top, 16).page()
         },
-        e(.init("kyc-selfie", "Selfie de vivacité", "Vérification d'identité", "person.crop.circle.badge.checkmark", Viz.categorical[2])) { _ in
+        e(.init("kyc-selfie", "Selfie de vivacité", "Vérification d'identité",
+                "person.crop.circle.badge.checkmark", Viz.categorical[2])) { _ in
             KYCCaptureView(mode: .selfie, onNext: {}, onBack: {}).padding(.top, 16).page()
         },
         e(.init("kyc-review", "Vérification en cours", "Vérification d'identité", "hourglass", Viz.categorical[6])) { _ in
