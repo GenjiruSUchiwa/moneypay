@@ -14,6 +14,9 @@ import WalletStore
 /// The single registry of every view in the mockup.
 /// It serves two uses: the in-app gallery, and launching straight into one
 /// screen (`-screen <key>`) to capture it without replaying the flows.
+///
+/// `title` and `section` are engineering labels for a review tool, not product
+/// copy: they stay English and render verbatim, so `Gallery` owns no catalog.
 public struct CatalogEntry: Identifiable {
     public init(
         key: String,
@@ -52,140 +55,140 @@ public enum ScreenCatalog {
 
     public static let all: [CatalogEntry] = [
         // Onboarding
-        e(.init("splash", "Splash", "Accueil et onboarding", "sparkles", Viz.categorical[6])) { _ in
+        e(.init("splash", "Splash", "Onboarding", "sparkles", Viz.categorical[6])) { _ in
             SplashView(onFinish: {})
         },
-        e(.init("welcome", "Carrousel d'accueil", "Accueil et onboarding", "rectangle.stack", Viz.categorical[0])) { _ in
+        e(.init("welcome", "Welcome carousel", "Onboarding", "rectangle.stack", Viz.categorical[0])) { _ in
             WelcomeView(onStart: {}, onSignIn: {})
         },
-        e(.init("phone", "Numéro de téléphone", "Accueil et onboarding", "phone", Viz.categorical[2])) { _ in
+        e(.init("phone", "Phone number", "Onboarding", "phone", Viz.categorical[2])) { _ in
             wrap { PhoneStep(next: {}) }
         },
-        e(.init("otp", "Code de vérification", "Accueil et onboarding", "123.rectangle", Viz.categorical[3])) { _ in
+        e(.init("otp", "Verification code", "Onboarding", "123.rectangle", Viz.categorical[3])) { _ in
             wrap { OTPStep(next: {}) }
         },
-        e(.init("passcode", "Création du code secret", "Accueil et onboarding", "lock", Brand.ink)) { _ in
+        e(.init("passcode", "Passcode creation", "Onboarding", "lock", Brand.ink)) { _ in
             wrap { PasscodeStep(next: {}) }
         },
-        e(.init("faceid", "Face ID", "Accueil et onboarding", "faceid", Viz.categorical[6])) { _ in
+        e(.init("faceid", "Face ID", "Onboarding", "faceid", Viz.categorical[6])) { _ in
             wrap { BiometricStep(next: {}) }
         },
-        e(.init("profilestep", "Informations du profil", "Accueil et onboarding", "person.text.rectangle", Viz.categorical[1])) { _ in
+        e(.init("profilestep", "Profile details", "Onboarding", "person.text.rectangle", Viz.categorical[1])) { _ in
             wrap { ProfileStep(next: {}) }
         },
 
         // KYC
-        e(.init("kyc-intro", "Introduction KYC", "Vérification d'identité", "checkmark.shield", Brand.ink)) { _ in
+        e(.init("kyc-intro", "KYC introduction", "Identity verification", "checkmark.shield", Brand.ink)) { _ in
             KYCIntroView(onStart: {}, onLater: {}).padding(.top, 16).page()
         },
-        e(.init("kyc-doc", "Choix du document", "Vérification d'identité", "doc.text.magnifyingglass", Viz.categorical[0])) { _ in
+        e(.init("kyc-doc", "Document choice", "Identity verification", "doc.text.magnifyingglass", Viz.categorical[0])) { _ in
             KYCDocumentPickerView(onPick: { _ in }, onBack: {}).padding(.top, 16).page()
         },
-        e(.init("kyc-capture", "Capture de la pièce", "Vérification d'identité", "camera.viewfinder", Viz.categorical[3])) { _ in
+        e(.init("kyc-capture", "Document capture", "Identity verification", "camera.viewfinder", Viz.categorical[3])) { _ in
             KYCCaptureView(mode: .document, onNext: {}, onBack: {}).padding(.top, 16).page()
         },
-        e(.init("kyc-selfie", "Selfie de vivacité", "Vérification d'identité",
+        e(.init("kyc-selfie", "Liveness selfie", "Identity verification",
                 "person.crop.circle.badge.checkmark", Viz.categorical[2])) { _ in
             KYCCaptureView(mode: .selfie, onNext: {}, onBack: {}).padding(.top, 16).page()
         },
-        e(.init("kyc-review", "Vérification en cours", "Vérification d'identité", "hourglass", Viz.categorical[6])) { _ in
+        e(.init("kyc-review", "Verification in progress", "Identity verification", "hourglass", Viz.categorical[6])) { _ in
             KYCReviewView(onDone: {}).page()
         },
 
         // Main app
-        e(.init("home", "Accueil / wallet", "Application", "house", Brand.ink)) { _ in
+        e(.init("home", "Home / wallet", "App", "house", Brand.ink)) { _ in
             HomeView(onTopUp: {}, onNewCard: {})
         },
-        e(.init("cards", "Liste des cartes", "Application", "creditcard", Viz.categorical[0])) { _ in
+        e(.init("cards", "Card list", "App", "creditcard", Viz.categorical[0])) { _ in
             CardsListView(onNewCard: {})
         },
-        e(.init("card-detail", "Détail d'une carte", "Application", "creditcard.and.123", Viz.categorical[6])) { s in
+        e(.init("card-detail", "Card detail", "App", "creditcard.and.123", Viz.categorical[6])) { s in
             NavigationStack { CardDetailView(card: s.cards[0]) }
         },
-        e(.init("card-frozen", "Carte gelée", "Application", "snowflake", Viz.categorical[0])) { s in
+        e(.init("card-frozen", "Frozen card", "App", "snowflake", Viz.categorical[0])) { s in
             NavigationStack { CardDetailView(card: s.cards[2]) }
         },
-        e(.init("card-controls", "Contrôles de carte", "Application", "slider.horizontal.3", Viz.categorical[2])) { s in
+        e(.init("card-controls", "Card controls", "App", "slider.horizontal.3", Viz.categorical[2])) { s in
             CardControlsView(card: s.cards[0])
         },
-        e(.init("activity", "Activité", "Application", "list.bullet.rectangle", Viz.categorical[3])) { _ in
+        e(.init("activity", "Activity", "App", "list.bullet.rectangle", Viz.categorical[3])) { _ in
             TransactionsView()
         },
-        e(.init("tx-detail", "Détail de transaction", "Application", "doc.text.magnifyingglass", Viz.categorical[1])) { s in
+        e(.init("tx-detail", "Transaction detail", "App", "doc.text.magnifyingglass", Viz.categorical[1])) { s in
             NavigationStack { TransactionDetailView(tx: s.transactions[0]) }
         },
-        e(.init("tx-declined", "Transaction refusée", "Application", "xmark.octagon", Brand.debit)) { s in
+        e(.init("tx-declined", "Declined transaction", "App", "xmark.octagon", Brand.debit)) { s in
             NavigationStack {
                 TransactionDetailView(tx: s.transactions.first { $0.status == .declined } ?? s.transactions[0])
             }
         },
-        e(.init("insights", "Analyse", "Application", "chart.bar", Viz.categorical[5])) { _ in InsightsView() },
-        e(.init("authorization", "Autorisation en direct", "Application", "bolt.badge.clock", Brand.pending)) { s in
+        e(.init("insights", "Analyse", "App", "chart.bar", Viz.categorical[5])) { _ in InsightsView() },
+        e(.init("authorization", "Live authorization", "App", "bolt.badge.clock", Brand.pending)) { s in
             AuthorizationSheet(merchant: "Netflix", category: .streaming,
                                amountUSDCents: 1_099, card: s.cards[0])
         },
-        e(.init("subscriptions", "Abonnements récurrents", "Application", "arrow.triangle.2.circlepath", Viz.categorical[2])) { _ in
+        e(.init("subscriptions", "Recurring subscriptions", "App", "arrow.triangle.2.circlepath", Viz.categorical[2])) { _ in
             NavigationStack { SubscriptionsView() }
         },
-        e(.init("lock", "Déverrouillage", "Accueil et onboarding", "lock.iphone", Brand.ink)) { _ in
+        e(.init("lock", "Unlock", "Onboarding", "lock.iphone", Brand.ink)) { _ in
             LockScreenView()
         },
-        e(.init("notifications", "Notifications", "Application", "bell", Viz.categorical[1])) { _ in
+        e(.init("notifications", "Notifications", "App", "bell", Viz.categorical[1])) { _ in
             NotificationsView()
         },
 
         // Flows
-        e(.init("create-card", "Créer une carte", "Parcours monétaires", "plus.rectangle.on.rectangle", Brand.ink)) { _ in
+        e(.init("create-card", "Create a card", "Money flows", "plus.rectangle.on.rectangle", Brand.ink)) { _ in
             CreateCardFlow()
         },
-        e(.init("card-created", "Carte créée", "Parcours monétaires", "checkmark.seal", Viz.categorical[2])) { s in
+        e(.init("card-created", "Card created", "Money flows", "checkmark.seal", Viz.categorical[2])) { s in
             NavigationStack { CardCreatedView(card: s.cards[1], onDone: {}) }
         },
-        e(.init("topup", "Recharger", "Parcours monétaires", "arrow.down.circle", Viz.categorical[0])) { _ in
+        e(.init("topup", "Top up", "Money flows", "arrow.down.circle", Viz.categorical[0])) { _ in
             TopUpFlow()
         },
-        e(.init("convert", "Convertir FCFA → USD", "Parcours monétaires", "arrow.left.arrow.right", Viz.categorical[6])) { _ in
+        e(.init("convert", "Convert FCFA to USD", "Money flows", "arrow.left.arrow.right", Viz.categorical[6])) { _ in
             ConvertView()
         },
-        e(.init("send", "Envoyer de l'argent", "Parcours monétaires", "paperplane", Viz.categorical[3])) { _ in
+        e(.init("send", "Send money", "Money flows", "paperplane", Viz.categorical[3])) { _ in
             SendMoneyView()
         },
 
         // Settings
-        e(.init("settings", "Profil", "Profil et réglages", "person.crop.circle", Brand.ink)) { _ in SettingsView() },
-        e(.init("profile", "Informations personnelles", "Profil et réglages", "person.text.rectangle", Viz.categorical[0])) { _ in
+        e(.init("settings", "Profile", "Profile and settings", "person.crop.circle", Brand.ink)) { _ in SettingsView() },
+        e(.init("profile", "Personal details", "Profile and settings", "person.text.rectangle", Viz.categorical[0])) { _ in
             NavigationStack { ProfileView() }
         },
-        e(.init("limits", "Plafonds et limites", "Profil et réglages", "gauge.with.dots.needle.50percent", Viz.categorical[2])) { _ in
+        e(.init("limits", "Caps and limits", "Profile and settings", "gauge.with.dots.needle.50percent", Viz.categorical[2])) { _ in
             NavigationStack { LimitsView() }
         },
-        e(.init("security", "Sécurité", "Profil et réglages", "lock.shield", Viz.categorical[6])) { _ in
+        e(.init("security", "Security", "Profile and settings", "lock.shield", Viz.categorical[6])) { _ in
             NavigationStack { SecurityView() }
         },
-        e(.init("devices", "Appareils connectés", "Profil et réglages", "iphone", Viz.categorical[1])) { _ in
+        e(.init("devices", "Connected devices", "Profile and settings", "iphone", Viz.categorical[1])) { _ in
             NavigationStack { DevicesView() }
         },
-        e(.init("documents", "Documents et relevés", "Profil et réglages", "doc.on.doc", Viz.categorical[3])) { _ in
+        e(.init("documents", "Documents and statements", "Profile and settings", "doc.on.doc", Viz.categorical[3])) { _ in
             NavigationStack { DocumentsView() }
         },
-        e(.init("referral", "Parrainage", "Profil et réglages", "gift", Brand.ink)) { _ in
+        e(.init("referral", "Referrals", "Profile and settings", "gift", Brand.ink)) { _ in
             NavigationStack { ReferralView() }
         },
-        e(.init("help", "Centre d'aide", "Profil et réglages", "questionmark.circle", Viz.categorical[5])) { _ in
+        e(.init("help", "Help centre", "Profile and settings", "questionmark.circle", Viz.categorical[5])) { _ in
             NavigationStack { HelpView() }
         },
 
         // Showcases
-        e(.init("empty", "États vides", "États et composants", "tray", Brand.inkMuted)) { _ in
+        e(.init("empty", "Empty states", "States and components", "tray", Brand.inkMuted)) { _ in
             NavigationStack { EmptyStatesShowcase() }
         },
-        e(.init("themes", "Habillages de carte", "États et composants", "paintpalette", Viz.categorical[1])) { _ in
+        e(.init("themes", "Card finishes", "States and components", "paintpalette", Viz.categorical[1])) { _ in
             NavigationStack { CardThemeShowcase() }
         },
-        e(.init("components", "Composants", "États et composants", "square.on.circle", Viz.categorical[0])) { _ in
+        e(.init("components", "Components", "States and components", "square.on.circle", Viz.categorical[0])) { _ in
             NavigationStack { ComponentsShowcase() }
         },
-        e(.init("gallery", "Galerie", "États et composants", "square.grid.2x2", Brand.ink)) { _ in
+        e(.init("gallery", "Gallery", "States and components", "square.grid.2x2", Brand.ink)) { _ in
             NavigationStack { GalleryView() }
         }
     ]

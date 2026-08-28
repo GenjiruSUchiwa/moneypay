@@ -16,25 +16,26 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            Tab("Accueil", systemImage: "house.fill", value: 0) {
+            Tab("Home", systemImage: "house.fill", value: 0) {
                 HomeView(onTopUp: { showTopUp = true }, onNewCard: { showCreateCard = true })
             }
-            Tab("Cartes", systemImage: "creditcard.fill", value: 1) {
+            Tab("Cards", systemImage: "creditcard.fill", value: 1) {
                 CardsListView(onNewCard: { showCreateCard = true })
             }
-            Tab("Activité", systemImage: "list.bullet.rectangle.fill", value: 2) {
+            Tab("Activity", systemImage: "list.bullet.rectangle.fill", value: 2) {
                 TransactionsView()
             }
             Tab("Analyse", systemImage: "chart.pie.fill", value: 3) {
                 InsightsView()
             }
-            Tab("Profil", systemImage: "person.fill", value: 4) {
+            Tab("Profile", systemImage: "person.fill", value: 4) {
                 SettingsView()
             }
             // The screen gallery is a review tool, not a product feature. It
             // lives here because the Gallery package references every screen,
-            // so only the composition root is allowed to depend on it.
-            Tab("Galerie", systemImage: "square.grid.2x2", value: 5) {
+            // so only the composition root is allowed to depend on it. Its tab
+            // label is the only one that is not translated, for the same reason.
+            Tab("Gallery", systemImage: "square.grid.2x2", value: 5) {
                 GalleryView()
             }
         }
