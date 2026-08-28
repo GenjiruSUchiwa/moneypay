@@ -727,6 +727,18 @@ concentriques wax). La marque reste lisible par-dessus.
 **`card-swatch`** — nuancier 42×30, sélection = anneau encre à -5px. **`net-option`** —
 choix Visa/Mastercard, sélection = liseré encre 1,5px + `{colors.surface}`.
 
+### Splash
+Écran immersif plein cadre sur `{colors.green-deep}` (`Brand.greenDeep`), encre
+`{colors.deep-ink}` (`Brand.deepInk`, blanc constant dans les deux thèmes).
+**Lockup** centré : tuile logo 60px (`LogoMark`), fond blanc à 12 % (`Brand.deepInkFill`),
+glyphe blanc ; nom « MoniPay » en `{typography.title-lg}` (`Font.titleLarge`) ; écart
+tuile/nom = `Metric.rowVertical` (14px).
+**Ligne légale** en bas, `{typography.caption}` (`Font.micro`), blanc à 45 %
+(`Brand.deepInkMuted`), `Metric.section` au-dessus de la zone sûre.
+**Séquence** : révélation (fondu + montée 8px `Motion.rise`, `Motion.screen`) → dwell 1,5s
+(`SplashModel.hold`) → Bienvenue. Mouvement réduit : ni montée ni fondu, même dwell.
+Un seul élément d'accessibilité combiné (tuile + nom + ligne légale).
+
 ### Bienvenue (onboarding)
 Réf. Revolut / Wise sur Mobbin. Navbar logo seul (pas de « Se connecter » en haut).
 **`we-segs`** — segments de progression façon stories (3 barres 3px, capsules) : le segment
@@ -775,6 +787,8 @@ Tout est conditionné par `.anim` sur la racine ; `prefers-reduced-motion` neutr
 | Dépliage des détails `.cd-collapse` | 0,42s `cubic-bezier(.3,.8,.3,1)` (grid-rows 0fr→1fr) |
 | Anneau de plafond | 0,9s `cubic-bezier(.3,.7,.3,1)` (stroke-dashoffset) |
 | Entrée du détail de carte `cdHero` | 0,5s, uniquement au push (`[data-anim="push"]`) |
+| Splash : révélation (fondu + montée 8px) | `Motion.screen` — 0,35s ease-in-out |
+| Splash : dwell avant Bienvenue | 1,5s (`SplashModel.hold`) |
 | Bienvenue : segment `weFill` | 4,2s linéaire (= dwell d'auto-avance) |
 | Bienvenue : rotation du deck | 0,55s `cubic-bezier(.3,1.25,.4,1)` (ressort), drag sans transition |
 | Bienvenue : flottement `weBob` | 3,2s ease-in-out alternate |
@@ -850,7 +864,8 @@ creux = `{colors.well}` · capsule = 999px · gutter = 20px.
 ## Known Gaps
 
 - **Deux systèmes coexistent** : l'app SwiftUI (`MoneyPay/`) porte un langage antérieur
-  (« Registre », monochrome) — obsolète, ne fait pas foi.
+  (« Registre », monochrome) — obsolète, ne fait pas foi, à l'exception du splash, désormais
+  porté par les jetons partagés.
 - Google Sans Flex est servie par Google Fonts ; hors ligne, le fallback système change
   sensiblement la voix typographique.
 - `rounded: 20px` (`.method-card`, `.fx-card`) est hors barème — assumé, non tokenisé.
