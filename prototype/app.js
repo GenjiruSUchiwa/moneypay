@@ -455,7 +455,7 @@ function vcardHTML(card, { compact = false, revealed = false, holder = null } = 
         ${netMark(card.network, netInk, compact ? 16 : 21)}
       </div>
     </div>`;
-  const frozen = card.frozen ? `<div class="vc-frozen">${ico("snow", 20)}Gelée</div>` : "";
+  const frozen = card.frozen ? `<div class="vc-frozen${F._frost === card.id ? " frosting" : ""}"><span class="vf-disc">${ico("snow", 15)}</span>Gelée</div>` : "";
   const gl = th.art ? `<div class="vc-art">${cardArt(th.art)}</div>` : th.accent ? `<div class="vc-guilloche">${guilloche("rgba(60,221,155,.13)")}</div>` : "";
   return `<div class="vcard ${th.light ? "light-art" : ""}" style="background:${th.fill};border-radius:${compact ? 12 : 16}px">${gl}${front}${frozen}</div>`;
 }
@@ -487,8 +487,8 @@ function navBar({ back = null, close = null, title = "", right = "" } = {}) {
   return `<div class="navbar">${left}<span class="nb-title">${esc(title)}</span><span class="nb-spacer"></span>${right}</div>`;
 }
 
-function sectionHead(title, { count = null, link = null, act = null, chev = false } = {}) {
-  return `<div class="section-head gutter" ${act ? `data-act="${act}" role="button"` : ""}>
+function sectionHead(title, { count = null, link = null, act = null, arg = "", chev = false } = {}) {
+  return `<div class="section-head gutter" ${act ? `data-act="${act}" data-arg="${arg}" role="button"` : ""}>
     <span class="t-section">${title}</span>
     ${chev ? `<span class="sh-chev">${ico(chev === true ? "chevR" : chev, 15)}</span>` : ""}
     <span class="sh-fill"></span>
@@ -1125,9 +1125,77 @@ function homeScreen() {
 }
 
 /* ---------------- Cartes ---------------------------------------- */
+/* paradigme « une carte à la fois » (réf. Wise/Revolut) : carrousel centré,
+   points, corps contextuel synchronisé sur la carte sélectionnée */
+function cwShown() {
+  const scope = F.cardScope || 0;
+  return scope === 1 ? S.cards.filter(c => !c.frozen) : scope === 2 ? S.cards.filter(c => c.frozen) : S.cards;
+}
+function cwBodyHTML(c) {
+  if (!c) return `<div style="text-align:center;padding:6px var(--gutter) 10px">
+    <div class="cw-meta"><span class="cwm-label">Une carte par usage</span></div>
+    <div class="ce-m" style="margin:8px auto 0">Abonnements, achats, essais gratuits : chaque carte s’isole, se gèle et se supprime sans toucher aux autres.</div>
+    <div style="max-width:250px;margin:18px auto 0">${btn("Créer une carte", "openCreateCard")}</div>
+  </div>`;
+  const txs = txsOfCard(c.id);
+  const pct = c.limit ? c.spent / c.limit : 0;
+  return `
+    <div class="cw-meta">
+      <span class="cwm-label">${esc(c.label)}</span>
+      <span class="cwm-pan tnum">••${NBSP}${c.pan.slice(-4)}</span>
+      ${c.frozen ? `<span class="pill neutral">${ico("snow", 11)}Gelée</span>` : ""}
+      ${c.singleUse ? `<span class="pill neutral">${ico("one", 11)}Usage unique</span>` : ""}
+    </div>
+    <div class="quick-actions gutter" style="margin-top:18px">
+      ${quickAction("card", "Détails", "openCard", c.id)}
+      ${quickAction(c.frozen ? "sun" : "snow", c.frozen ? "Dégeler" : "Geler", "cardFreezeAsk", c.id)}
+      ${quickAction("sliders", "Contrôles", "openControls", c.id)}
+      ${quickAction("dots", "Plus", "cardMenu", c.id)}
+    </div>
+    <div class="rule" style="margin:22px var(--gutter) 0"></div>
+    <div class="gutter" style="display:flex;align-items:baseline;padding-top:18px">
+      ${eyebrow("Dépensé ce mois")}
+      <span style="flex:1"></span>
+      <span class="tnum" style="font-size:12px;color:var(--ink-3)">${c.limit ? "plafond " + fmtUSD(c.limit) : "sans plafond"}</span>
+    </div>
+    <div class="gutter" style="margin-top:8px">${moneyUSD(c.spent, 25)}</div>
+    ${c.limit ? `<div class="gutter" style="margin-top:11px">${meter(pct, { warn: pct > .85 })}</div>` : ""}
+    ${sectionHead("Transactions", { count: txs.length || null, act: txs.length ? "openCard" : null, arg: c.id, chev: !!txs.length })}
+    ${txs.length
+      ? txs.slice(0, 3).map(t => txRow(t)).join("")
+      : `<div class="ce-m gutter" style="margin-top:-4px;padding-bottom:8px;max-width:none">Aucune transaction avec cette carte pour l’instant.</div>`}`;
+}
+function cwEmptyHTML(scope) {
+  if (scope === 2) return `<div class="cards-empty">
+    <span class="ce-disc">${ico("snow", 22)}</span>
+    <div class="ce-t">Aucune carte gelée</div>
+    <div class="ce-m">Gelez une carte pour suspendre instantanément ses paiements — réversible d’un geste.</div>
+  </div>`;
+  if (scope === 1 && S.cards.length) return `<div class="cards-empty">
+    <span class="ce-disc">${ico("snow", 22)}</span>
+    <div class="ce-t">Toutes vos cartes sont gelées</div>
+    <div class="ce-m">Dégelez une carte pour reprendre les paiements, ou créez-en une nouvelle.</div>
+    <div style="margin-top:16px">${btn("Voir les cartes gelées", "cardScope", { style: "quiet small", arg: 2 })}</div>
+  </div>`;
+  return `<div class="cards-empty">
+    <div class="fan">
+      <div class="fan-card l">${vcardHTML({ label: "Voyages", theme: "ivoire", network: "visa", pan: "0000000000004921", frozen: false }, { compact: true })}</div>
+      <div class="fan-card r">${vcardHTML({ label: "Shopping", theme: "encre", network: "mastercard", pan: "0000000000007305", frozen: false }, { compact: true })}</div>
+      <div class="fan-card c">${vcardHTML({ label: "Abonnements", theme: "ndop", network: "mastercard", pan: "0000000000002214", frozen: false }, { compact: true })}</div>
+    </div>
+    <div class="ce-t">Vos cartes vivront ici</div>
+    <div class="ce-m">Créez une carte virtuelle par usage et payez partout où Visa et Mastercard sont acceptées en ligne.</div>
+    <div style="margin-top:18px;width:100%;max-width:250px">${btn("Créer ma première carte", "openCreateCard")}</div>
+  </div>`;
+}
 function cardsScreen() {
   const scope = F.cardScope || 0;
-  const shown = scope === 1 ? S.cards.filter(c => !c.frozen) : scope === 2 ? S.cards.filter(c => c.frozen) : S.cards;
+  const shown = cwShown();
+  const anim = F._cwAnim; delete F._cwAnim;
+  const ghost = scope !== 2;
+  const nSlides = shown.length + (ghost ? 1 : 0);
+  const sel = Math.max(0, Math.min(F.cardSel || 0, nSlides - 1));
+  F.cardSel = sel;
   return `${statusBar()}
   <div class="gutter" style="padding-top:6px;padding-bottom:13px">
     <div style="display:flex;align-items:center">
@@ -1139,30 +1207,19 @@ function cardsScreen() {
   </div>
   <div class="rule"></div>
   <div class="scroll">
-    ${shown.length === 0 ? emptyNote("Aucune carte ici", "Créez une carte dédiée à chaque usage. Geler l’une d’elles suspend ses prélèvements sans toucher aux autres.", "Créer une carte", "openCreateCard") : ""}
-    ${shown.map((c, i) => `
-      ${i > 0 ? `<div class="rule" style="margin:0 var(--gutter)"></div>` : ""}
-      <button type="button" class="gutter" style="display:block;width:100%;padding-top:22px;padding-bottom:22px" data-act="openCard" data-arg="${c.id}">
-        <div style="max-width:300px">${vcardHTML(c)}</div>
-        <div style="max-width:300px;margin-top:14px">
-          <div style="display:flex;align-items:center;gap:7px">
-            <span style="font-size:15px;font-weight:500">${esc(c.label)}</span>
-            ${c.frozen ? `<span class="pill neutral">${ico("snow", 11)}Gelée</span>` : ""}
-            ${c.singleUse ? `<span class="pill neutral">${ico("one", 11)}Usage unique</span>` : ""}
-          </div>
-          ${c.limit ? `
-            <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:13px" class="tnum">
-              <span style="color:var(--ink-2)">${fmtUSD(c.spent)} dépensés</span>
-              <span style="color:var(--ink-3)">plafond ${fmtUSD(c.limit)}</span>
-            </div>
-            <div style="margin-top:7px">${meter(c.spent / c.limit, { warn: c.spent / c.limit > .85 })}</div>`
-          : `<div style="margin-top:9px;font-size:13px;color:var(--ink-2)" class="tnum">${fmtUSD(c.spent)} dépensés · sans plafond</div>`}
-        </div>
-      </button>`).join("")}
-    <div class="rule" style="margin:0 var(--gutter)"></div>
-    ${listRow({ icon: "plus", title: "Créer une nouvelle carte", chevron: true, act: "openCreateCard" })}
-    <div class="rule" style="margin:0 var(--gutter)"></div>
-    <div class="note-micro gutter" style="padding-top:18px;padding-bottom:20px">Cartes émises par notre banque partenaire agréée, sous licence Visa et Mastercard International.</div>
+    <div id="cw-zone" class="${anim ? "cw-swap" : ""}">
+    ${shown.length === 0 ? cwEmptyHTML(scope) : `
+      <div class="cardswipe" id="cardswipe" aria-label="Vos cartes">
+        <div class="cw-spacer"></div>
+        ${shown.map(c => `<div class="cw-slide"><button type="button" class="cw-cardbtn" data-act="openCard" data-arg="${c.id}">${vcardHTML(c)}</button></div>`).join("")}
+        ${ghost ? `<div class="cw-slide"><button type="button" class="cw-ghost" data-act="openCreateCard">${ico("plus", 22)}<span>Nouvelle carte</span></button></div>` : ""}
+        <div class="cw-spacer"></div>
+      </div>
+      ${nSlides > 1 ? `<div class="cw-dots" id="cw-dots">${Array.from({ length: nSlides }, (_, i) => `<span class="dot ${i === sel ? "on" : ""}"></span>`).join("")}</div>` : `<div style="height:12px"></div>`}
+      <div id="cw-body">${cwBodyHTML(shown[sel] || null)}</div>`}
+    </div>
+    ${shown.length ? `<div class="rule" style="margin:14px var(--gutter) 0"></div>
+    <div class="note-micro gutter" style="padding-top:14px;padding-bottom:20px">Cartes émises par notre banque partenaire agréée, sous licence Visa et Mastercard International.</div>` : ""}
   </div>
   ${tabbarHTML()}
   <div class="homebar"></div>`;
@@ -2398,7 +2455,7 @@ function authSheet() {
    Orchestration du rendu
    ================================================================ */
 let SHEET2 = null;
-const F_KEEP = ["cardScope","txFilter","txQuery","insPeriod","insView","insSel","insCat","insGroup","insFCats","insFCard","faqOpen","revealed","slide","country","phoneDigits","methodId","sendQuery"];
+const F_KEEP = ["cardScope","cardSel","txFilter","txQuery","insPeriod","insView","insSel","insCat","insGroup","insFCats","insFCard","faqOpen","revealed","slide","country","phoneDigits","methodId","sendQuery"];
 
 /* redéfinition : conserve l'état d'interface hors flux */
 function openSheet(kind, params = {}) {
@@ -2620,6 +2677,45 @@ function renderPhone(mode) {
       requestAnimationFrame(() => { csTick = false; update(); });
     }, { passive: true });
   }
+
+  /* carrousel de l'onglet Cartes : centrage, échelle/opacité, points, corps synchronisé */
+  const cw = phone.querySelector("#cardswipe");
+  if (cw) {
+    const cards = cwShown();
+    const slidesEls = [...cw.querySelectorAll(".cw-slide")];
+    const rm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const update = () => {
+      const mid = cw.scrollLeft + cw.clientWidth / 2;
+      let best = 0, bestD = 1e9;
+      slidesEls.forEach((s, i) => {
+        const r = (s.offsetLeft + s.offsetWidth / 2 - mid) / s.offsetWidth;
+        if (!rm) {
+          const k = Math.min(1, Math.abs(r));
+          s.firstElementChild.style.transform = `scale(${(1 - k * .07).toFixed(3)})`;
+          s.firstElementChild.style.opacity = (1 - k * .45).toFixed(3);
+        }
+        if (Math.abs(r) < bestD) { bestD = Math.abs(r); best = i; }
+      });
+      if (best !== F.cardSel) {
+        F.cardSel = best;
+        phone.querySelectorAll("#cw-dots .dot").forEach((d, j) => d.classList.toggle("on", j === best));
+        const body = phone.querySelector("#cw-body");
+        if (body) {
+          body.innerHTML = cwBodyHTML(cards[best] || null);
+          if (!rm) { body.classList.remove("swap"); void body.offsetWidth; body.classList.add("swap"); }
+        }
+      }
+    };
+    const selS = slidesEls[Math.min(F.cardSel || 0, slidesEls.length - 1)];
+    if (selS) cw.scrollLeft = selS.offsetLeft + selS.offsetWidth / 2 - cw.clientWidth / 2;
+    update();
+    let cwTick = false;
+    cw.addEventListener("scroll", () => {
+      if (cwTick) return;
+      cwTick = true;
+      requestAnimationFrame(() => { cwTick = false; update(); });
+    }, { passive: true });
+  }
 }
 
 /* ================================================================
@@ -2718,7 +2814,7 @@ const ACTIONS = {
   notifsReadAll: () => { S.notifs.forEach(n => n.unread = false); renderPhone(); },
 
   /* cartes */
-  cardScope: i => { F.cardScope = +i; renderPhone(); },
+  cardScope: i => { F.cardScope = +i; F.cardSel = 0; F._cwAnim = true; renderPhone(); },
   openCard: id => { delete F.revealed; pushScreen("cardDetail", { id }); },
   cardReveal: () => { F.revealed = !F.revealed; renderPhone(); },
   cardFreezeAsk: id => {
@@ -2730,7 +2826,13 @@ const ACTIONS = {
         label: c.frozen ? "Dégeler" : "Geler",
         icon: "snow",
         sub: c.frozen ? "Réactiver les paiements de cette carte." : "Suspendre tous les paiements, réversible.",
-        fn: () => { c.frozen = !c.frozen; showToast(c.frozen ? "Carte gelée" : "Carte dégelée", c.frozen ? "snow" : "check"); renderPhone(); renderRail(); }
+        fn: () => {
+          c.frozen = !c.frozen;
+          if (c.frozen) F._frost = c.id;
+          showToast(c.frozen ? "Carte gelée" : "Carte dégelée", c.frozen ? "snow" : "check");
+          renderPhone(); renderRail();
+          delete F._frost;
+        }
       }]
     });
   },
