@@ -17,7 +17,7 @@ final class WelcomeModel {
     let dwell: Duration
     private var paused = false
     /// Bumped by every change that re-arms the dwell — an advance, a retreat, a
-    /// release. The view runs one `autoAdvanceAfterDwell()` task per generation, so a
+    /// resume. The view runs one `autoAdvanceAfterDwell()` task per generation, so a
     /// user action always restarts a full dwell, as the prototype's `clearTimeout` does.
     private(set) var generation = 0
 
@@ -42,17 +42,21 @@ final class WelcomeModel {
         generation += 1
     }
 
-    /// Finger down: the auto-advance stops counting until `release`.
+    /// Finger down: the auto-advance stops counting until `resume`.
     func hold() {
         paused = true
+    }
+
+    /// Finger up or gesture cancelled: re-arms a full dwell, whether or not the deck paged.
+    func resume() {
+        paused = false
+        generation += 1
     }
 
     /// Finger up after a horizontal travel of `dx` points. Past the swipe
     /// threshold it pages in the drag's direction; a near-zero travel is a tap
     /// and pages forward; anything in between leaves the deck where it is.
     func release(dx: CGFloat) {
-        paused = false
-        generation += 1   // even a short drag re-arms a full dwell, as the prototype does
         if dx < -Self.swipeThreshold {
             advance()
         } else if dx > Self.swipeThreshold {
@@ -62,11 +66,14 @@ final class WelcomeModel {
         }
     }
 
-    /// One dwell, then one auto-advance — unless the task was cancelled or the deck is
-    /// held. Run it with `.task(id: generation)` so every user action restarts it.
+    /// One dwell, then one auto-advance — unless the deck is held or the dwell was re-armed
+    /// meanwhile. Run it with `.task(id: generation)` so every user action restarts it; the
+    /// generation check covers the gap between the sleep expiring and SwiftUI cancelling
+    /// the stale task, which would otherwise page twice.
     func autoAdvanceAfterDwell() async {
+        let armed = generation
         try? await Task.sleep(for: dwell)
-        guard !Task.isCancelled, !paused else { return }
+        guard !Task.isCancelled, !paused, generation == armed else { return }
         advance()
     }
 }

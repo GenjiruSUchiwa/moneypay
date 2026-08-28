@@ -76,7 +76,8 @@ public struct ComponentsShowcase: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 block("Buttons") {
-                    MPButton(title: Text(verbatim: "Primary action")) {
+                    MPButton(title: Text(verbatim: "Primary action"), tone: .primary) {}
+                    MPButton(title: Text(verbatim: "Ink action"), tone: .ink) {
                         toastMsg = Toast(text: Text(verbatim: "Tapped"))
                     }
                     MPButton(title: Text(verbatim: "Neutral action"), tone: .quiet) {}
@@ -84,6 +85,16 @@ public struct ComponentsShowcase: View {
                     MPButton(title: Text(verbatim: "Destructive action"), tone: .danger) {}
                     MPButton(title: Text(verbatim: "Loading"), loading: true) {}
                     MPButton(title: Text(verbatim: "Disabled"), enabled: false) {}
+                }
+                block("Logo") {
+                    HStack(spacing: 16) {
+                        LogoMark(size: 28)
+                        LogoMark(size: 44)
+                        Wordmark(size: 18)
+                    }
+                    LogoMark(size: 44, tint: Brand.deepInkFill, glyph: Brand.deepInk)
+                        .padding()
+                        .background(Brand.greenDeep)
                 }
                 block("Quick actions") {
                     HStack(spacing: 4) {

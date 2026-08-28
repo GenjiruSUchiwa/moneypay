@@ -11,8 +11,8 @@ struct WelcomeSlide: Identifiable, Sendable {
     let cardLabel: String
     let theme: CardTheme
     let network: CardNetwork
-
-    private static let sampleCardIDs = [UUID(), UUID(), UUID()]
+    /// Stable for the process, so the deck's `VirtualCardView`s keep their identity across renders.
+    let cardID = UUID()
 
     static let all: [WelcomeSlide] = [
         WelcomeSlide(
@@ -41,16 +41,16 @@ struct WelcomeSlide: Identifiable, Sendable {
         )
     ]
 
-    static func card(for slide: WelcomeSlide, locale: Locale = .current) -> VirtualCard {
+    func localizedCardLabel(_ locale: Locale) -> String {
+        String(localized: String.LocalizationValue(cardLabel), bundle: .module, locale: locale)
+    }
+
+    func card(locale: Locale = .current) -> VirtualCard {
         VirtualCard(
-            id: Self.sampleCardIDs[slide.id],
-            label: String(
-                localized: String.LocalizationValue(slide.cardLabel),
-                bundle: .module,
-                locale: locale
-            ),
-            theme: slide.theme,
-            network: slide.network,
+            id: cardID,
+            label: localizedCardLabel(locale),
+            theme: theme,
+            network: network,
             pan: "5399471028834412",
             cvv: "417",
             expiry: "09/29",

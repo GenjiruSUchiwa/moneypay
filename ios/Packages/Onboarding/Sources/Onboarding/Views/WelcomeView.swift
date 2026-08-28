@@ -9,7 +9,6 @@ public struct WelcomeView: View {
 
     public var onStart: () -> Void
     public var onSignIn: () -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     @State private var model = WelcomeModel(count: WelcomeSlide.all.count)
     @State private var appeared = false
@@ -20,33 +19,29 @@ public struct WelcomeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .gutter()
                 .padding(.top, Metric.rowVertical)
-                .modifier(Rise(index: 0, appeared: appeared, reduceMotion: reduceMotion))
+                .rise(0, appeared: appeared)
 
             SegmentedProgress(
                 count: model.count,
                 current: model.index,
-                style: .story(dwell: model.dwell)
+                style: .story(dwell: model.dwell, cycle: model.generation)
             )
             .gutter()
             .padding(.top, Metric.small)
-            .modifier(Rise(index: 1, appeared: appeared, reduceMotion: reduceMotion))
+            .rise(1, appeared: appeared)
 
-            WelcomeTexts(
-                slides: WelcomeSlide.all,
-                currentIndex: model.index,
-                reduceMotion: reduceMotion
-            )
+            WelcomeTexts(slides: WelcomeSlide.all, currentIndex: model.index)
             .gutter()
             .padding(.top, Metric.large)
-            .modifier(Rise(index: 2, appeared: appeared, reduceMotion: reduceMotion))
+            .rise(2, appeared: appeared)
 
             WelcomeDeckView(model: model, slides: WelcomeSlide.all)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .modifier(Rise(index: 3, appeared: appeared, reduceMotion: reduceMotion))
+                .rise(3, appeared: appeared)
 
             WelcomeActions(onStart: onStart, onSignIn: onSignIn)
                 .padding(.bottom, Metric.gutter)
-                .modifier(Rise(index: 4, appeared: appeared, reduceMotion: reduceMotion))
+                .rise(4, appeared: appeared)
         }
         .page()
         .onAppear { appeared = true }
@@ -63,7 +58,7 @@ public struct WelcomeView: View {
 private struct WelcomeTexts: View {
     let slides: [WelcomeSlide]
     let currentIndex: Int
-    let reduceMotion: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -131,10 +126,17 @@ private struct WelcomeActions: View {
     }
 }
 
+private extension View {
+    /// Cascaded entrance: element `index` rises in `Motion.stagger` after the one before it.
+    func rise(_ index: Int, appeared: Bool) -> some View {
+        modifier(Rise(index: index, appeared: appeared))
+    }
+}
+
 private struct Rise: ViewModifier {
     let index: Int
     let appeared: Bool
-    let reduceMotion: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content

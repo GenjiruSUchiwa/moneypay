@@ -5,11 +5,12 @@ import SwiftUI
 /// `steps` only marks the reached segments (sign-up). For an amount against a cap, use `Meter`.
 public struct SegmentedProgress: View {
     /// How the current step is shown.
-    public enum Style: Sendable {
+    public enum Style: Sendable, Equatable {
         /// Segments up to and including `current` are full. Sign-up steps.
         case steps
         /// Segments before `current` are full; `current` fills linearly over `dwell`. Stories.
-        case story(dwell: Duration)
+        /// `cycle` restarts the fill whenever it changes, for a dwell re-armed without a step change.
+        case story(dwell: Duration, cycle: Int = 0)
     }
 
     private let count: Int
@@ -42,6 +43,7 @@ public struct SegmentedProgress: View {
         .accessibilityAddTraits(style.isStory ? .updatesFrequently : [])
         .onAppear(perform: startRunningFill)
         .onChange(of: current, startRunningFill)
+        .onChange(of: style, startRunningFill)
     }
 
     private func fill(of index: Int) -> Double {
@@ -55,7 +57,7 @@ public struct SegmentedProgress: View {
     /// Restarts the story fill from empty. A state reset rather than `.id(current)`:
     /// recreating the segment would tear down the accessibility element mid-announcement.
     private func startRunningFill() {
-        guard case let .story(dwell) = style else { return }
+        guard case let .story(dwell, _) = style else { return }
         runningFill = 0
         withAnimation(.linear(duration: Self.seconds(from: dwell))) { runningFill = 1 }
     }

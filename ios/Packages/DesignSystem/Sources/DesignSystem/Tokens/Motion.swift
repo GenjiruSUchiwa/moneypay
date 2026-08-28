@@ -39,3 +39,23 @@ public enum Motion {
     /// Vertical travel of content entering a screen; zero when Reduce Motion is on.
     public static let rise: CGFloat = 8
 }
+
+/// Resting pose of a card in a deck, by depth (prototype `.we-card[data-depth]`).
+/// Depth 0 is the front card; deeper cards are smaller, higher and fanned out.
+public struct DeckPose: Sendable {
+    public let offset: CGSize
+    public let scale: CGFloat
+    public let rotation: Angle
+
+    /// The pose for `depth`; anything past the last fanned card sits at the front pose.
+    public static func at(depth: Int) -> DeckPose {
+        switch depth {
+        case 1: DeckPose(offset: CGSize(width: 12, height: -32), scale: 0.92, rotation: .degrees(4.5))
+        case 2: DeckPose(offset: CGSize(width: -13, height: -58), scale: 0.84, rotation: .degrees(-4))
+        default: DeckPose(offset: .zero, scale: 1, rotation: .zero)
+        }
+    }
+
+    /// Degrees a dragged front card tilts per point of horizontal travel (prototype `dx / 18`).
+    public static let dragTiltPerPoint: CGFloat = 1 / 18
+}
