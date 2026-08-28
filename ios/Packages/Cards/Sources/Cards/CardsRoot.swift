@@ -25,10 +25,13 @@ public struct CardsListView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if store.cards.isEmpty {
-                        EmptyNote(title: "Aucune carte",
-                                  message: "Créez une carte dédiée à chaque usage. Geler l'une d'elles " +
-                                  "suspend ses prélèvements sans toucher aux autres.",
-                                  actionTitle: "Créer ma première carte", action: onNewCard)
+                        EmptyNote(title: Text("No card yet", bundle: .module),
+                                  message: Text("""
+                                      Create a card for each use. Freezing one suspends its charges \
+                                      without touching the others.
+                                      """, bundle: .module),
+                                  actionTitle: Text("Create my first card", bundle: .module),
+                                  action: onNewCard)
                             .gutter().padding(.top, 20)
                     }
 
@@ -49,14 +52,15 @@ public struct CardsListView: View {
                     if !store.cards.isEmpty {
                         Rule()
                         Button { Haptic.tap(); onNewCard() } label: {
-                            Row(icon: "plus", title: "Créer une nouvelle carte", chevron: true)
+                            Row(icon: "plus", title: Text("Create a new card", bundle: .module), chevron: true)
                         }
                         .buttonStyle(.plain)
                         .gutter()
                         Rule()
                     }
 
-                    Text("Cartes émises par notre banque partenaire agréée, sous licence Visa et Mastercard International.")
+                    Text("Cards issued by our licensed partner bank, under Visa and Mastercard International licence.",
+                         bundle: .module)
                         .font(.micro).foregroundStyle(Brand.inkFaint)
                         .fixedSize(horizontal: false, vertical: true)
                         .gutter().padding(.top, 20)
@@ -68,14 +72,17 @@ public struct CardsListView: View {
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack {
-                        Text("Cartes").font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
+                        Text("Cards", bundle: .module).font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
                         Spacer()
                         Button { Haptic.tap(); onNewCard() } label: {
                             Image(systemName: "plus").font(.system(size: 17, weight: .medium))
                                 .foregroundStyle(Brand.ink).frame(width: 34, height: 34)
                         }
                     }
-                    Segments(items: ["Toutes", "Actives", "Gelées"], selection: $scope)
+                    Segments(items: [Text("All", bundle: .module),
+                                     Text("Active", bundle: .module),
+                                     Text("Frozen", bundle: .module)],
+                             selection: $scope)
                 }
                 .gutter()
                 .padding(.top, 4)
@@ -88,32 +95,40 @@ public struct CardsListView: View {
     private func meta(_ card: VirtualCard) -> some View {
         VStack(alignment: .leading, spacing: 9) {
             HStack(spacing: 7) {
-                Text(card.label).font(.bodyMed).foregroundStyle(Brand.ink)
+                Text(verbatim: card.label).font(.bodyMed).foregroundStyle(Brand.ink)
                 if card.isFrozen {
-                    StatusPill(text: "Gelée", symbol: "snowflake", tint: Brand.mark, soft: Brand.markSoft)
+                    StatusPill(text: Text("Frozen", bundle: .module), symbol: "snowflake",
+                               tint: Brand.mark, soft: Brand.markSoft)
                 }
                 if card.singleUse {
-                    StatusPill(text: "Usage unique", symbol: "1.circle", tint: Brand.inkMuted, soft: Brand.well)
+                    StatusPill(text: Text("Single use", bundle: .module), symbol: "1.circle",
+                               tint: Brand.inkMuted, soft: Brand.well)
                 }
                 Spacer(minLength: 0)
             }
             if let limit = card.monthlyLimitUSDCents {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Text("\(Fmt.usd(card.spentUSDCents)) dépensés")
+                        Text("\(Fmt.usd(card.spentUSDCents)) spent", bundle: .module)
                             .font(.sub).foregroundStyle(Brand.inkMuted)
                         Spacer()
-                        Text("plafond \(Fmt.usd(limit))")
+                        Text("cap \(Fmt.usd(limit))", bundle: .module)
                             .font(.sub).foregroundStyle(Brand.inkFaint)
                     }
                     Meter(value: card.usage,
                           tint: card.usage > 0.85 ? Brand.debit : Brand.ink)
                 }
             } else {
-                Text("\(Fmt.usd(card.spentUSDCents)) dépensés · sans plafond")
+                Text("\(Fmt.usd(card.spentUSDCents)) spent · no cap", bundle: .module)
                     .font(.sub).foregroundStyle(Brand.inkMuted)
             }
         }
         .frame(maxWidth: 300, alignment: .leading)
     }
+}
+
+#Preview("Cards — fr") {
+    CardsListView(onNewCard: {})
+        .environment(Store())
+        .environment(\.locale, Locale(identifier: "fr"))
 }

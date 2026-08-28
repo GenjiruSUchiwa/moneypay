@@ -39,16 +39,19 @@ public struct CardControlsView: View {
             }
             .scrollIndicators(.hidden)
             .page()
-            .navigationTitle("Contrôles")
+            .navigationTitle(Text("Controls", bundle: .module))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Annuler") { dismiss() }.foregroundStyle(Brand.inkMuted)
+                    Button { dismiss() } label: { Text("Cancel", bundle: .module) }
+                        .foregroundStyle(Brand.inkMuted)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Enregistrer") {
+                    Button {
                         draft.monthlyLimitUSDCents = Self.presets[limitIndex]
                         store.update(draft); Haptic.success(); dismiss()
+                    } label: {
+                        Text("Save", bundle: .module)
                     }
                     .font(.bodyMed).foregroundStyle(Brand.ink)
                 }
@@ -58,11 +61,14 @@ public struct CardControlsView: View {
 
     private var limitSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Eyebrow(text: "Plafond mensuel").gutter().padding(.top, 22)
+            Eyebrow(text: Text("Monthly cap", bundle: .module)).gutter().padding(.top, 22)
 
             Group {
                 if let v = Self.presets[limitIndex] { MoneyText.usd(v, size: 30) }
-                else { Text("Sans plafond").font(.system(size: 30, weight: .semibold)).tight(-0.6) }
+                else {
+                    Text("No cap", bundle: .module)
+                        .font(.system(size: 30, weight: .semibold)).tight(-0.6)
+                }
             }
             .foregroundStyle(Brand.ink)
             .gutter().padding(.top, 10)
@@ -70,7 +76,8 @@ public struct CardControlsView: View {
             ScrollView(.horizontal) {
                 HStack(spacing: 7) {
                     ForEach(Self.presets.indices, id: \.self) { i in
-                        Chip(text: Self.presets[i].map { Fmt.usd($0) } ?? "Illimité",
+                        Chip(text: Self.presets[i].map { Text(verbatim: Fmt.usd($0)) }
+                                ?? Text("Unlimited", bundle: .module),
                              selected: i == limitIndex) {
                             withAnimation(.easeOut(duration: 0.18)) { limitIndex = i }
                         }
@@ -81,7 +88,8 @@ public struct CardControlsView: View {
             .scrollIndicators(.hidden)
             .padding(.top, 16)
 
-            Text("Au-delà, chaque autorisation est refusée automatiquement. Un refus coûte 220 FCFA.")
+            Text("Past that, every authorization is declined automatically. A decline costs \(Fmt.xaf(220)).",
+                 bundle: .module)
                 .font(.micro).foregroundStyle(Brand.inkFaint)
                 .fixedSize(horizontal: false, vertical: true)
                 .gutter().padding(.top, 12).padding(.bottom, 22)
@@ -90,16 +98,17 @@ public struct CardControlsView: View {
 
     private var permissions: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Eyebrow(text: "Autorisations").gutter().padding(.top, 22).padding(.bottom, 2)
+            Eyebrow(text: Text("Permissions", bundle: .module)).gutter().padding(.top, 22).padding(.bottom, 2)
             VStack(spacing: 0) {
-                toggleRow("Paiements en ligne", "globe", $draft.onlineAllowed)
+                toggleRow("Online payments", "globe", $draft.onlineAllowed)
                 Rule(inset: 51)
-                toggleRow("Abonnements récurrents", "arrow.triangle.2.circlepath", $draft.subscriptionsAllowed)
+                toggleRow("Recurring subscriptions", "arrow.triangle.2.circlepath",
+                          $draft.subscriptionsAllowed)
                 Rule(inset: 51)
-                toggleRow("Usage unique", "1.circle", $draft.singleUse)
+                toggleRow("Single use", "1.circle", $draft.singleUse)
             }
             .gutter()
-            Text("Une carte à usage unique s'auto-supprime après le premier paiement réussi.")
+            Text("A single-use card deletes itself after the first successful payment.", bundle: .module)
                 .font(.micro).foregroundStyle(Brand.inkFaint)
                 .fixedSize(horizontal: false, vertical: true)
                 .gutter().padding(.top, 10).padding(.bottom, 22)
@@ -108,28 +117,32 @@ public struct CardControlsView: View {
 
     private var security: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Eyebrow(text: "Sécurité").gutter().padding(.top, 22).padding(.bottom, 2)
+            Eyebrow(text: Text("Security", bundle: .module)).gutter().padding(.top, 22).padding(.bottom, 2)
             VStack(spacing: 0) {
-                toggleRow("Geler la carte", "snowflake", $draft.isFrozen)
+                toggleRow("Freeze the card", "snowflake", $draft.isFrozen)
                 Rule(inset: 51)
-                Row(icon: "globe.europe.africa", title: "Pays autorisés", chevron: true) {
-                    RowValue(text: "Tous")
+                Row(icon: "globe.europe.africa", title: Text("Allowed countries", bundle: .module),
+                    chevron: true) {
+                    RowValue(text: Text("All", bundle: .module))
                 }
                 Rule(inset: 51)
-                Row(icon: "bell.badge", title: "Alerte à chaque paiement", chevron: true) {
-                    RowValue(text: "Activée")
+                Row(icon: "bell.badge", title: Text("Alert on every payment", bundle: .module),
+                    chevron: true) {
+                    RowValue(text: Text("On", bundle: .module))
                 }
             }
             .gutter()
         }
     }
 
-    private func toggleRow(_ title: String, _ icon: String, _ value: Binding<Bool>) -> some View {
+    private func toggleRow(_ title: LocalizedStringKey, _ icon: String,
+                           _ value: Binding<Bool>) -> some View {
         HStack(spacing: 13) {
             IconTile(symbol: icon)
-            Text(title).font(.bodyReg).foregroundStyle(Brand.ink)
+            Text(title, bundle: .module).font(.bodyReg).foregroundStyle(Brand.ink)
             Spacer()
-            Toggle("", isOn: value).labelsHidden().tint(Brand.inkFill)
+            Toggle(isOn: value) { Text(title, bundle: .module) }
+                .labelsHidden().tint(Brand.inkFill)
         }
         .padding(.vertical, 11)
     }
