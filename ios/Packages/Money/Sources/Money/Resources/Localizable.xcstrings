@@ -198,6 +198,17 @@
           }
         }
       }
+    },
+    "Virtual": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Virtuelle"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

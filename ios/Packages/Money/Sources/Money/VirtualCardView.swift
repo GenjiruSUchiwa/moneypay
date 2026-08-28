@@ -13,6 +13,13 @@ public struct VirtualCardView: View {
     public var compact = false
 
     private var ink: Color { card.theme.ink }
+    /// The mark's tile: the prototype's translucent accent, dark on a light card,
+    /// white elsewhere.
+    private var markTint: Color {
+        if let accent = card.theme.accent { return accent.opacity(0.16) }
+        return card.theme.isLight ? ink.opacity(0.08) : Color.white.opacity(0.10)
+    }
+    private var markGlyph: Color { card.theme.accent ?? ink }
     private var pad: CGFloat { compact ? 15 : 22 }
 
     public var body: some View {
@@ -38,17 +45,16 @@ public struct VirtualCardView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top) {
                 HStack(spacing: 6) {
-                    RoundedRectangle(cornerRadius: 2.5, style: .continuous)
-                        .fill(ink)
-                        .frame(width: compact ? 9 : 11, height: compact ? 9 : 11)
-                    Text("MoneyPay")
+                    LogoMark(size: compact ? 15 : 19, tint: markTint, glyph: markGlyph)
+                    Text(verbatim: "MoniPay")
                         .font(.system(size: compact ? 12 : 14, weight: .semibold))
                         .foregroundStyle(ink)
                 }
                 Spacer()
-                Text("virtuelle")
-                    .font(.system(size: compact ? 9 : 10, weight: .medium, design: .monospaced))
-                    .tracking(0.6)
+                Text("Virtual", bundle: .module)
+                    .textCase(.uppercase)
+                    .font(.system(size: compact ? 9 : 10, weight: .medium))
+                    .tracking(1.2)
                     .foregroundStyle(ink.opacity(0.55))
             }
 
@@ -59,7 +65,7 @@ public struct VirtualCardView: View {
                 .foregroundStyle(ink)
                 .lineLimit(1)
 
-            Text(revealed ? card.pan.chunked() : "•• \(card.last4)")
+            Text(revealed ? card.pan.chunked() : "•••• \(card.last4)")
                 .font(.system(size: compact ? 12 : 14, weight: .regular, design: .monospaced))
                 .tracking(compact ? 0.4 : 1.0)
                 .foregroundStyle(ink.opacity(0.72))
