@@ -291,10 +291,7 @@ input:focus-visible{outline:none}
 .t-page{font-size:28px;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
 .t-section{font-size:19px;font-weight:600;letter-spacing:-.015em}
 .t-title{font-size:24px}
-.eyebrow{
-  font-family:var(--mono);font-size:11px;font-weight:500;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);
-}
+.eyebrow{font-size:13px;font-weight:500;color:var(--ink-2)}
 .mono{font-family:var(--mono)}
 .tnum{font-variant-numeric:tabular-nums}
 .muted{color:var(--ink-2)}
@@ -759,7 +756,7 @@ input:focus-visible{outline:none}
 .donut .segc{fill:none;stroke-width:21px;stroke-dasharray:var(--dl) var(--dg);cursor:pointer;transition:opacity .25s ease,stroke-width .25s ease}
 .donut .segc.dim{opacity:.22}
 .donut .segc.sel{stroke-width:25px}
-.donut .dn-eyebrow{font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.1em;fill:var(--ink-3)}
+.donut .dn-eyebrow{font-size:11px;font-weight:500;fill:var(--ink-2)}
 .donut .dn-amt{font-size:29px;font-weight:600;letter-spacing:-.02em;fill:var(--ink);font-variant-numeric:tabular-nums}
 .donut .dn-sub{font-size:11.5px;fill:var(--ink-2)}
 
@@ -2596,7 +2593,7 @@ function insDonutHTML(anim) {
   const selR = cats.find(x => x.cat === F.insCat);
   return `<div class="donut-wrap chart-anim${anim ? " swap" : ""}">
     <svg class="donut" viewBox="0 0 353 236" role="img" aria-label="Répartition des dépenses par catégorie">${segs}
-      <text class="dn-eyebrow" x="${cx}" y="${cy - 28}" text-anchor="middle">${selR ? CATEGORIES[selR.cat].label.toUpperCase() : "DÉPENSES"}</text>
+      <text class="dn-eyebrow" x="${cx}" y="${cy - 28}" text-anchor="middle">${selR ? CATEGORIES[selR.cat].label : "Dépenses"}</text>
       <text class="dn-amt" x="${cx}" y="${cy + 8}" text-anchor="middle">${grp(selR ? selR.xaf : total)}</text>
       <text class="dn-sub" x="${cx}" y="${cy + 32}" text-anchor="middle">${selR ? Math.round(selR.xaf / total * 100) + NBSP + "% du total" : "FCFA · par catégorie"}</text>
     </svg></div>`;
@@ -4256,7 +4253,7 @@ const ACTIONS = {
     });
     const cats = spendByCat(), total = cats.reduce((s, c) => s + c.xaf, 0) || 1;
     const r = cats.find(x => x.cat === F.insCat);
-    svg.querySelector(".dn-eyebrow").textContent = r ? CATEGORIES[r.cat].label.toUpperCase() : "DÉPENSES";
+    svg.querySelector(".dn-eyebrow").textContent = r ? CATEGORIES[r.cat].label : "Dépenses";
     svg.querySelector(".dn-amt").textContent = grp(r ? r.xaf : total);
     svg.querySelector(".dn-sub").textContent = r ? Math.round(r.xaf / total * 100) + NBSP + "% du total" : "FCFA · par catégorie";
   },

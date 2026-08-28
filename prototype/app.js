@@ -1351,7 +1351,7 @@ function insDonutHTML(anim) {
   const selR = cats.find(x => x.cat === F.insCat);
   return `<div class="donut-wrap chart-anim${anim ? " swap" : ""}">
     <svg class="donut" viewBox="0 0 353 236" role="img" aria-label="Répartition des dépenses par catégorie">${segs}
-      <text class="dn-eyebrow" x="${cx}" y="${cy - 28}" text-anchor="middle">${selR ? CATEGORIES[selR.cat].label.toUpperCase() : "DÉPENSES"}</text>
+      <text class="dn-eyebrow" x="${cx}" y="${cy - 28}" text-anchor="middle">${selR ? CATEGORIES[selR.cat].label : "Dépenses"}</text>
       <text class="dn-amt" x="${cx}" y="${cy + 8}" text-anchor="middle">${grp(selR ? selR.xaf : total)}</text>
       <text class="dn-sub" x="${cx}" y="${cy + 32}" text-anchor="middle">${selR ? Math.round(selR.xaf / total * 100) + NBSP + "% du total" : "FCFA · par catégorie"}</text>
     </svg></div>`;
@@ -3011,7 +3011,7 @@ const ACTIONS = {
     });
     const cats = spendByCat(), total = cats.reduce((s, c) => s + c.xaf, 0) || 1;
     const r = cats.find(x => x.cat === F.insCat);
-    svg.querySelector(".dn-eyebrow").textContent = r ? CATEGORIES[r.cat].label.toUpperCase() : "DÉPENSES";
+    svg.querySelector(".dn-eyebrow").textContent = r ? CATEGORIES[r.cat].label : "Dépenses";
     svg.querySelector(".dn-amt").textContent = grp(r ? r.xaf : total);
     svg.querySelector(".dn-sub").textContent = r ? Math.round(r.xaf / total * 100) + NBSP + "% du total" : "FCFA · par catégorie";
   },
