@@ -16,10 +16,10 @@ final class WelcomeModel {
     let count: Int
     let dwell: Duration
     private var paused = false
-    /// Bumped by every user interaction. The run loop compares it after each
-    /// sleep and, on a mismatch, skips that auto-advance and sleeps a fresh
-    /// dwell, so a swipe or a release never stacks an auto-advance on top.
-    private var generation = 0
+    /// Bumped by every change that re-arms the dwell — an advance, a retreat, a
+    /// release. The view runs one `autoAdvanceAfterDwell()` task per generation, so a
+    /// user action always restarts a full dwell, as the prototype's `clearTimeout` does.
+    private(set) var generation = 0
 
     init(count: Int, dwell: Duration = .milliseconds(4200)) {
         precondition(count >= 1, "A welcome deck needs at least one slide.")
@@ -62,17 +62,11 @@ final class WelcomeModel {
         }
     }
 
-    /// Auto-advance loop. Runs until the task is cancelled; each dwell is
-    /// restarted by a user-driven change of `index` and skipped while held.
-    func run() async {
-        while !Task.isCancelled {
-            let generationAtSleep = generation
-            try? await Task.sleep(for: dwell)
-            // Re-check after the sleep, like SplashModel: cancellation, a hold
-            // or a manual swipe may have landed while we were suspended.
-            guard !Task.isCancelled, !paused else { continue }
-            guard generation == generationAtSleep else { continue }
-            advance()
-        }
+    /// One dwell, then one auto-advance — unless the task was cancelled or the deck is
+    /// held. Run it with `.task(id: generation)` so every user action restarts it.
+    func autoAdvanceAfterDwell() async {
+        try? await Task.sleep(for: dwell)
+        guard !Task.isCancelled, !paused else { return }
+        advance()
     }
 }

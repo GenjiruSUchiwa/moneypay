@@ -25,7 +25,7 @@ public enum Motion {
 
     /// Idle drift of a hero object, e.g. the welcome deck. Ambient only;
     /// never on a control.
-    public static let float = Animation.easeInOut(duration: 1.6).repeatForever(autoreverses: true)
+    public static let float = Animation.easeInOut(duration: 3.2).repeatForever(autoreverses: true)
 
     /// Vertical drift amplitude of `float`.
     public static let floatAmplitude: CGFloat = 4.5

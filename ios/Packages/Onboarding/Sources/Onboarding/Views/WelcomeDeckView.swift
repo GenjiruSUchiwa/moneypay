@@ -19,6 +19,10 @@ struct WelcomeDeckView: View {
         }
         .animation(reduceMotion ? nil : Motion.deck, value: model.index)
         .frame(width: Metric.deckWidth)
+        .contentShape(.rect)
+        // The prototype listens on `.we-deck`, not on the card: the whole stage is the
+        // drag surface, and every card keeps one stable identity across depth changes.
+        .gesture(dragGesture)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .offset(y: floatOffset)
         .animation(reduceMotion ? nil : Motion.float, value: isFloating)
@@ -35,25 +39,21 @@ struct WelcomeDeckView: View {
         return isFloating ? -Motion.floatAmplitude : Motion.floatAmplitude
     }
 
-    @ViewBuilder
     private func card(at index: Int) -> some View {
         let depth = model.depth(of: index)
         let slot = DeckSlot.placement(for: depth)
-        let view = VirtualCardView(card: WelcomeSlide.card(for: slides[index], locale: locale))
-            .frame(width: Metric.deckWidth)
-            .offset(slot.offset)
-            .scaleEffect(slot.scale)
-            .rotationEffect(slot.rotation)
-            .zIndex(Double(slides.count - depth))
+        let drag = depth == 0 ? dragOffset : .zero
 
-        if depth == 0 {
-            view
-                .offset(x: dragOffset)
-                .rotationEffect(.degrees(dragOffset / DeckSlot.dragRotationDivisor))
-                .gesture(dragGesture)
-        } else {
-            view
-        }
+        // Same order as CSS `translate() scale() rotate()`: rotate about the centre,
+        // scale, then move — so the offsets land where the prototype puts them.
+        return VirtualCardView(card: WelcomeSlide.card(for: slides[index], locale: locale))
+            .frame(width: Metric.deckWidth)
+            .rotationEffect(slot.rotation)
+            .scaleEffect(slot.scale)
+            .offset(slot.offset)
+            .offset(x: drag)
+            .rotationEffect(.degrees(drag / DeckSlot.dragRotationDivisor))
+            .zIndex(Double(slides.count - depth))
     }
 
     private var dragGesture: some Gesture {

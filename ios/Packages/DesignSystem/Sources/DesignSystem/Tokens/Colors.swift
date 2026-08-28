@@ -24,11 +24,13 @@ public enum Brand {
     public static let inkFaint = Color.adaptive(light: 0x93A19D, dark: 0x5A6764)
     /// Reversed ink: text on an ink fill.
     public static let onInk = Color.adaptive(light: 0xFFFFFF, dark: 0x0C0F10)
-    /// Ink fill: the primary action. Black reads as serious where a
-    /// saturated colour reads as a demo.
+    /// Ink fill: a solid ink surface (`Tone.ink` buttons, chips in their "on" state).
+    /// The primary action is `action`, as in the prototype; this is the monochrome
+    /// alternative for a secondary emphasis.
     public static let inkFill = Color.adaptive(light: 0x101615, dark: 0xF1F4F3)
 
-    /// Primary action fill, matching the prototype's light and dark themes.
+    /// The action green (`--green`): primary CTA, the logo tile, active chips and
+    /// toggles. Never decoration.
     public static let action = Color.adaptive(light: 0x067647, dark: 0x2FC988)
     /// Text color that remains legible on the primary action fill.
     public static let onAction = Color.adaptive(light: 0xFFFFFF, dark: 0x04301F)

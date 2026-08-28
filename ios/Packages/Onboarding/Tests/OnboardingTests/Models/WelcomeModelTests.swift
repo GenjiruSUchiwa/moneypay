@@ -47,44 +47,40 @@ struct WelcomeModelTests {
         #expect(shortDrag.index == 0)
     }
 
-    @Test("run() auto-advances and stops after cancellation")
-    func runAdvancesUntilCancelled() async {
+    @Test("autoAdvanceAfterDwell() pages forward once and bumps the generation")
+    func autoAdvancePagesOnce() async {
         let model = WelcomeModel(count: 3, dwell: .zero)
-        let task = Task { await model.run() }
 
-        var attempts = 0
-        while model.index == 0 && attempts < 100 {
-            await Task.yield()
-            attempts += 1
-        }
-        #expect(model.index != 0)
+        await model.autoAdvanceAfterDwell()
 
-        task.cancel()
-        await task.value
+        #expect(model.index == 1)
+        #expect(model.generation == 1)
     }
 
-    @Test("a held deck does not auto-advance until release")
-    func holdPausesAutoAdvance() async {
+    @Test("a held deck does not auto-advance; the release re-arms a fresh dwell")
+    func holdSkipsAutoAdvance() async {
         let model = WelcomeModel(count: 3, dwell: .zero)
         model.hold()
-        let task = Task { await model.run() }
 
-        for _ in 0..<10 { await Task.yield() }
+        await model.autoAdvanceAfterDwell()
         #expect(model.index == 0)
 
-        model.release(dx: 0)
+        model.release(dx: 30)   // short drag: stays put, but the dwell restarts
+        #expect(model.index == 0)
+        #expect(model.generation == 1)
+
+        await model.autoAdvanceAfterDwell()
         #expect(model.index == 1)
+    }
 
-        // The loop must resume after the release: wait for an auto-advance past the tap.
-        var attempts = 0
-        while model.index == 1 && attempts < 100 {
-            await Task.yield()
-            attempts += 1
-        }
-        #expect(model.index != 1)
+    @Test("every user action re-arms the dwell by bumping the generation")
+    func userActionsBumpGeneration() {
+        let model = WelcomeModel(count: 3)
 
-        task.cancel()
-        await task.value
+        model.release(dx: -60)
+        #expect(model.generation == 2)   // release + advance
+        model.retreat()
+        #expect(model.generation == 3)
     }
 
     @Test("a single-slide deck is a no-op for every direction")
