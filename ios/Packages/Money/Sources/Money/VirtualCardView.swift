@@ -95,7 +95,7 @@ public struct VirtualCardView: View {
             Rectangle().fill(Brand.bg.opacity(0.72))
             VStack(spacing: 6) {
                 Image(systemName: "snowflake").font(.system(size: compact ? 16 : 20, weight: .medium))
-                Text("Gelée").font(.system(size: compact ? 11 : 13, weight: .medium))
+                Text("Frozen", bundle: .module).font(.system(size: compact ? 11 : 13, weight: .medium))
             }
             .foregroundStyle(Brand.ink)
         }

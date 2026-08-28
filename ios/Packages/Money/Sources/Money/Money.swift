@@ -23,14 +23,7 @@ nonisolated public struct FXRate: Sendable {
     /// wallet. Always rounds up to the next XAF: the fintech never loses on
     /// rounding.
     public func xaf(fromUSDCents cents: Int) -> Int {
-        precondition(cents >= 0, "montant négatif")
+        precondition(cents >= 0, "the amount must not be negative")
         return Int((Double(cents) / 100.0 * usdToXAF * (1.0 + marginPct)).rounded(.up))
     }
-}
-
-/// `nonisolated` for the same reason as `FXRate`: formatting a minor-unit
-/// amount is pure and is needed on whichever actor holds the value.
-nonisolated public extension Int {
-    var xafLabel: String { "\(self) FCFA" }
-    var usdLabel: String { String(format: "$%.2f", Double(self) / 100.0) }
 }

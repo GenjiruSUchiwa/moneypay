@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Money",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v26),
     ],
@@ -17,6 +18,9 @@ let package = Package(
             name: "Money",
             dependencies: [
                 .product(name: "DesignSystem", package: "DesignSystem"),
+            ],
+            resources: [
+                .process("Resources"),
             ],
             swiftSettings: [
                 // Same default isolation as the app target: unannotated code is
