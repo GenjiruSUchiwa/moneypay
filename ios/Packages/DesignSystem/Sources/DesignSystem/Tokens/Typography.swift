@@ -5,7 +5,6 @@ public extension Font {
 
     static let heading1 = Font.system(size: 28, weight: .semibold)
     static let titleLarge = Font.system(size: 24, weight: .semibold)
-
     static let heading2 = Font.system(size: 20, weight: .semibold)
     static let heading3 = Font.system(size: 17, weight: .semibold)
     static let bodyReg = Font.system(size: 16, weight: .regular)

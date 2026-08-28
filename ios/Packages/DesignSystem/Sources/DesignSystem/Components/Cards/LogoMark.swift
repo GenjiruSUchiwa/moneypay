@@ -52,12 +52,10 @@ public struct Wordmark: View {
             LogoMark(size: 56)
         }
         Wordmark(size: 18)
-        HStack {
-            LogoMark(size: 60, tint: Brand.deepInkFill, glyph: Brand.deepInk)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Brand.greenDeep)
+        LogoMark(size: 60, tint: Brand.deepInkFill, glyph: Brand.deepInk)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Brand.greenDeep)
     }
     .padding()
     .page()
