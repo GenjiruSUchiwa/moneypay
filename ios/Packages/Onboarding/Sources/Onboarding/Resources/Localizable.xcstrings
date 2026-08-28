@@ -1,0 +1,391 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "A six-digit code goes out to this line. It is also the line your Mobile Money top-ups arrive on.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un code à six chiffres part sur cette ligne. C'est aussi elle qui recevra vos rechargements Mobile Money."
+          }
+        }
+      }
+    },
+    "Accepted wherever\nVisa and Mastercard are": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceptée là où\nVisa et Mastercard le sont"
+          }
+        }
+      }
+    },
+    "By continuing you accept MoneyPay's terms and privacy policy.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En continuant, vous acceptez les conditions générales et la politique de confidentialité de MoneyPay."
+          }
+        }
+      }
+    },
+    "Cards issued by our licensed partner bank.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cartes émises par notre banque partenaire agréée."
+          }
+        }
+      }
+    },
+    "Confirm your passcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmez votre code"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
+          }
+        }
+      }
+    },
+    "Country": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pays"
+          }
+        }
+      }
+    },
+    "Create a passcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créez un code secret"
+          }
+        }
+      }
+    },
+    "Create my account": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer mon compte"
+          }
+        }
+      }
+    },
+    "Email address": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse e-mail"
+          }
+        }
+      }
+    },
+    "Enter the code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrez le code"
+          }
+        }
+      }
+    },
+    "First name": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prénom"
+          }
+        }
+      }
+    },
+    "It unlocks the app and confirms your sensitive payments.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il déverrouille l'application et valide vos paiements sensibles."
+          }
+        }
+      }
+    },
+    "Last name": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom"
+          }
+        }
+      }
+    },
+    "Later": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus tard"
+          }
+        }
+      }
+    },
+    "Licensed payment institution · CEMAC zone": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Établissement de paiement agréé · zone CEMAC"
+          }
+        }
+      }
+    },
+    "MTN MoMo, Orange Money or an agent deposit. Your FCFA balance funds every dollar payment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MTN MoMo, Orange Money ou dépôt agent. Votre solde FCFA finance chaque paiement en dollars."
+          }
+        }
+      }
+    },
+    "Netflix, AWS, AliExpress. The rate and the margin are shown before every conversion.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netflix, AWS, AliExpress. Le taux et la marge sont affichés avant chaque conversion."
+          }
+        }
+      }
+    },
+    "One card per use,\ncreated in 30 seconds": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une carte par usage,\ncréée en 30 secondes"
+          }
+        }
+      }
+    },
+    "Open the app and confirm payments without typing your passcode.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez l'application et confirmez vos paiements sans saisir votre code."
+          }
+        }
+      }
+    },
+    "Resend the code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renvoyer le code"
+          }
+        }
+      }
+    },
+    "Resend the code in %lld s": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renvoyer le code dans %lld s"
+          }
+        }
+      }
+    },
+    "Send me the code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recevoir le code"
+          }
+        }
+      }
+    },
+    "Sent to %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyé au %@"
+          }
+        }
+      }
+    },
+    "Sign in": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter"
+          }
+        }
+      }
+    },
+    "The name must match your ID exactly — it is the one your cards will carry.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le nom doit correspondre exactement à votre pièce d'identité : c'est celui qui sera porté par vos cartes."
+          }
+        }
+      }
+    },
+    "The passcodes do not match": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les codes ne correspondent pas"
+          }
+        }
+      }
+    },
+    "Topped up with\nMobile Money": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechargée en\nMobile Money"
+          }
+        }
+      }
+    },
+    "Turn on Face ID": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer Face ID"
+          }
+        }
+      }
+    },
+    "Turn on Face ID?": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer Face ID ?"
+          }
+        }
+      }
+    },
+    "Verify": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifier"
+          }
+        }
+      }
+    },
+    "Visa or Mastercard, its own cap, frozen in one gesture. As many cards as you have needs.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visa ou Mastercard, son propre plafond, gelée d'un geste. Autant de cartes que de besoins."
+          }
+        }
+      }
+    },
+    "What is your\nnumber?": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quel est votre\nnuméro ?"
+          }
+        }
+      }
+    },
+    "Your biometric data never leaves your iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos données biométriques ne quittent pas votre iPhone."
+          }
+        }
+      }
+    },
+    "Your details": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos informations"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

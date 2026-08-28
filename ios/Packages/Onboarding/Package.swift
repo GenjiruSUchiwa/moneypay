@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Onboarding",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v26),
     ],
@@ -19,6 +20,22 @@ let package = Package(
             dependencies: [
                 .product(name: "DesignSystem", package: "DesignSystem"),
                 .product(name: "Money", package: "Money"),
+            ],
+            resources: [
+                .process("Resources"),
+            ],
+            swiftSettings: [
+                // Same default isolation as the app target: unannotated code is
+                // @MainActor, and what must run off it says so explicitly.
+                .defaultIsolation(MainActor.self),
+                // Warnings are errors, front and back.
+                .treatAllWarnings(as: .error),
+            ]
+        ),
+        .testTarget(
+            name: "OnboardingTests",
+            dependencies: [
+                "Onboarding",
             ],
             swiftSettings: [
                 // Same default isolation as the app target: unannotated code is

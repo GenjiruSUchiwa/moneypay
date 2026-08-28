@@ -13,17 +13,24 @@ public struct WelcomeView: View {
     public var onSignIn: () -> Void
     @State private var page = 0
 
-    private struct Slide { var title: String, body: String, theme: CardTheme, label: String }
+    /// `title` and `body` are copy and resolve against this package's catalog
+    /// at render time; `label` is the name printed on the sample card, data.
+    private struct Slide {
+        var title: LocalizedStringKey
+        var body: LocalizedStringKey
+        var theme: CardTheme
+        var label: String
+    }
 
     private let slides: [Slide] = [
-        .init(title: "Une carte par usage,\ncréée en 30 secondes",
-              body: "Visa ou Mastercard, son propre plafond, gelée d'un geste. Autant de cartes que de besoins.",
+        .init(title: "One card per use,\ncreated in 30 seconds",
+              body: "Visa or Mastercard, its own cap, frozen in one gesture. As many cards as you have needs.",
               theme: .ink, label: "Abonnements"),
-        .init(title: "Rechargée en\nMobile Money",
-              body: "MTN MoMo, Orange Money ou dépôt agent. Votre solde FCFA finance chaque paiement en dollars.",
+        .init(title: "Topped up with\nMobile Money",
+              body: "MTN MoMo, Orange Money or an agent deposit. Your FCFA balance funds every dollar payment.",
               theme: .pine, label: "Shopping"),
-        .init(title: "Acceptée là où\nVisa et Mastercard le sont",
-              body: "Netflix, AWS, AliExpress. Le taux et la marge sont affichés avant chaque conversion.",
+        .init(title: "Accepted wherever\nVisa and Mastercard are",
+              body: "Netflix, AWS, AliExpress. The rate and the margin are shown before every conversion.",
               theme: .clay, label: "Serveurs")
     ]
 
@@ -33,7 +40,7 @@ public struct WelcomeView: View {
                 Wordmark(size: 17)
                 Spacer()
                 Button(action: onSignIn) {
-                    Text("Se connecter").font(.subMed).foregroundStyle(Brand.inkMuted)
+                    Text("Sign in", bundle: .module).font(.subMed).foregroundStyle(Brand.inkMuted)
                 }
             }
             .gutter()
@@ -56,10 +63,10 @@ public struct WelcomeView: View {
             .gutter()
             .padding(.bottom, 22)
 
-            MPButton(title: "Créer mon compte", action: onStart)
+            MPButton(title: Text("Create my account", bundle: .module), action: onStart)
                 .gutter()
 
-            Text("Cartes émises par notre banque partenaire agréée.")
+            Text("Cards issued by our licensed partner bank.", bundle: .module)
                 .font(.micro)
                 .foregroundStyle(Brand.inkFaint)
                 .padding(.top, 12)
@@ -83,13 +90,13 @@ public struct WelcomeView: View {
 
             Spacer(minLength: 28)
 
-            Text(slides[i].title)
+            Text(slides[i].title, bundle: .module)
                 .font(.system(size: 29, weight: .semibold))
                 .tight(-0.8)
                 .foregroundStyle(Brand.ink)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text(slides[i].body)
+            Text(slides[i].body, bundle: .module)
                 .font(.bodyReg)
                 .foregroundStyle(Brand.inkMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -101,4 +108,14 @@ public struct WelcomeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .gutter()
     }
+}
+
+#Preview("Welcome — fr") {
+    WelcomeView(onStart: {}, onSignIn: {})
+        .environment(\.locale, Locale(identifier: "fr"))
+}
+
+#Preview("Welcome — en") {
+    WelcomeView(onStart: {}, onSignIn: {})
+        .environment(\.locale, Locale(identifier: "en"))
 }
