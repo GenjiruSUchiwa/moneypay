@@ -1,6 +1,4 @@
 import DesignSystem
-import Foundation
-import Money
 import SwiftUI
 
 public struct WelcomeView: View {
@@ -11,100 +9,132 @@ public struct WelcomeView: View {
 
     public var onStart: () -> Void
     public var onSignIn: () -> Void
-    @State private var page = 0
-
-    private struct Slide {
-        var title: LocalizedStringKey
-        var body: LocalizedStringKey
-        var theme: CardTheme
-        var label: String
-    }
-
-    private let slides: [Slide] = [
-        .init(title: "One card per use,\ncreated in 30 seconds",
-              body: "Visa or Mastercard, its own cap, frozen in one gesture. As many cards as you have needs.",
-              theme: .ink, label: "Abonnements"),
-        .init(title: "Topped up with\nMobile Money",
-              body: "MTN MoMo, Orange Money or an agent deposit. Your FCFA balance funds every dollar payment.",
-              theme: .pine, label: "Shopping"),
-        .init(title: "Accepted wherever\nVisa and Mastercard are",
-              body: "Netflix, AWS, AliExpress. The rate and the margin are shown before every conversion.",
-              theme: .clay, label: "Serveurs")
-    ]
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
+    @State private var model = WelcomeModel(count: WelcomeSlide.all.count)
+    @State private var appeared = false
 
     public var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Wordmark(size: 17)
-                Spacer()
-                Button(action: onSignIn) {
-                    Text("Sign in", bundle: .module).font(.subMed).foregroundStyle(Brand.inkMuted)
-                }
-            }
+        VStack(spacing: .zero) {
+            Wordmark(size: 17)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .gutter()
+                .padding(.top, Metric.rowVertical)
+                .modifier(Rise(index: 0, appeared: appeared, reduceMotion: reduceMotion))
+
+            SegmentedProgress(
+                count: model.count,
+                current: model.index,
+                style: .story(dwell: model.dwell)
+            )
             .gutter()
-            .padding(.top, 6)
+            .padding(.top, Metric.rowVertical)
+            .modifier(Rise(index: 1, appeared: appeared, reduceMotion: reduceMotion))
 
-            TabView(selection: $page) {
-                ForEach(slides.indices, id: \.self) { i in slide(i).tag(i) }
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-
-            HStack(spacing: 5) {
-                ForEach(slides.indices, id: \.self) { i in
-                    Capsule()
-                        .fill(i == page ? Brand.ink : Brand.rule)
-                        .frame(width: i == page ? 18 : 6, height: 3)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: page)
-                }
-                Spacer()
-            }
+            WelcomeTexts(
+                slides: WelcomeSlide.all,
+                currentIndex: model.index,
+                reduceMotion: reduceMotion
+            )
             .gutter()
-            .padding(.bottom, 22)
+            .padding(.top, Metric.section)
+            .modifier(Rise(index: 2, appeared: appeared, reduceMotion: reduceMotion))
 
+            WelcomeDeckView(model: model, slides: WelcomeSlide.all)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .modifier(Rise(index: 3, appeared: appeared, reduceMotion: reduceMotion))
+
+            WelcomeActions(onStart: onStart, onSignIn: onSignIn)
+                .modifier(Rise(index: 4, appeared: appeared, reduceMotion: reduceMotion))
+        }
+        .page()
+        .onAppear { appeared = true }
+        .task(id: voiceOverEnabled) {
+            guard !voiceOverEnabled else { return }
+            await model.run()
+        }
+    }
+}
+
+private struct WelcomeTexts: View {
+    let slides: [WelcomeSlide]
+    let currentIndex: Int
+    let reduceMotion: Bool
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            ForEach(slides) { slide in
+                text(for: slide)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    @ViewBuilder
+    private func text(for slide: WelcomeSlide) -> some View {
+        let isCurrent = slide.id == currentIndex
+
+        VStack(alignment: .leading, spacing: Metric.stack) {
+            Text(slide.title, bundle: .module)
+                .font(.heading1)
+                .tight()
+                .foregroundStyle(Brand.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+
+            Text(slide.body, bundle: .module)
+                .font(.bodyReg)
+                .foregroundStyle(Brand.inkMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .opacity(isCurrent ? 1 : 0)
+        .blur(radius: reduceMotion || isCurrent ? .zero : Motion.blur)
+        .offset(y: reduceMotion || isCurrent ? .zero : Motion.rise)
+        .animation(reduceMotion ? Motion.quick : Motion.screen, value: currentIndex)
+        .accessibilityHidden(!isCurrent)
+    }
+}
+
+private struct WelcomeActions: View {
+    let onStart: () -> Void
+    let onSignIn: () -> Void
+
+    var body: some View {
+        VStack(spacing: Metric.stack) {
             MPButton(title: Text("Create my account", bundle: .module), action: onStart)
                 .gutter()
+
+            MPButton(
+                title: Text("I already have an account", bundle: .module),
+                tone: .quiet,
+                action: onSignIn
+            )
+            .gutter()
 
             Text("Cards issued by our licensed partner bank.", bundle: .module)
                 .font(.micro)
                 .foregroundStyle(Brand.inkFaint)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, Metric.rowVertical)
         }
-        .page()
     }
+}
 
-    private func slide(_ i: Int) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: 12)
+private struct Rise: ViewModifier {
+    let index: Int
+    let appeared: Bool
+    let reduceMotion: Bool
 
-            VirtualCardView(card: VirtualCard(
-                id: UUID(), label: slides[i].label, theme: slides[i].theme,
-                network: i == 1 ? .visa : .mastercard,
-                pan: "5399471028834412", cvv: "417", expiry: "09/29",
-                createdAt: .now, monthlyLimitUSDCents: 15_000, spentUSDCents: 0
-            ))
-            .frame(maxWidth: 300)
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            Spacer(minLength: 28)
-
-            Text(slides[i].title, bundle: .module)
-                .font(.system(size: 29, weight: .semibold))
-                .tight(-0.8)
-                .foregroundStyle(Brand.ink)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(slides[i].body, bundle: .module)
-                .font(.bodyReg)
-                .foregroundStyle(Brand.inkMuted)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 10)
-                .frame(maxWidth: 330, alignment: .leading)
-
-            Spacer(minLength: 12)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .gutter()
+    func body(content: Content) -> some View {
+        content
+            .opacity(appeared || reduceMotion ? 1 : 0)
+            .offset(y: appeared || reduceMotion ? .zero : Motion.rise)
+            .animation(
+                reduceMotion ? nil : Motion.screen.delay(Double(index) * Motion.stagger),
+                value: appeared
+            )
     }
 }
 
@@ -116,4 +146,9 @@ public struct WelcomeView: View {
 #Preview("Welcome — en") {
     WelcomeView(onStart: {}, onSignIn: {})
         .environment(\.locale, Locale(identifier: "en"))
+}
+
+#Preview("Welcome — dark") {
+    WelcomeView(onStart: {}, onSignIn: {})
+        .preferredColorScheme(.dark)
 }

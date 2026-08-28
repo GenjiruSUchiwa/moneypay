@@ -45,6 +45,17 @@
         }
       }
     },
+    "Card %lld of %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carte %lld sur %lld"
+          }
+        }
+      }
+    },
     "Confirm your passcode": {
       "extractionState": "manual",
       "localizations": {
@@ -129,6 +140,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prénom"
+          }
+        }
+      }
+    },
+    "I already have an account": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J’ai déjà un compte"
           }
         }
       }
@@ -283,17 +305,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shopping"
-          }
-        }
-      }
-    },
-    "Sign in": {
-      "extractionState": "manual",
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se connecter"
           }
         }
       }
