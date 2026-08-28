@@ -727,6 +727,18 @@ concentriques wax). La marque reste lisible par-dessus.
 **`card-swatch`** — nuancier 42×30, sélection = anneau encre à -5px. **`net-option`** —
 choix Visa/Mastercard, sélection = liseré encre 1,5px + `{colors.surface}`.
 
+### Bienvenue (onboarding)
+Réf. Revolut / Wise sur Mobbin. Navbar logo seul (pas de « Se connecter » en haut).
+**`we-segs`** — segments de progression façon stories (3 barres 3px, capsules) : le segment
+courant se **remplit** (`weFill` 4,2s linéaire = temps d'auto-avance), les passés sont pleins.
+**`we-deck`** — héros : les 3 cartes d'exemple en **éventail** (296px, offsets ±12/13px,
+rotations 4,5°/−4°), la carte de devant se **drague** (suit le doigt + rotation `dx/18`),
+relâche > 55px = carte suivante/précédente, tap = suivante ; flottement lent `weBob` en repos.
+**`we-texts`** — titres/corps empilés en `grid-area:1/1` (hauteur réservée, zéro saut),
+transition fondu + `blur(5px)` + montée 0,5s.
+En bas : **deux boutons empilés** — « Créer mon compte » (plein) + « J'ai déjà un compte »
+(quiet) — puis la ligne légale. Entrée en cascade `weRise` (délais .05→.26s).
+
 ### Graphiques (Analyse)
 **`bars-chart`** — barres `{colors.ink}` à 13 %, **active en `{colors.green}`** + étiquette,
 grille pointillée `{colors.hairline}`, ticks 9,5px `{colors.ink-3}`. Pousse `barUp` 0,5s en cascade.
@@ -763,6 +775,11 @@ Tout est conditionné par `.anim` sur la racine ; `prefers-reduced-motion` neutr
 | Dépliage des détails `.cd-collapse` | 0,42s `cubic-bezier(.3,.8,.3,1)` (grid-rows 0fr→1fr) |
 | Anneau de plafond | 0,9s `cubic-bezier(.3,.7,.3,1)` (stroke-dashoffset) |
 | Entrée du détail de carte `cdHero` | 0,5s, uniquement au push (`[data-anim="push"]`) |
+| Bienvenue : segment `weFill` | 4,2s linéaire (= dwell d'auto-avance) |
+| Bienvenue : rotation du deck | 0,55s `cubic-bezier(.3,1.25,.4,1)` (ressort), drag sans transition |
+| Bienvenue : flottement `weBob` | 3,2s ease-in-out alternate |
+| Bienvenue : textes (fondu + blur + montée) | 0,5s ease |
+| Bienvenue : entrée `weRise` en cascade | 0,55s `cubic-bezier(.2,.7,.3,1)`, délais .05→.26s |
 | Retours de pression | scale .92–.985, 0,12–0,14s |
 | Bascule de thème `.theme-anim` | fondu 0,3s |
 
