@@ -807,12 +807,34 @@ input:focus-visible{outline:none}
 .notif-dot{width:8px;height:8px;border-radius:99px;background:var(--debit);flex-shrink:0}
 .bell-badge{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:99px;background:var(--debit);box-shadow:0 0 0 2px var(--paper)}
 
-/* onboarding */
-.welcome-dots{display:flex;gap:5px;align-items:center}
-.welcome-dots .wd{width:6px;height:3px;border-radius:99px;background:var(--well-2);transition:width .25s ease,background .25s ease}
-.welcome-dots .wd.on{width:18px;background:var(--ink)}
-.slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;flex:1;min-height:0}
-.slides .slide{width:100%;flex-shrink:0;scroll-snap-align:center;display:flex;flex-direction:column;justify-content:center;padding:12px var(--gutter)}
+/* onboarding — deck de bienvenue */
+.we-segs{display:flex;gap:5px;padding:12px var(--gutter) 0}
+.we-segs .ws{flex:1;height:3px;border-radius:99px;background:var(--well-2);overflow:hidden}
+.we-segs .ws i{display:block;height:100%;border-radius:99px;background:var(--ink);transform:scaleX(0);transform-origin:left}
+.we-segs .ws.done i{transform:none}
+.we-segs .ws.run i{animation:weFill 4.2s linear forwards}
+@keyframes weFill{to{transform:none}}
+.we-texts{display:grid;padding:24px var(--gutter) 0}
+.we-t{grid-area:1/1;opacity:0;transform:translateY(10px);filter:blur(5px);transition:opacity .5s ease,transform .5s ease,filter .5s ease;pointer-events:none}
+.we-t.on{opacity:1;transform:none;filter:none}
+.we-body{font-size:15px;line-height:1.5;color:var(--ink-2);margin-top:10px;max-width:320px;text-wrap:pretty}
+.we-deck{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;touch-action:pan-y;cursor:grab}
+.we-deck:active{cursor:grabbing}
+.we-stage{position:relative;width:296px;aspect-ratio:1.586}
+.we-card{position:absolute;inset:0;transition:transform .55s cubic-bezier(.3,1.25,.4,1)}
+.we-card.drag{transition:none}
+.we-card[data-depth="0"]{z-index:3}
+.we-card[data-depth="1"]{transform:translate(12px,-32px) scale(.92) rotate(4.5deg);z-index:2}
+.we-card[data-depth="2"]{transform:translate(-13px,-58px) scale(.84) rotate(-4deg);z-index:1}
+.we-float{animation:weBob 3.2s ease-in-out infinite alternate}
+@keyframes weBob{from{transform:translateY(2px)}to{transform:translateY(-7px)}}
+.we-rise{animation:weRise .55s cubic-bezier(.2,.7,.3,1) both}
+@keyframes weRise{from{opacity:0;transform:translateY(14px)}}
+@media (prefers-reduced-motion: reduce){
+  .we-rise,.we-float{animation:none}
+  .we-card{transition:none}
+  .we-t{transition:opacity .2s ease;transform:none;filter:none}
+}
 .viewfinder{position:relative}
 .viewfinder .vf-corners{position:absolute;inset:0;color:var(--ink)}
 .viewfinder .vf-corners.ok{color:var(--credit)}
