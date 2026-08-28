@@ -3,306 +3,626 @@
 <meta charset="utf-8">
 <title>MoniPay — Preview</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+/* thème avant peinture — défaut de CE fichier : "light" (preview-dark.html : "dark") */
+(function(){var DEF="light";try{var t=localStorage.getItem("mp-preview-theme")||DEF;
+if(t==="auto")delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t}catch(e){}})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300..800&display=swap">
 <link rel="stylesheet" href="prototype/styles.css">
 <style>
-/* ---- coquille du catalogue (n'affecte pas les composants) ---- */
+/* ================================================================
+   Coquille du catalogue — préfixe pv-, n'affecte pas les composants.
+   Les composants eux-mêmes sont rendus par prototype/styles.css.
+   ================================================================ */
+:root[data-theme="light"]{color-scheme:light}
 html,body{overflow:auto!important;height:auto!important}
-body{padding:40px 24px 80px;background:var(--paper)}
-.pv{max-width:900px;margin:0 auto}
-.pv h1{font-size:28px;font-weight:600;letter-spacing:-.02em}
-.pv .pv-sub{font-size:13.5px;color:var(--ink-2);margin-top:6px}
-.pv h2{font-size:19px;font-weight:600;letter-spacing:-.015em;margin:44px 0 4px;padding-top:24px;border-top:1px solid var(--rule)}
-.pv h3{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:22px 0 10px}
-.pv-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.pv-col{display:flex;flex-direction:column;gap:12px}
-.pv-phone{width:393px;max-width:100%}
-.pv-cardw{width:300px;max-width:100%}
-.pv-note{font-size:12px;color:var(--ink-3);margin-top:8px;line-height:1.55;text-wrap:pretty}
-/* nuancier */
-.sw{width:150px}
-.sw-c{height:52px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--edge)}
-.sw-n{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-2);margin-top:6px}
-/* composants absolus rendus statiques pour le catalogue */
-.pv .toast{position:static;opacity:1;transform:none;display:inline-flex;pointer-events:auto}
-.pv .action-sheet{position:static;transform:none;max-width:373px}
-.pv .widget-menu{position:static;transform:none;opacity:1;pointer-events:auto;display:inline-grid}
-.pv-tabzone{position:relative;height:96px;max-width:393px}
-.pv-tabzone .tabwrap{bottom:10px;left:0;right:0}
+body{background:var(--paper);scroll-behavior:smooth}
+
+/* ---- en-tête sticky ---- */
+.pv-head{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;gap:14px;
+  padding:14px 28px;
+  background:var(--glass-menu);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  border-bottom:1px solid var(--hairline);
+}
+.pv-mark{width:26px;height:26px;border-radius:8px;background:var(--green-deep);display:flex;align-items:center;justify-content:center;color:var(--accent-bright);flex-shrink:0}
+.pv-head h1{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.pv-head .pv-hsub{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:1px}
+.pv-hfill{flex:1}
+.pv-theme{display:flex;gap:2px;background:var(--well);border-radius:99px;padding:3px}
+.pv-theme button{height:28px;padding:0 13px;border-radius:99px;font-size:12px;font-weight:500;color:var(--ink-2)}
+.pv-theme button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-1)}
+
+/* ---- gabarit : sommaire + contenu ---- */
+.pv-wrap{display:flex;gap:44px;max-width:1180px;margin:0 auto;padding:36px 28px 120px}
+.pv-toc{width:190px;flex-shrink:0;position:sticky;top:86px;align-self:flex-start}
+.pv-toc .t-lbl{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:0 10px 8px}
+.pv-toc a{display:block;padding:6px 10px;border-radius:8px;font-size:13px;color:var(--ink-2);text-decoration:none}
+.pv-toc a:hover{background:var(--well);color:var(--ink)}
+.pv-main{flex:1;min-width:0}
+@media(max-width:900px){.pv-toc{display:none}.pv-wrap{padding:24px 16px 80px}}
+
+/* ---- intro ---- */
+.pv-intro h2{font-size:27px;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+.pv-intro p{font-size:14px;line-height:1.6;color:var(--ink-2);margin-top:10px;max-width:640px;text-wrap:pretty}
+.pv-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pv-meta span{display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:99px;background:var(--well);font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--ink-2)}
+
+/* ---- sections & specimens ---- */
+.pv-sec{margin-top:64px;scroll-margin-top:86px}
+.pv-sec>h3{font-size:20px;font-weight:600;letter-spacing:-.015em;padding-bottom:14px;border-bottom:1px solid var(--rule)}
+.pv-sec>.s-note{font-size:13px;line-height:1.55;color:var(--ink-2);margin-top:12px;max-width:640px;text-wrap:pretty}
+.pv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:20px}
+.pv-grid.wide{grid-template-columns:1fr}
+.pv-grid.half{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+@media(max-width:640px){.pv-grid.half{grid-template-columns:1fr}}
+
+.spec{border:1px solid var(--hairline);border-radius:16px;background:var(--paper);overflow:hidden;display:flex;flex-direction:column}
+.spec .sp-zone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px 24px;min-height:96px}
+.spec .sp-zone.left{align-items:stretch}
+.spec .sp-zone.row{flex-direction:row;flex-wrap:wrap;justify-content:center}
+.spec .sp-zone>*{max-width:100%}
+.spec .sp-cap{border-top:1px solid var(--hairline);padding:10px 16px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.spec .sp-cap b{font-size:12.5px;font-weight:600;letter-spacing:-.005em}
+.spec .sp-cap code{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;color:var(--ink-3)}
+.sp-w{width:100%;max-width:345px}
+
+/* ---- nuancier ---- */
+.sw{border:1px solid var(--hairline);border-radius:14px;overflow:hidden;background:var(--paper)}
+.sw .sw-c{height:64px}
+.sw .sw-b{padding:9px 13px 11px}
+.sw .sw-n{font-size:12.5px;font-weight:600;letter-spacing:-.005em}
+.sw .sw-h{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--ink-3);margin-top:3px;line-height:1.6}
+.pv-grid.colors{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+
+/* ---- typographie ---- */
+.ty{display:flex;align-items:baseline;gap:18px;padding:13px 0;border-bottom:1px solid var(--hairline)}
+.ty:last-child{border-bottom:0}
+.ty .ty-s{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ty .ty-m{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;color:var(--ink-3);text-align:right;flex-shrink:0;line-height:1.6}
+
+/* ---- composants absolus rendus statiques ---- */
+.spec .toast{position:static;opacity:1;transform:none;display:inline-flex;pointer-events:auto}
+.spec .action-sheet{position:static;transform:none;width:100%;max-width:360px}
+.sp-tabzone{position:relative;height:76px;width:100%;max-width:360px}
+.sp-tabzone .tabwrap{bottom:0;left:0;right:0}
 </style>
 <body>
-<div class="pv">
 
-  <h1>MoniPay — catalogue du système</h1>
-  <div class="pv-sub">Rendu par <code class="mono">prototype/styles.css</code> — la source, pas une copie.
-  Version sombre : <a href="preview-dark.html" style="color:var(--accent)">preview-dark.html</a></div>
+<header class="pv-head">
+  <span class="pv-mark"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"><path d="M3.5 12V4.5L8 9l4.5-4.5V12"/></svg></span>
+  <div>
+    <h1>MoniPay — Design System</h1>
+    <div class="pv-hsub">preview · rendu par prototype/styles.css</div>
+  </div>
+  <div class="pv-hfill"></div>
+  <div class="pv-theme" id="pv-theme">
+    <button data-t="light">Clair</button>
+    <button data-t="dark">Sombre</button>
+    <button data-t="auto">Auto</button>
+  </div>
+</header>
 
-  <h2>Couleurs</h2>
-  <h3>Surfaces &amp; encre</h3>
-  <div class="pv-row">
-    <div class="sw"><div class="sw-c" style="background:var(--paper)"></div><div class="sw-n">--paper</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--surface)"></div><div class="sw-n">--surface</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--well)"></div><div class="sw-n">--well</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--well-2)"></div><div class="sw-n">--well-2</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--ink)"></div><div class="sw-n">--ink</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--ink-2)"></div><div class="sw-n">--ink-2</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--ink-3)"></div><div class="sw-n">--ink-3</div></div>
-  </div>
-  <h3>Vert — action &amp; identité</h3>
-  <div class="pv-row">
-    <div class="sw"><div class="sw-c" style="background:var(--green)"></div><div class="sw-n">--green</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--green-press)"></div><div class="sw-n">--green-press</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--green-deep)"></div><div class="sw-n">--green-deep</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--accent)"></div><div class="sw-n">--accent</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--accent-bright)"></div><div class="sw-n">--accent-bright</div></div>
-  </div>
-  <h3>Sémantique monétaire</h3>
-  <div class="pv-row">
-    <div class="sw"><div class="sw-c" style="background:var(--credit)"></div><div class="sw-n">--credit</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--credit-soft)"></div><div class="sw-n">--credit-soft</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--debit)"></div><div class="sw-n">--debit</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--debit-soft)"></div><div class="sw-n">--debit-soft</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--pend)"></div><div class="sw-n">--pend</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--pend-soft)"></div><div class="sw-n">--pend-soft</div></div>
-  </div>
-  <h3>Palette catégorielle (validée au script)</h3>
-  <div class="pv-row">
-    <div class="sw"><div class="sw-c" style="background:var(--cat-streaming)"></div><div class="sw-n">--cat-streaming</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--cat-shopping)"></div><div class="sw-n">--cat-shopping</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--cat-software)"></div><div class="sw-n">--cat-software</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--cat-food)"></div><div class="sw-n">--cat-food</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--cat-transport)"></div><div class="sw-n">--cat-transport</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--cat-travel)"></div><div class="sw-n">--cat-travel</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--cat-ads)"></div><div class="sw-n">--cat-ads</div></div>
-    <div class="sw"><div class="sw-c" style="background:var(--cat-other)"></div><div class="sw-n">--cat-other</div></div>
-  </div>
+<div class="pv-wrap">
 
-  <h2>Typographie — Google Sans Flex, famille unique</h2>
-  <div class="pv-col">
-    <div class="display" style="font-size:44px">44 — Saisie de montant</div>
-    <div class="display" style="font-size:40px">40 — Solde du héro</div>
-    <div class="t-page">28 — Titre d'écran</div>
-    <div class="t-section">19 — Titre de section</div>
-    <div style="font-size:15px">15 — Corps courant, titres de ligne</div>
-    <div style="font-size:13.5px;color:var(--ink-2)">13,5 — Sous-titres et notes</div>
-    <div class="eyebrow">11 — Eyebrow en capitales, chasse +0.14em</div>
-  </div>
-  <h3>Montant composé</h3>
-  <div class="pv-row" style="gap:32px">
-    <span class="money display tnum" style="font-size:40px"><span class="m-cur">$</span>125<span class="m-frac">50</span></span>
-    <span class="money display tnum" style="font-size:40px">78 500<span class="m-unit">FCFA</span></span>
-  </div>
-  <div class="pv-note">Centimes en exposant, chiffres tabulaires, séparateur U+202F (espace fine insécable).</div>
+  <nav class="pv-toc">
+    <div class="t-lbl">Sommaire</div>
+    <a href="#couleurs">Couleurs</a>
+    <a href="#typographie">Typographie</a>
+    <a href="#boutons">Boutons</a>
+    <a href="#etats">Sélection &amp; états</a>
+    <a href="#saisie">Champs &amp; saisie</a>
+    <a href="#listes">Listes &amp; données</a>
+    <a href="#flux">Héro &amp; flux</a>
+    <a href="#cartes">Cartes virtuelles</a>
+    <a href="#verre">Verre liquide</a>
+    <a href="#messages">États &amp; messages</a>
+  </nav>
 
-  <h2>Boutons</h2>
-  <div class="pv-phone pv-col">
-    <button class="btn primary">Continuer</button>
-    <button class="btn quiet">Action secondaire</button>
-    <button class="btn danger">Supprimer la carte</button>
-    <button class="btn primary disabled">Continuer</button>
-    <div class="pv-row">
-      <button class="btn ghost" style="width:auto">Annuler</button>
-      <button class="btn quiet small">Changer</button>
-      <button class="btn primary small">Tout voir</button>
-    </div>
-  </div>
+  <main class="pv-main">
 
-  <h2>Sélection &amp; états</h2>
-  <h3>Chips &amp; segments</h3>
-  <div class="pv-row">
-    <span class="chip on">Originales</span>
-    <span class="chip">Héritage</span>
-    <span class="chip">30 jours</span>
-  </div>
-  <div class="segments pv-phone" style="margin-top:12px">
-    <button class="seg on">Toutes</button>
-    <button class="seg">Entrées</button>
-    <button class="seg">Sorties</button>
-  </div>
-  <h3>Pills de statut — toujours icône + libellé</h3>
-  <div class="pv-row">
-    <span class="pill credit"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg>Réussi</span>
-    <span class="pill pend"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.6V6l1.7 1.4"/></svg>En attente</span>
-    <span class="pill debit"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l6 6M9 3l-6 6"/></svg>Refusé</span>
-    <span class="pill neutral no-ico">Remboursé</span>
-    <span class="pill accent no-ico">Virtuelle</span>
-  </div>
-  <h3>Toggle, jauge, coche</h3>
-  <div class="pv-row" style="gap:24px">
-    <span class="toggle on"></span>
-    <span class="toggle"></span>
-    <div style="width:160px" class="meter"><div class="m-fill" style="width:62%"></div></div>
-    <div style="width:160px" class="meter"><div class="m-fill warn" style="width:88%"></div></div>
-    <span class="success-mark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg></span>
-    <span class="fail-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></span>
-  </div>
-
-  <h2>Champs &amp; saisie</h2>
-  <div class="pv-phone pv-col">
-    <label class="field"><span class="f-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg></span><input placeholder="Rechercher un contact"></label>
-    <label class="field" style="box-shadow:inset 0 0 0 1.5px var(--green);background:var(--surface)"><input value="focalisé"></label>
-    <div class="otp-boxes"><span class="ob">4</span><span class="ob">7</span><span class="ob cursor"></span><span class="ob"></span><span class="ob"></span><span class="ob"></span></div>
-    <div class="pass-dots"><span class="pd fill"></span><span class="pd fill"></span><span class="pd"></span><span class="pd"></span></div>
-    <div class="amount-entry">
-      <div class="ae-value display money tnum">12 500<span class="m-unit">FCFA</span></div>
-      <div class="ae-sub tnum">≈ 19,89 $ · 1 $ = 628 F</div>
-    </div>
-    <div class="keypad">
-      <button class="kp">1</button><button class="kp">2</button><button class="kp">3</button>
-      <button class="kp">4</button><button class="kp">5</button><button class="kp">6</button>
-      <button class="kp">7</button><button class="kp">8</button><button class="kp">9</button>
-      <button class="kp fn">,</button><button class="kp">0</button><button class="kp fn">⌫</button>
-    </div>
-  </div>
-
-  <h2>Lignes &amp; listes — posées sur le papier</h2>
-  <div class="pv-phone">
-    <div class="section-head gutter"><span class="t-section">Transactions</span><span class="sh-count tnum">12</span><span class="sh-fill"></span><span class="sh-link">Tout voir</span></div>
-    <div class="gutter">
-      <div class="row"><span class="icon-tile"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v9M4 7l4 4 4-4"/></svg></span>
-        <span class="r-body"><span class="r-title"><span class="rt-text">Netflix</span></span><span class="r-sub">Paiement carte · 14:32</span></span>
-        <span class="r-value tnum" style="color:var(--debit)">−7,99 $</span></div>
-      <div class="rule inset" style="margin-left:52px"></div>
-      <div class="row"><span class="icon-tile" style="background:var(--credit-soft);color:var(--credit)"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 14V5M4 9l4-4 4 4"/></svg></span>
-        <span class="r-body"><span class="r-title"><span class="rt-text">Rechargement MoMo</span></span><span class="r-sub">Aujourd'hui · 09:12</span></span>
-        <span class="r-value tnum" style="color:var(--credit)">+25 000</span></div>
-      <div class="rule inset" style="margin-left:52px"></div>
-      <div class="row"><span class="icon-tile"></span>
-        <span class="r-body"><span class="r-title"><span class="rt-text">Paramètres de sécurité</span></span></span>
-        <span class="r-chevron"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></span></div>
-    </div>
-    <div class="gutter">
-      <div class="kv"><span class="kv-l">Référence</span><span class="kv-fill"></span><span class="kv-v mono">MP-2026-08-4471</span></div>
-      <div class="rule"></div>
-      <div class="kv"><span class="kv-l">Frais</span><span class="kv-fill"></span><span class="kv-v strong tnum">250 FCFA</span></div>
-    </div>
-  </div>
-
-  <h2>Héro du solde</h2>
-  <div class="pv-phone">
-    <div class="hero-panel">
-      <div class="hp-eyebrow-row"><span class="eyebrow">Solde disponible</span></div>
-      <div class="hp-balance display money tnum">184 250<span class="m-unit" style="color:rgba(255,255,255,.62)">FCFA</span></div>
-      <div class="hp-usd tnum">≈ 293,39 $ · 1 $ = 628 F</div>
-      <div class="quick-actions on-green" style="margin-top:22px">
-        <button class="qa"><span class="qa-disc"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3v10M3 8h10"/></svg></span><span class="qa-label">Recharger</span></button>
-        <button class="qa"><span class="qa-disc"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="qa-label">Envoyer</span></button>
-        <button class="qa"><span class="qa-disc"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h8M9 3l3 3-3 3M12 11H4m3-3-3 3 3 3"/></svg></span><span class="qa-label">Convertir</span></button>
+    <div class="pv-intro">
+      <h2>Le système MoniPay, composant par composant</h2>
+      <p>Fintech mobile pour la zone CEMAC : portefeuille FCFA, recharges MTN MoMo / Orange Money,
+      cartes virtuelles USD. Chaque specimen ci-dessous est rendu par la feuille de style du
+      prototype — le catalogue ne peut pas dériver de la source. Spécification : <code class="mono">DESIGN.md</code>.</p>
+      <div class="pv-meta">
+        <span>Google Sans Flex</span><span>capsules 999px</span><span>gutter 20px</span>
+        <span>clair &amp; sombre</span><span>verre liquide iOS 26</span><span>français · U+202F</span>
       </div>
     </div>
-  </div>
 
-  <h2>Flux monétaires</h2>
-  <div class="pv-phone pv-col">
-    <div class="fx-stack" style="margin-left:0;margin-right:0">
-      <div class="fx-card"><span class="fl-flag" style="width:34px;height:34px;background:#0E8345"></span>
-        <span><span class="fl-code">FCFA</span><span class="fl-note" style="display:block">Solde : 184 250</span></span>
-        <span class="fl-amt tnum">12 500</span></div>
-      <span class="fx-mid"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M4 9l4 4 4-4"/></svg></span>
-      <div class="fx-card"><span class="fl-flag" style="width:34px;height:34px;background:#1434CB"></span>
-        <span><span class="fl-code">USD</span><span class="fl-note" style="display:block">Carte virtuelle</span></span>
-        <span class="fl-amt credit tnum">19,89</span></div>
-    </div>
-    <button class="method-card" style="margin:0;width:100%">
-      <span class="logo-tile"><span style="font-weight:700;font-size:11px;color:#FFCB05;background:#004F9F;width:100%;height:100%;display:flex;align-items:center;justify-content:center">MTN</span></span>
-      <span style="flex:1"><span class="mc-name">MTN Mobile Money</span><span class="mc-sub">+237 6•• ••• •42</span></span>
-      <span class="btn quiet small" style="pointer-events:none">Changer</span>
-    </button>
-    <div class="tl">
-      <div class="tl-row"><span class="tl-disc"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg></span><span><span class="tl-t" style="display:block">Envoi confirmé</span><span class="tl-s">Aujourd'hui, 14:32</span></span><span class="tl-v tnum">12 500 F</span></div>
-      <div class="tl-row"><span class="tl-disc"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg></span><span><span class="tl-t" style="display:block">Traitement MoMo</span><span class="tl-s">Quelques secondes</span></span></div>
-      <div class="tl-row"><span class="tl-disc" style="opacity:.45"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="4.6"/></svg></span><span><span class="tl-t" style="display:block">Aristide reçoit l'argent</span><span class="tl-s">Aujourd'hui</span></span></div>
-    </div>
-  </div>
+    <!-- ======================= COULEURS ======================= -->
+    <section class="pv-sec" id="couleurs">
+      <h3>Couleurs</h3>
+      <div class="s-note">Chaque token existe dans les deux blocs sombres (média système + <code class="mono">data-theme</code>).
+      Le sombre n'est pas une inversion : chaque rôle est reconstruit — sur l'aplat vert, le texte devient vert profond.</div>
 
-  <h2>Cartes virtuelles</h2>
-  <div class="pv-row" style="align-items:flex-start">
-    <div class="pv-cardw">
-      <div class="vcard" style="background:#053826;color:#FFFFFF">
-        <div class="vc-inner">
-          <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
-          <span class="vc-label" style="font-size:15px">Abonnements</span>
-          <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;4417</span>
-          <div class="vc-bottom"><span class="vc-exp">08/29</span><span style="font-weight:800;font-style:italic;font-size:15px;letter-spacing:-.02em">VISA</span></div>
+      <div class="pv-grid colors">
+        <div class="sw"><div class="sw-c" style="background:var(--paper);box-shadow:inset 0 0 0 1px var(--hairline)"></div><div class="sw-b"><div class="sw-n">Papier</div><div class="sw-h">--paper<br>#F4F5F7 · #0C0F13</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--surface);box-shadow:inset 0 0 0 1px var(--hairline)"></div><div class="sw-b"><div class="sw-n">Surface</div><div class="sw-h">--surface<br>#FFFFFF · #161B22</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--well)"></div><div class="sw-b"><div class="sw-n">Creux</div><div class="sw-h">--well<br>#EAECEF · #1F2630</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--well-2)"></div><div class="sw-b"><div class="sw-n">Creux 2</div><div class="sw-h">--well-2<br>#DFE2E7 · #2A3340</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--ink)"></div><div class="sw-b"><div class="sw-n">Encre</div><div class="sw-h">--ink<br>#12161C · #F0F3F6</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--ink-2)"></div><div class="sw-b"><div class="sw-n">Encre 2</div><div class="sw-h">--ink-2<br>#5C6570 · #9CA5B0</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--ink-3)"></div><div class="sw-b"><div class="sw-n">Encre 3</div><div class="sw-h">--ink-3<br>#9AA1AA · #67707C</div></div></div>
+      </div>
+
+      <div class="pv-grid colors">
+        <div class="sw"><div class="sw-c" style="background:var(--green)"></div><div class="sw-b"><div class="sw-n">Vert — action</div><div class="sw-h">--green<br>#067647 · #2FC988</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--green-press)"></div><div class="sw-b"><div class="sw-n">Vert pressé</div><div class="sw-h">--green-press<br>#05603C · #28B579</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--green-deep)"></div><div class="sw-b"><div class="sw-n">Vert profond</div><div class="sw-h">--green-deep<br>#053826 · #0A4331</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--accent)"></div><div class="sw-b"><div class="sw-n">Accent</div><div class="sw-h">--accent<br>#067647 · #3AD695</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--accent-bright)"></div><div class="sw-b"><div class="sw-n">Accent vif</div><div class="sw-h">--accent-bright<br>#3CDD9B · sur vert profond</div></div></div>
+      </div>
+
+      <div class="pv-grid colors">
+        <div class="sw"><div class="sw-c" style="background:var(--credit)"></div><div class="sw-b"><div class="sw-n">Crédit</div><div class="sw-h">--credit<br>#0E8345 · #4CD394</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--credit-soft)"></div><div class="sw-b"><div class="sw-n">Crédit doux</div><div class="sw-h">--credit-soft<br>#DCF3E6 · rgba .16</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--debit)"></div><div class="sw-b"><div class="sw-n">Débit</div><div class="sw-h">--debit<br>#D92D20 · #F97066</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--debit-soft)"></div><div class="sw-b"><div class="sw-n">Débit doux</div><div class="sw-h">--debit-soft<br>#FEE4E2 · rgba .15</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--pend)"></div><div class="sw-b"><div class="sw-n">Attente</div><div class="sw-h">--pend<br>#B54708 · #EEA23D</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--pend-soft)"></div><div class="sw-b"><div class="sw-n">Attente douce</div><div class="sw-h">--pend-soft<br>#FDF0D2 · rgba .15</div></div></div>
+      </div>
+
+      <div class="pv-grid colors">
+        <div class="sw"><div class="sw-c" style="background:var(--cat-streaming)"></div><div class="sw-b"><div class="sw-n">Divertissement</div><div class="sw-h">--cat-streaming</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--cat-shopping)"></div><div class="sw-b"><div class="sw-n">Achats</div><div class="sw-h">--cat-shopping</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--cat-software)"></div><div class="sw-b"><div class="sw-n">Logiciels</div><div class="sw-h">--cat-software</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--cat-food)"></div><div class="sw-b"><div class="sw-n">Restauration</div><div class="sw-h">--cat-food</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--cat-transport)"></div><div class="sw-b"><div class="sw-n">Transport</div><div class="sw-h">--cat-transport</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--cat-travel)"></div><div class="sw-b"><div class="sw-n">Voyage</div><div class="sw-h">--cat-travel</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--cat-ads)"></div><div class="sw-b"><div class="sw-n">Publicité</div><div class="sw-h">--cat-ads</div></div></div>
+        <div class="sw"><div class="sw-c" style="background:var(--cat-other)"></div><div class="sw-b"><div class="sw-n">Autre</div><div class="sw-h">--cat-other</div></div></div>
+      </div>
+    </section>
+
+    <!-- ======================= TYPOGRAPHIE ======================= -->
+    <section class="pv-sec" id="typographie">
+      <h3>Typographie</h3>
+      <div class="s-note">Google Sans Flex, famille unique. Les rôles techniques (eyebrow, PAN, références)
+      se distinguent par capitales + chasse élargie + chiffres tabulaires, pas par une seconde famille.
+      Poids maximal des titres : 600.</div>
+
+      <div class="pv-grid wide">
+        <div class="spec">
+          <div class="sp-zone left" style="gap:0;padding:10px 24px">
+            <div class="ty"><span class="ty-s display" style="font-size:44px">Saisie de montant</span><span class="ty-m">44 / 600 / −0.02em</span></div>
+            <div class="ty"><span class="ty-s display" style="font-size:40px">Solde du héro</span><span class="ty-m">40 / 600 / −0.02em</span></div>
+            <div class="ty"><span class="ty-s t-page">Titre d'écran</span><span class="ty-m">28 / 600 / −0.02em</span></div>
+            <div class="ty"><span class="ty-s t-section">Titre de section</span><span class="ty-m">19 / 600 / −0.015em</span></div>
+            <div class="ty"><span class="ty-s" style="font-size:15px">Corps courant, titres de ligne</span><span class="ty-m">15 / 400</span></div>
+            <div class="ty"><span class="ty-s" style="font-size:13.5px;color:var(--ink-2)">Sous-titres et notes</span><span class="ty-m">13,5 / 400 / lh 1.5</span></div>
+            <div class="ty"><span class="ty-s eyebrow">Eyebrow en capitales</span><span class="ty-m">11 / 500 / +0.14em</span></div>
+          </div>
+          <div class="sp-cap"><b>Échelle</b><code>.t-page · .t-section · .eyebrow · .display</code></div>
         </div>
       </div>
-      <div class="pv-note">Sapin — collection Originales</div>
-    </div>
-    <div class="pv-cardw">
-      <div class="vcard" style="background:#23307C;color:#FFFFFF">
-        <span class="vc-art"><svg viewBox="0 0 200 126" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><pattern id="pv-ndop" width="28" height="28" patternUnits="userSpaceOnUse"><g fill="none" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="1.6"><path d="M0 14 14 0l14 14-14 14Z"/><path d="M7 14l7-7 7 7-7 7Z"/></g></pattern></defs><rect width="200" height="126" fill="url(#pv-ndop)"/></svg></span>
-        <div class="vc-inner">
-          <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
-          <span class="vc-label" style="font-size:15px">Voyage</span>
-          <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;803</span>
-          <div class="vc-bottom"><span class="vc-exp">03/30</span>
-            <span style="display:inline-flex"><span style="width:20px;height:20px;border-radius:99px;background:#EB001B"></span><span style="width:20px;height:20px;border-radius:99px;background:#F79E1B;margin-left:-8px;mix-blend-mode:hard-light"></span></span></div>
+
+      <div class="pv-grid half">
+        <div class="spec">
+          <div class="sp-zone row" style="gap:36px">
+            <span class="money display tnum" style="font-size:40px"><span class="m-cur">$</span>125<span class="m-frac">50</span></span>
+            <span class="money display tnum" style="font-size:40px">78 500<span class="m-unit">FCFA</span></span>
+          </div>
+          <div class="sp-cap"><b>Montant composé</b><code>.money — centimes en exposant ·  tabular-nums · séparateur U+202F</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone row" style="gap:26px">
+            <span class="mono" style="font-size:14px;letter-spacing:.1em">5312 8801 4417 0093</span>
+            <span class="mono tnum" style="font-size:13px;color:var(--ink-2)">MP-2026-08-4471</span>
+          </div>
+          <div class="sp-cap"><b>Données brutes</b><code>.mono — PAN chasse .1em, références</code></div>
         </div>
       </div>
-      <div class="pv-note">Ndop — collection Héritage, motif ton sur ton</div>
-    </div>
-    <div class="pv-cardw">
-      <div class="vcard light-art" style="background:#E7E9EC;color:#171C22">
-        <div class="vc-inner">
-          <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
-          <span class="vc-label" style="font-size:15px">Courses</span>
-          <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;1129</span>
-          <div class="vc-bottom"><span class="vc-exp">11/28</span><span style="font-weight:800;font-style:italic;font-size:15px">VISA</span></div>
+    </section>
+
+    <!-- ======================= BOUTONS ======================= -->
+    <section class="pv-sec" id="boutons">
+      <h3>Boutons</h3>
+      <div class="s-note">Capsules 52px. États : défaut et pressé (fond <code class="mono">--green-press</code>,
+      échelle .985) — pas de hover, le prototype est mobile-first. Désactivé : opacité .35.</div>
+      <div class="pv-grid half">
+        <div class="spec">
+          <div class="sp-zone">
+            <button class="btn primary sp-w">Continuer</button>
+            <button class="btn primary sp-w" style="background:var(--green-press)">Continuer — pressé</button>
+            <button class="btn primary disabled sp-w">Continuer — désactivé</button>
+          </div>
+          <div class="sp-cap"><b>Primaire</b><code>.btn.primary — {colors.green} / {colors.on-green} · h52 · capsule</code></div>
         </div>
-        <div class="vc-frozen"><span class="vf-disc"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#12161C" stroke-width="1.5"><path d="M8 1v14M2 4l12 8M14 4 2 12"/></svg></span>Carte gelée</div>
+        <div class="spec">
+          <div class="sp-zone">
+            <button class="btn quiet sp-w">Action secondaire</button>
+            <button class="btn danger sp-w">Supprimer la carte</button>
+            <div class="sp-w" style="display:flex;gap:10px;justify-content:center">
+              <button class="btn ghost" style="width:auto">Annuler</button>
+              <button class="btn quiet small">Changer</button>
+              <button class="btn primary small">Tout voir</button>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Secondaires</b><code>.quiet · .danger · .ghost · .small (h36)</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone row" style="gap:22px">
+            <button class="qa" style="flex:none;width:76px"><span class="qa-disc"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3v10M3 8h10"/></svg></span><span class="qa-label">Recharger</span></button>
+            <button class="qa" style="flex:none;width:76px"><span class="qa-disc"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="qa-label">Envoyer</span></button>
+            <button class="qa" style="flex:none;width:76px"><span class="qa-disc"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h8M9 3l3 3-3 3M12 11H4m3-3-3 3 3 3"/></svg></span><span class="qa-label">Convertir</span></button>
+          </div>
+          <div class="sp-cap"><b>Action rapide</b><code>.qa — disque 52 {colors.well} + libellé 11,5</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <button class="btn primary sp-w"><span class="spinner"></span>Traitement…</button>
+          </div>
+          <div class="sp-cap"><b>Chargement</b><code>.spinner — anneau 16px currentColor</code></div>
+        </div>
       </div>
-      <div class="pv-note">Argent (`light-art`) — état gelé</div>
-    </div>
-  </div>
-  <h3>Nuancier &amp; réseau</h3>
-  <div class="pv-row" style="gap:18px">
-    <span class="card-swatch sel" style="background:#053826"></span>
-    <span class="card-swatch" style="background:#15181B"></span>
-    <span class="card-swatch" style="background:#E7E9EC"></span>
-    <span class="card-swatch" style="background:#9E4A2E"></span>
-    <span class="card-swatch" style="background:#1E3C72"></span>
-    <span class="card-swatch" style="background:#44525A"></span>
-  </div>
-  <div class="pv-row pv-phone" style="margin-top:14px;flex-wrap:nowrap">
-    <button class="net-option sel"><span style="font-weight:800;font-style:italic;color:var(--net-visa)">VISA</span>Visa</button>
-    <button class="net-option"><span style="display:inline-flex"><span style="width:16px;height:16px;border-radius:99px;background:#EB001B"></span><span style="width:16px;height:16px;border-radius:99px;background:#F79E1B;margin-left:-6px"></span></span>Mastercard</button>
-  </div>
+    </section>
 
-  <h2>Verre liquide</h2>
-  <div class="pv-tabzone pv-phone">
-    <div class="tabwrap">
-      <nav class="tabbar">
-        <button class="tb on"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9.5 10 3l7 6.5V17h-5v-4h-4v4H3Z"/></svg><span class="tb-label">Accueil</span></button>
-        <button class="tb"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="5" width="15" height="11" rx="2.5"/><path d="M2.5 8.5h15"/></svg><span class="tb-label">Cartes</span></button>
-        <button class="tb"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 16V9M10 16V4M17 16v-6"/></svg><span class="tb-label">Analyse</span></button>
-        <button class="tb"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="7" r="3.4"/><path d="M3.5 17c1-3 3.4-4.4 6.5-4.4S15.5 14 16.5 17"/></svg><span class="tb-label">Profil</span></button>
-      </nav>
-      <button class="tab-widget"><span class="tw-grid"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="2" width="5" height="5" rx="1.5"/><rect x="9" y="2" width="5" height="5" rx="1.5"/><rect x="2" y="9" width="5" height="5" rx="1.5"/><rect x="9" y="9" width="5" height="5" rx="1.5"/></svg></span></button>
-    </div>
-  </div>
-  <div class="pv-row" style="margin-top:16px;align-items:flex-start">
-    <span class="nb-btn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3 5 8l5 5"/></svg></span>
-    <span class="toast show"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="var(--credit)" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg>Carte gelée</span>
-  </div>
-  <div class="action-sheet show" style="margin-top:16px">
-    <div class="as-box">
-      <div class="as-grab"></div>
-      <div class="as-head"><span class="as-title">Recharger depuis</span><span class="as-x"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l8 8M10 2l-8 8"/></svg></span></div>
-      <button class="as-item"><span class="ai-ico"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M2.5 6.5h11"/></svg></span><span class="ai-body"><span class="ai-t">MTN Mobile Money</span><span class="ai-s">Frais 1,5 % · instantané</span></span><span class="ai-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></span></button>
-      <button class="as-item destructive"><span class="ai-ico"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 4h10M6 4V2.8h4V4m-7 0 .7 9h8.6l.7-9"/></svg></span><span class="ai-body"><span class="ai-t">Supprimer la méthode</span></span></button>
-    </div>
-  </div>
-  <div class="pv-note">Règle : pas de verre sur verre — dans une feuille, les contrôles redeviennent des aplats <code class="mono">--well</code>.</div>
+    <!-- ======================= SÉLECTION & ÉTATS ======================= -->
+    <section class="pv-sec" id="etats">
+      <h3>Sélection &amp; états</h3>
+      <div class="s-note">Un état porte toujours une icône <em>et</em> un libellé — jamais la couleur seule.
+      Les couleurs de statut ne servent jamais de teintes de série.</div>
+      <div class="pv-grid half">
+        <div class="spec">
+          <div class="sp-zone row">
+            <span class="chip on">Originales</span><span class="chip">Héritage</span><span class="chip">30 jours</span><span class="chip tnum">10 000 F</span>
+          </div>
+          <div class="sp-cap"><b>Chips</b><code>.chip — h34 · .on = {colors.green}</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="segments sp-w"><button class="seg on">Toutes</button><button class="seg">Entrées</button><button class="seg">Sorties</button></div>
+          </div>
+          <div class="sp-cap"><b>Segments</b><code>.segments — verre · actif sur {colors.surface} + shadow-1</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone row">
+            <span class="pill credit"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg>Réussi</span>
+            <span class="pill pend"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.6V6l1.7 1.4"/></svg>En attente</span>
+            <span class="pill debit"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l6 6M9 3l-6 6"/></svg>Refusé</span>
+            <span class="pill neutral no-ico">Remboursé</span>
+            <span class="pill accent no-ico">Virtuelle</span>
+          </div>
+          <div class="sp-cap"><b>Pills de statut</b><code>.pill — h20 · STATUS_META : credit / pend / debit / neutral</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone row" style="gap:26px">
+            <span class="toggle on"></span><span class="toggle"></span>
+            <span class="delta-chip up"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9l4-4 4 4"/></svg>+18 %<span class="dc-vs">&nbsp;vs juillet</span></span>
+            <span class="delta-chip down"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3l4 4 4-4"/></svg>−9 %<span class="dc-vs">&nbsp;vs juillet</span></span>
+          </div>
+          <div class="sp-cap"><b>Toggle &amp; évolution</b><code>.toggle 46×28 · .delta-chip : hausse = pend, baisse = credit</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="sp-w meter"><div class="m-fill" style="width:62%"></div></div>
+            <div class="sp-w meter"><div class="m-fill warn" style="width:88%"></div></div>
+          </div>
+          <div class="sp-cap"><b>Jauge</b><code>.meter — 4px · .warn = {colors.debit}</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone row" style="gap:22px">
+            <span class="success-mark"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg></span>
+            <span class="fail-mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></span>
+          </div>
+          <div class="sp-cap"><b>Coche / croix</b><code>58px — tracé 0,4s + onde ringOut 0,7s</code></div>
+        </div>
+      </div>
+    </section>
 
-  <h2>États &amp; messages</h2>
-  <div class="pv-phone pv-col">
-    <div class="alert-card"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 2 1.5 13.5h13L8 2Zm0 4.5V9.5M8 11.6v.1"/></svg><span><span class="ac-t">Solde insuffisant pour cette conversion.</span><span class="ac-s" style="display:block">Il manque 4 500 FCFA. Rechargez votre portefeuille.</span></span></div>
-    <div class="empty-note"><div class="en-t">Aucune carte pour l'instant</div><div class="en-m">Créez une carte virtuelle pour payer en ligne en dollars, avec un habillage à votre goût.</div></div>
-    <div class="delta-chip up"><svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9l4-4 4 4"/></svg>+18 %<span class="dc-vs">&nbsp;vs juillet</span></div>
-  </div>
+    <!-- ======================= CHAMPS & SAISIE ======================= -->
+    <section class="pv-sec" id="saisie">
+      <h3>Champs &amp; saisie</h3>
+      <div class="pv-grid half">
+        <div class="spec">
+          <div class="sp-zone">
+            <label class="field sp-w"><span class="f-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg></span><input placeholder="Rechercher un contact"></label>
+            <label class="field sp-w" style="box-shadow:inset 0 0 0 1.5px var(--green);background:var(--surface)"><input value="focalisé"></label>
+          </div>
+          <div class="sp-cap"><b>Champ</b><code>.field — h50 · focus : liseré 1,5px {colors.green} + {colors.surface}</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="otp-boxes sp-w"><span class="ob">4</span><span class="ob">7</span><span class="ob cursor"></span><span class="ob"></span><span class="ob"></span><span class="ob"></span></div>
+            <div class="pass-dots"><span class="pd fill"></span><span class="pd fill"></span><span class="pd"></span><span class="pd"></span></div>
+          </div>
+          <div class="sp-cap"><b>OTP &amp; code secret</b><code>.otp-boxes h56 · .pass-dots — secousse à l'erreur</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="amount-entry">
+              <div class="ae-value display money tnum">12 500<span class="m-unit">FCFA</span></div>
+              <div class="ae-sub tnum">≈ 19,89 $ · 1 $ = 628 F</div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Saisie de montant</b><code>.amount-entry — 44px · pulsation digitPop à la frappe</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="keypad sp-w">
+              <button class="kp">1</button><button class="kp">2</button><button class="kp">3</button>
+              <button class="kp">4</button><button class="kp">5</button><button class="kp">6</button>
+              <button class="kp">7</button><button class="kp">8</button><button class="kp">9</button>
+              <button class="kp fn">,</button><button class="kp">0</button><button class="kp fn">⌫</button>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Pavé numérique</b><code>.keypad — touches h52 · 23/500 tabular</code></div>
+        </div>
+      </div>
+    </section>
 
+    <!-- ======================= LISTES & DONNÉES ======================= -->
+    <section class="pv-sec" id="listes">
+      <h3>Listes &amp; données</h3>
+      <div class="s-note">Les listes sont posées sur le papier, sans conteneur, séparées par un filet
+      en retrait aligné après la pastille (<code class="mono">gutter + 52px</code>).</div>
+      <div class="pv-grid half">
+        <div class="spec">
+          <div class="sp-zone left" style="padding:10px 24px">
+            <div class="section-head" style="padding-top:14px"><span class="t-section">Transactions</span><span class="sh-count tnum">12</span><span class="sh-fill"></span><span class="sh-link">Tout voir</span></div>
+            <div class="row"><span class="icon-tile" style="background:var(--debit-soft);color:var(--debit)"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v9M4 7l4 4 4-4"/></svg></span>
+              <span class="r-body"><span class="r-title"><span class="rt-text">Netflix</span></span><span class="r-sub">Paiement carte · 14:32</span></span>
+              <span class="r-value tnum" style="color:var(--debit)">−7,99 $</span></div>
+            <div class="rule" style="margin-left:52px"></div>
+            <div class="row"><span class="icon-tile" style="background:var(--credit-soft);color:var(--credit)"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 14V5M4 9l4-4 4 4"/></svg></span>
+              <span class="r-body"><span class="r-title"><span class="rt-text">Rechargement MoMo</span></span><span class="r-sub">Aujourd'hui · 09:12</span></span>
+              <span class="r-value tnum" style="color:var(--credit)">+25 000</span></div>
+            <div class="rule" style="margin-left:52px"></div>
+            <div class="row"><span class="icon-tile"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="6.5" width="10" height="7" rx="1.6"/><path d="M5.5 6.5V5a2.5 2.5 0 0 1 5 0v1.5"/></svg></span>
+              <span class="r-body"><span class="r-title"><span class="rt-text">Paramètres de sécurité</span></span></span>
+              <span class="r-chevron"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></span></div>
+          </div>
+          <div class="sp-cap"><b>Lignes</b><code>.row — min 56 · .icon-tile 38 rond · .rule filet en retrait</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone left" style="padding:10px 24px">
+            <div class="kv"><span class="kv-l">Référence</span><span class="kv-fill"></span><span class="kv-v mono">MP-2026-08-4471</span></div>
+            <div class="rule"></div>
+            <div class="kv"><span class="kv-l">Frais</span><span class="kv-fill"></span><span class="kv-v strong tnum">250 FCFA</span></div>
+            <div class="rule"></div>
+            <div class="month-strip">
+              <div class="ms-cell"><div class="ms-label">Entrées</div><div class="ms-value tnum" style="color:var(--credit)">+310 000</div></div>
+              <div class="ms-cell"><div class="ms-label">Sorties</div><div class="ms-value tnum">−125 750</div></div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Clé-valeur &amp; bandeau du mois</b><code>.kv · .month-strip — valeurs tabulaires</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= HÉRO & FLUX ======================= -->
+    <section class="pv-sec" id="flux">
+      <h3>Héro &amp; flux monétaires</h3>
+      <div class="s-note">Le vert profond est un panneau, pas un thème : il porte le solde et rien d'autre.
+      Sur lui, les accents passent en <code class="mono">--accent-bright</code> et les disques en verre translucide.</div>
+      <div class="pv-grid half">
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="hero-panel sp-w" style="margin:0">
+              <div class="hp-eyebrow-row"><span class="eyebrow">Solde disponible</span></div>
+              <div class="hp-balance display money tnum">184 250<span class="m-unit" style="color:rgba(255,255,255,.62)">FCFA</span></div>
+              <div class="hp-usd tnum">≈ 293,39 $ · 1 $ = 628 F</div>
+              <div class="quick-actions on-green" style="margin-top:22px">
+                <button class="qa"><span class="qa-disc"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3v10M3 8h10"/></svg></span><span class="qa-label">Recharger</span></button>
+                <button class="qa"><span class="qa-disc"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span><span class="qa-label">Envoyer</span></button>
+                <button class="qa"><span class="qa-disc"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h8M9 3l3 3-3 3M12 11H4m3-3-3 3 3 3"/></svg></span><span class="qa-label">Convertir</span></button>
+              </div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Héro du solde</b><code>.hero-panel — {colors.green-deep} · r24 · rosace en dérive 30s</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="fx-stack sp-w" style="margin:0">
+              <div class="fx-card"><span class="fl-flag" style="width:34px;height:34px;background:var(--credit)"></span>
+                <span><span class="fl-code">FCFA</span><span class="fl-note" style="display:block">Solde : 184 250</span></span>
+                <span class="fl-amt tnum">12 500<span class="fx-caret"></span></span></div>
+              <span class="fx-mid"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M4 9l4 4 4-4"/></svg></span>
+              <div class="fx-card"><span class="fl-flag" style="width:34px;height:34px;background:var(--net-visa)"></span>
+                <span><span class="fl-code">USD</span><span class="fl-note" style="display:block">Carte virtuelle</span></span>
+                <span class="fl-amt credit tnum">19,89</span></div>
+            </div>
+            <span class="chip tnum">1 $ = 628 F · marge incluse</span>
+          </div>
+          <div class="sp-cap"><b>Pile de change</b><code>.fx-stack — pastille .fx-mid sur la couture · curseur .fx-caret</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <button class="method-card sp-w" style="margin:0;width:100%">
+              <span class="logo-tile"><span style="font-weight:700;font-size:11px;color:#FFCB05;background:#004F9F;width:100%;height:100%;display:flex;align-items:center;justify-content:center">MTN</span></span>
+              <span style="flex:1"><span class="mc-name">MTN Mobile Money</span><span class="mc-sub">+237 6•• ••• •42</span></span>
+              <span class="btn quiet small" style="pointer-events:none">Changer</span>
+            </button>
+          </div>
+          <div class="sp-cap"><b>Méthode de recharge</b><code>.method-card — {colors.well} r20 · .logo-tile fond blanc constant</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone left">
+            <div class="tl">
+              <div class="tl-row"><span class="tl-disc"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg></span><span><span class="tl-t" style="display:block">Envoi confirmé</span><span class="tl-s">Aujourd'hui, 14:32</span></span><span class="tl-v tnum">12 500 F</span></div>
+              <div class="tl-row"><span class="tl-disc"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg></span><span><span class="tl-t" style="display:block">Traitement MoMo</span><span class="tl-s">Quelques secondes</span></span></div>
+              <div class="tl-row"><span class="tl-disc" style="opacity:.45"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="6" r="4.6"/></svg></span><span><span class="tl-t" style="display:block">Aristide reçoit l'argent</span><span class="tl-s">Aujourd'hui</span></span></div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Chronologie de succès</b><code>.tl — réf. Wise · jalons en cascade .35/.55/.75s</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= CARTES ======================= -->
+    <section class="pv-sec" id="cartes">
+      <h3>Cartes virtuelles</h3>
+      <div class="s-note">Ratio 1.586 (ISO/IEC 7810 ID-1). Aplats <em>fixes</em>, insensibles au thème.
+      La collection Héritage porte un motif SVG ton sur ton (ndop, bogolan, wax) — la marque reste lisible par-dessus.</div>
+      <div class="pv-grid">
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="vcard" style="background:#053826;color:#FFFFFF;max-width:300px;width:100%">
+              <div class="vc-inner">
+                <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
+                <span class="vc-label" style="font-size:15px">Abonnements</span>
+                <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;4417</span>
+                <div class="vc-bottom"><span class="vc-exp">08/29</span><span style="font-weight:800;font-style:italic;font-size:15px;letter-spacing:-.02em">VISA</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Sapin</b><code>Originales — #053826 / #FFFFFF</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="vcard" style="background:#23307C;color:#FFFFFF;max-width:300px;width:100%">
+              <span class="vc-art"><svg viewBox="0 0 200 126" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><pattern id="pv-ndop" width="28" height="28" patternUnits="userSpaceOnUse"><g fill="none" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="1.6"><path d="M0 14 14 0l14 14-14 14Z"/><path d="M7 14l7-7 7 7-7 7Z"/></g></pattern></defs><rect width="200" height="126" fill="url(#pv-ndop)"/></svg></span>
+              <div class="vc-inner">
+                <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
+                <span class="vc-label" style="font-size:15px">Voyage</span>
+                <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;803</span>
+                <div class="vc-bottom"><span class="vc-exp">03/30</span>
+                  <span style="display:inline-flex"><span style="width:20px;height:20px;border-radius:99px;background:#EB001B"></span><span style="width:20px;height:20px;border-radius:99px;background:#F79E1B;margin-left:-8px;mix-blend-mode:hard-light"></span></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Ndop</b><code>Héritage — motif cardArt("ndop") ton sur ton</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="vcard light-art" style="background:#E7E9EC;color:#171C22;max-width:300px;width:100%">
+              <div class="vc-inner">
+                <div class="vc-top"><span class="vc-brand" style="font-size:14px">MoniPay</span><span class="vc-virtual" style="font-size:9px">virtuelle</span></div>
+                <span class="vc-label" style="font-size:15px">Courses</span>
+                <span class="vc-pan" style="font-size:13px">••&nbsp;&nbsp;1129</span>
+                <div class="vc-bottom"><span class="vc-exp">11/28</span><span style="font-weight:800;font-style:italic;font-size:15px">VISA</span></div>
+              </div>
+              <div class="vc-frozen"><span class="vf-disc"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#12161C" stroke-width="1.5"><path d="M8 1v14M2 4l12 8M14 4 2 12"/></svg></span>Carte gelée</div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Argent — gelée</b><code>.light-art · .vc-frozen : voile + blur(7px) saturate(.65)</code></div>
+        </div>
+      </div>
+      <div class="pv-grid half">
+        <div class="spec">
+          <div class="sp-zone row" style="gap:16px">
+            <span class="card-swatch sel" style="background:#053826"></span>
+            <span class="card-swatch" style="background:#15181B"></span>
+            <span class="card-swatch" style="background:#E7E9EC"></span>
+            <span class="card-swatch" style="background:#9E4A2E"></span>
+            <span class="card-swatch" style="background:#1E3C72"></span>
+            <span class="card-swatch" style="background:#44525A"></span>
+            <span class="card-swatch" style="background:#23307C"></span>
+            <span class="card-swatch" style="background:#26190E"></span>
+            <span class="card-swatch" style="background:#0D5F52"></span>
+          </div>
+          <div class="sp-cap"><b>Nuancier</b><code>.card-swatch 42×30 — CARD_THEMES : 6 Originales + 3 Héritage · sélection = anneau encre</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="sp-w" style="display:flex;gap:10px">
+              <button class="net-option sel"><span style="font-weight:800;font-style:italic;color:var(--net-visa)">VISA</span>Visa</button>
+              <button class="net-option"><span style="display:inline-flex"><span style="width:16px;height:16px;border-radius:99px;background:#EB001B"></span><span style="width:16px;height:16px;border-radius:99px;background:#F79E1B;margin-left:-6px"></span></span>Mastercard</button>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Choix du réseau</b><code>.net-option — sélection : liseré encre 1,5px + {colors.surface}</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= VERRE ======================= -->
+    <section class="pv-sec" id="verre">
+      <h3>Verre liquide</h3>
+      <div class="s-note">Fond translucide + <code class="mono">blur(26px) saturate(1.8)</code> + double
+      liseré <code class="mono">--glass-edge</code> — toujours les trois ensemble. Règle : pas de verre
+      sur verre — dans une feuille, les contrôles redeviennent des aplats <code class="mono">--well</code>.</div>
+      <div class="pv-grid half">
+        <div class="spec">
+          <div class="sp-zone" style="background:linear-gradient(135deg,var(--well) 0%,var(--paper) 60%)">
+            <div class="sp-tabzone">
+              <div class="tabwrap">
+                <nav class="tabbar">
+                  <button class="tb on"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 9.5 10 3l7 6.5V17h-5v-4h-4v4H3Z"/></svg><span class="tb-label">Accueil</span></button>
+                  <button class="tb"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="5" width="15" height="11" rx="2.5"/><path d="M2.5 8.5h15"/></svg><span class="tb-label">Cartes</span></button>
+                  <button class="tb"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 16V9M10 16V4M17 16v-6"/></svg><span class="tb-label">Analyse</span></button>
+                  <button class="tb"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="7" r="3.4"/><path d="M3.5 17c1-3 3.4-4.4 6.5-4.4S15.5 14 16.5 17"/></svg><span class="tb-label">Profil</span></button>
+                </nav>
+                <button class="tab-widget"><span class="tw-grid"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="2" width="5" height="5" rx="1.5"/><rect x="9" y="2" width="5" height="5" rx="1.5"/><rect x="2" y="9" width="5" height="5" rx="1.5"/><rect x="9" y="9" width="5" height="5" rx="1.5"/></svg></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Barre d'onglets</b><code>.tabbar — capsule {colors.glass} · actif : {colors.green} + color-mix 14%</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone row" style="gap:20px;background:linear-gradient(135deg,var(--well) 0%,var(--paper) 60%)">
+            <span class="nb-btn"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3 5 8l5 5"/></svg></span>
+            <span class="nb-btn"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l8 8M10 2l-8 8"/></svg></span>
+            <span class="toast show"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="var(--credit)" stroke-width="2"><path d="M2 6.5 5 9l5-6"/></svg>Carte gelée</span>
+          </div>
+          <div class="sp-cap"><b>Boutons de nav &amp; toast</b><code>.nb-btn 38 · .toast — {colors.glass-menu} + glass-edge</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone" style="background:linear-gradient(135deg,var(--well) 0%,var(--paper) 60%)">
+            <div class="action-sheet show">
+              <div class="as-box">
+                <div class="as-grab"></div>
+                <div class="as-head"><span class="as-title">Recharger depuis</span><span class="as-x"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 2l8 8M10 2l-8 8"/></svg></span></div>
+                <button class="as-item"><span class="ai-ico"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="3" width="11" height="10" rx="2"/><path d="M2.5 6.5h11"/></svg></span><span class="ai-body"><span class="ai-t">MTN Mobile Money</span><span class="ai-s">Frais 1,5 % · instantané</span></span><span class="ai-chev"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></span></button>
+                <button class="as-item destructive"><span class="ai-ico"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 4h10M6 4V2.8h4V4m-7 0 .7 9h8.6l.7-9"/></svg></span><span class="ai-body"><span class="ai-t">Supprimer la méthode</span></span></button>
+              </div>
+            </div>
+          </div>
+          <div class="sp-cap"><b>Panneau d'action</b><code>.action-sheet — r30 · tuiles {colors.green-deep} + {colors.accent-bright}</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone row" style="gap:14px">
+            <span class="chip on">Aplat dans une feuille</span>
+            <label class="field" style="width:200px"><input placeholder="Aplat --well"></label>
+          </div>
+          <div class="sp-cap"><b>Pas de verre sur verre</b><code>.sheet .nb-btn, .sheet .segments → background:{colors.well}</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= ÉTATS & MESSAGES ======================= -->
+    <section class="pv-sec" id="messages">
+      <h3>États &amp; messages</h3>
+      <div class="pv-grid half">
+        <div class="spec">
+          <div class="sp-zone">
+            <div class="alert-card sp-w"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 2 1.5 13.5h13L8 2Zm0 4.5V9.5M8 11.6v.1"/></svg><span><span class="ac-t">Solde insuffisant pour cette conversion.</span><span class="ac-s" style="display:block">Il manque 4 500 FCFA. Rechargez votre portefeuille.</span></span></div>
+          </div>
+          <div class="sp-cap"><b>Alerte</b><code>.alert-card — {colors.debit-soft} r16 · icône + titre + détail chiffré</code></div>
+        </div>
+        <div class="spec">
+          <div class="sp-zone left">
+            <div class="empty-note" style="padding:6px 0"><div class="en-t">Aucune carte pour l'instant</div><div class="en-m">Créez une carte virtuelle pour payer en ligne en dollars, avec un habillage à votre goût.</div></div>
+          </div>
+          <div class="sp-cap"><b>État vide</b><code>.empty-note — aligné à gauche, message d'action concret</code></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
 </div>
+
+<script>
+/* commutateur de thème — force data-theme, mémorisé */
+(function(){
+  var wrap=document.getElementById("pv-theme"),btns=wrap.querySelectorAll("button");
+  function apply(t,store){
+    if(t==="auto")delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme=t;
+    btns.forEach(function(b){b.classList.toggle("on",b.dataset.t===t)});
+    if(store)try{localStorage.setItem("mp-preview-theme",t)}catch(e){}
+  }
+  btns.forEach(function(b){b.addEventListener("click",function(){apply(b.dataset.t,true)})});
+  var cur;try{cur=localStorage.getItem("mp-preview-theme")}catch(e){}
+  apply(cur||"light",false);
+})();
+</script>
 </body>
 </html>
