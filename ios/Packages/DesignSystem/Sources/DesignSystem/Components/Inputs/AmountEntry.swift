@@ -16,7 +16,7 @@ public struct AmountEntry: View {
 
     public var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Text(digits.isEmpty ? "0" : digits)
+            Text(verbatim: digits.isEmpty ? "0" : digits)
                 .font(.system(size: size, weight: .semibold))
                 .tracking(-1)
                 .foregroundStyle(digits.isEmpty ? Brand.inkFaint : Brand.ink)
@@ -26,7 +26,7 @@ public struct AmountEntry: View {
                 .fill(Brand.ink)
                 .frame(width: 2, height: size * 0.78)
                 .opacity(blink ? 1 : 0)
-            Text(currency)
+            Text(verbatim: currency)
                 .font(.system(size: size * 0.4, weight: .medium))
                 .foregroundStyle(Brand.inkMuted)
         }

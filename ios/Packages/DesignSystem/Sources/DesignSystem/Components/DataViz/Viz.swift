@@ -41,13 +41,13 @@ public enum Viz {
 
 #Preview("Viz palette") {
     VStack(alignment: .leading, spacing: 10) {
-        Eyebrow(text: "categorical")
+        Eyebrow(text: Text(verbatim: "categorical"))
         HStack(spacing: 6) {
             ForEach(Array(Viz.categorical.enumerated()), id: \.offset) { _, colour in
                 RoundedRectangle(cornerRadius: 4).fill(colour).frame(height: 34)
             }
         }
-        Eyebrow(text: "rank")
+        Eyebrow(text: Text(verbatim: "rank"))
         HStack(spacing: 6) {
             ForEach(Array(Viz.rank.enumerated()), id: \.offset) { _, colour in
                 RoundedRectangle(cornerRadius: 4).fill(colour).frame(height: 34)

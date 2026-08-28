@@ -31,7 +31,7 @@ public struct Keypad: View {
             ForEach(rows, id: \.self) { row in
                 HStack(spacing: 2) {
                     ForEach(row, id: \.self) { d in
-                        key(Text("\(d)").font(.system(size: 25, weight: .regular))) { onDigit(d) }
+                        key(Text(d, format: .number).font(.system(size: 25, weight: .regular))) { onDigit(d) }
                     }
                 }
             }
@@ -40,11 +40,11 @@ public struct Keypad: View {
                 case .none:
                     Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity)
                 case .decimal:
-                    key(Text(",").font(.system(size: 25, weight: .regular))) { onSide() }
+                    key(Text(verbatim: Locale.current.decimalSeparator ?? ",").font(.system(size: 25, weight: .regular))) { onSide() }
                 case .biometric:
                     key(Image(systemName: "faceid").font(.system(size: 21, weight: .regular))) { onSide() }
                 }
-                key(Text("0").font(.system(size: 25, weight: .regular))) { onDigit(0) }
+                key(Text(0, format: .number).font(.system(size: 25, weight: .regular))) { onDigit(0) }
                 key(Image(systemName: "delete.left").font(.system(size: 20, weight: .regular))) { onDelete() }
             }
         }

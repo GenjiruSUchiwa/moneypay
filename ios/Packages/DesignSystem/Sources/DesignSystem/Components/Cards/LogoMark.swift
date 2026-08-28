@@ -36,7 +36,7 @@ public struct Wordmark: View {
     public var body: some View {
         HStack(spacing: 8) {
             LogoMark(size: size * 1.35)
-            Text("MoneyPay")
+            Text(verbatim: "MoneyPay")
                 .font(.system(size: size, weight: .semibold))
                 .tight(-0.3)
                 .foregroundStyle(Brand.ink)

@@ -6,8 +6,8 @@ public struct Row<Trailing: View>: View {
         icon: String? = nil,
         iconTint: Color = Brand.ink,
         glyph: String? = nil,
-        title: String,
-        subtitle: String? = nil,
+        title: Text,
+        subtitle: Text? = nil,
         chevron: Bool = false,
         destructive: Bool = false,
         @ViewBuilder trailing: () -> Trailing
@@ -25,8 +25,8 @@ public struct Row<Trailing: View>: View {
     public var icon: String? = nil
     public var iconTint: Color = Brand.ink
     public var glyph: String? = nil
-    public var title: String
-    public var subtitle: String? = nil
+    public var title: Text
+    public var subtitle: Text? = nil
     public var chevron = false
     public var destructive = false
     @ViewBuilder public var trailing: Trailing
@@ -41,16 +41,16 @@ public struct Row<Trailing: View>: View {
                 IconTile(symbol: icon, tint: destructive ? Brand.debit : iconTint)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.bodyReg)
+                title.font(.bodyReg)
                     .foregroundStyle(destructive ? Brand.debit : Brand.ink)
                 if let subtitle {
-                    Text(subtitle).font(.sub).foregroundStyle(Brand.inkMuted).lineLimit(1)
+                    subtitle.font(.sub).foregroundStyle(Brand.inkMuted).lineLimit(1)
                 }
             }
             Spacer(minLength: 10)
             trailing
             if chevron {
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Brand.inkFaint)
             }
@@ -62,7 +62,7 @@ public struct Row<Trailing: View>: View {
 
 public extension Row where Trailing == EmptyView {
     init(icon: String? = nil, iconTint: Color = Brand.ink, glyph: String? = nil,
-         title: String, subtitle: String? = nil, chevron: Bool = false,
+         title: Text, subtitle: Text? = nil, chevron: Bool = false,
          destructive: Bool = false) {
         self.init(icon: icon, iconTint: iconTint, glyph: glyph, title: title,
                   subtitle: subtitle, chevron: chevron, destructive: destructive) { EmptyView() }
@@ -71,16 +71,16 @@ public extension Row where Trailing == EmptyView {
 
 #Preview("Row") {
     VStack(spacing: 0) {
-        Row(icon: "person.text.rectangle", title: "Personal details", chevron: true)
+        Row(icon: "person.text.rectangle", title: Text(verbatim: "Personal details"), chevron: true)
         Rule(inset: 51)
         Row(icon: "gauge.with.dots.needle.50percent",
-            title: "Limits",
-            subtitle: "Monthly cap",
-            chevron: true) { RowValue(text: "500 000") }
+            title: Text(verbatim: "Limits"),
+            subtitle: Text(verbatim: "Monthly cap"),
+            chevron: true) { RowValue(text: Text(verbatim: "500 000")) }
         Rule(inset: 51)
-        Row(glyph: "🇨🇲", title: "Cameroon") { RowValue(text: "+237") }
+        Row(glyph: "🇨🇲", title: Text(verbatim: "Cameroon")) { RowValue(text: Text(verbatim: "+237")) }
         Rule(inset: 51)
-        Row(icon: "rectangle.portrait.and.arrow.right", title: "Sign out", destructive: true)
+        Row(icon: "rectangle.portrait.and.arrow.right", title: Text(verbatim: "Sign out"), destructive: true)
     }
     .gutter()
     .page()

@@ -16,7 +16,7 @@ public struct OTPBoxes: View {
                 let ch = i < code.count ? String(Array(code)[i]) : ""
                 let active = i == code.count
                 VStack(spacing: 9) {
-                    Text(ch.isEmpty ? " " : ch)
+                    Text(verbatim: ch.isEmpty ? " " : ch)
                         .font(.system(size: 27, weight: .medium))
                         .monospacedDigit()
                         .foregroundStyle(Brand.ink)
