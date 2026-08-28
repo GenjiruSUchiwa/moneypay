@@ -85,7 +85,7 @@ public final class Store {
     public func createCard(label: String, theme: CardTheme, network: CardNetwork,
                            limitUSDCents: Int?, singleUse: Bool) -> VirtualCard {
         let card = VirtualCard(
-            id: UUID(), label: label.isEmpty ? "Ma carte" : label,
+            id: UUID(), label: label.isEmpty ? String(localized: "My card", bundle: .module) : label,
             theme: theme, network: network,
             pan: SampleData.randomPan(), cvv: String(format: "%03d", Int.random(in: 100...999)),
             expiry: SampleData.futureExpiry(), createdAt: .now,
@@ -118,16 +118,26 @@ public final class Store {
 // MARK: - Demo data
 
 public enum SampleData {
-    public static let methods: [TopUpMethod] = [
-        .init(id: "mtn", name: "MTN Mobile Money", detail: "•• 34 56 · instantané",
-              symbol: "antenna.radiowaves.left.and.right", tint: Color(rgb: 0xB88A00), feePct: 0.015, instant: true),
-        .init(id: "om", name: "Orange Money", detail: "•• 78 90 · instantané",
-              symbol: "circle.hexagongrid.fill", tint: Color(rgb: 0xC25A0E), feePct: 0.015, instant: true),
-        .init(id: "bank", name: "Virement bancaire", detail: "Afriland First Bank · 1 à 2 jours",
-              symbol: "building.columns.fill", tint: Brand.mark, feePct: 0, instant: false),
-        .init(id: "agent", name: "Agent MoneyPay", detail: "Dépôt en espèces · instantané",
-              symbol: "storefront.fill", tint: Brand.credit, feePct: 0.02, instant: true)
-    ]
+    /// `var`, not `let`: the copy inside resolves at first access, and a
+    /// preview that swaps the locale has to see the other language.
+    public static var methods: [TopUpMethod] {
+        [
+            .init(id: "mtn", name: "MTN Mobile Money",
+                  detail: String(localized: "•• \("34 56") · instant", bundle: .module),
+                  symbol: "antenna.radiowaves.left.and.right", tint: Color(rgb: 0xB88A00),
+                  feePct: 0.015, instant: true),
+            .init(id: "om", name: "Orange Money",
+                  detail: String(localized: "•• \("78 90") · instant", bundle: .module),
+                  symbol: "circle.hexagongrid.fill", tint: Color(rgb: 0xC25A0E),
+                  feePct: 0.015, instant: true),
+            .init(id: "bank", name: String(localized: "Bank transfer", bundle: .module),
+                  detail: String(localized: "Afriland First Bank · 1 to 2 days", bundle: .module),
+                  symbol: "building.columns.fill", tint: Brand.mark, feePct: 0, instant: false),
+            .init(id: "agent", name: String(localized: "MoneyPay agent", bundle: .module),
+                  detail: String(localized: "Cash deposit · instant", bundle: .module),
+                  symbol: "storefront.fill", tint: Brand.credit, feePct: 0.02, instant: true),
+        ]
+    }
 
     public static func randomPan() -> String {
         "5399" + (0..<12).map { _ in String(Int.random(in: 0...9)) }.joined()
@@ -154,7 +164,7 @@ public enum SampleData {
                     monthlyLimitUSDCents: nil, spentUSDCents: 12_900, declineCount: 2)
     ]
 
-    public static let transactions: [Money.Transaction] = {
+    public static var transactions: [Money.Transaction] {
         let c = cards
         func t(_ h: Double) -> Date { Date().addingTimeInterval(-h * 3600) }
         return [
@@ -166,10 +176,11 @@ public enum SampleData {
                         status: .approved, date: t(9), amountUSDCents: -2_000, amountXAF: -12_566, cardID: c[1].id),
             Money.Transaction(id: UUID(), merchant: "Amazon", kind: .payment, category: .shopping,
                         status: .declined, date: t(26), amountUSDCents: -8_499, amountXAF: 0, cardID: c[1].id,
-                        declineReason: "Solde insuffisant au moment de l'autorisation"),
+                        declineReason: String(localized: "Insufficient balance at authorization",
+                                                     bundle: .module)),
             Money.Transaction(id: UUID(), merchant: "Spotify", kind: .payment, category: .streaming,
                         status: .approved, date: t(30), amountUSDCents: -1_199, amountXAF: -7_535, cardID: c[0].id),
-            Money.Transaction(id: UUID(), merchant: "Frais de refus", kind: .fee, category: .other,
+            Money.Transaction(id: UUID(), merchant: String(localized: "Decline fee", bundle: .module), kind: .fee, category: .other,
                         status: .approved, date: t(26.1), amountUSDCents: -35, amountXAF: -220, cardID: c[1].id),
             Money.Transaction(id: UUID(), merchant: "Uber", kind: .payment, category: .transport,
                         status: .approved, date: t(52), amountUSDCents: -1_540, amountXAF: -9_678, cardID: c[1].id),
@@ -188,23 +199,33 @@ public enum SampleData {
             Money.Transaction(id: UUID(), merchant: "AliExpress", kind: .payment, category: .shopping,
                         status: .approved, date: t(170), amountUSDCents: -3_265, amountXAF: -20_515, cardID: c[1].id)
         ]
-    }()
+    }
 
-    public static let notifications: [AppNotification] = [
-        .init(title: "Paiement autorisé", body: "Netflix · $10,99 débité de « Abonnements »",
-              date: Date().addingTimeInterval(-3 * 3600), symbol: "checkmark.circle.fill",
-              tint: Brand.credit, unread: true),
-        .init(title: "Rechargement reçu", body: "98 500 FCFA depuis MTN Mobile Money",
-              date: Date().addingTimeInterval(-6 * 3600), symbol: "arrow.down.circle.fill",
-              tint: Brand.credit, unread: true),
-        .init(title: "Paiement refusé", body: "Amazon · solde insuffisant. 2 refus restants avant blocage.",
-              date: Date().addingTimeInterval(-26 * 3600), symbol: "xmark.circle.fill",
-              tint: Brand.debit, unread: true),
-        .init(title: "Carte gelée", body: "« Serveurs & outils » a été gelée depuis l'application",
-              date: Date().addingTimeInterval(-40 * 3600), symbol: "snowflake",
-              tint: Brand.mark, unread: false),
-        .init(title: "Taux du jour", body: "1 USD = 610 FCFA · marge MoneyPay 3 %",
-              date: Date().addingTimeInterval(-70 * 3600), symbol: "arrow.left.arrow.right",
-              tint: Brand.inkMuted, unread: false)
-    ]
+    public static var notifications: [AppNotification] {
+        [
+            .init(title: String(localized: "Payment approved", bundle: .module),
+                  body: String(localized: "Netflix · \(Fmt.usd(1_099)) charged to “\(cards[0].label)”",
+                               bundle: .module),
+                  date: Date().addingTimeInterval(-3 * 3600), symbol: "checkmark.circle.fill",
+                  tint: Brand.credit, unread: true),
+            .init(title: String(localized: "Top-up received", bundle: .module),
+                  body: String(localized: "\(Fmt.xaf(98_500)) from MTN Mobile Money", bundle: .module),
+                  date: Date().addingTimeInterval(-6 * 3600), symbol: "arrow.down.circle.fill",
+                  tint: Brand.credit, unread: true),
+            .init(title: String(localized: "Payment declined", bundle: .module),
+                  body: String(localized: "Amazon · insufficient balance. \(2) declines left before a block.",
+                               bundle: .module),
+                  date: Date().addingTimeInterval(-26 * 3600), symbol: "xmark.circle.fill",
+                  tint: Brand.debit, unread: true),
+            .init(title: String(localized: "Card frozen", bundle: .module),
+                  body: String(localized: "“\(cards[2].label)” was frozen from the app", bundle: .module),
+                  date: Date().addingTimeInterval(-40 * 3600), symbol: "snowflake",
+                  tint: Brand.mark, unread: false),
+            .init(title: String(localized: "Today's rate", bundle: .module),
+                  body: String(localized: "1 USD = \(Fmt.xaf(610)) · MoneyPay margin \(0.03, format: .percent)",
+                               bundle: .module),
+                  date: Date().addingTimeInterval(-70 * 3600), symbol: "arrow.left.arrow.right",
+                  tint: Brand.inkMuted, unread: false),
+        ]
+    }
 }
