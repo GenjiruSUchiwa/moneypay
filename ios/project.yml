@@ -120,7 +120,6 @@ targets:
         APIBaseURL: $(API_BASE_URL)
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
-        UIUserInterfaceStyle: Light
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
 
