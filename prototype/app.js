@@ -792,32 +792,85 @@ function splashScreen() {
 
 const WELCOME_SLIDES = [
   { title: "Une carte par usage,<br>créée en 30 secondes", body: "Visa ou Mastercard, son propre plafond, gelée d’un geste. Autant de cartes que de besoins.", card: { label: "Abonnements", theme: "sapin", network: "mastercard" } },
-  { title: "Rechargée en<br>Mobile Money", body: "MTN MoMo, Orange Money ou dépôt agent. Votre solde FCFA finance chaque paiement en dollars.", card: { label: "Shopping", theme: "ivoire", network: "visa" } },
+  { title: "Rechargée en<br>Mobile Money", body: "MTN MoMo, Orange Money ou dépôt agent. Votre solde FCFA finance chaque paiement en dollars.", card: { label: "Shopping", theme: "ndop", network: "visa" } },
   { title: "Acceptée partout<br>en ligne", body: "Netflix, OpenAI, AliExpress. Le taux et la marge sont affichés avant chaque conversion.", card: { label: "Serveurs", theme: "encre", network: "mastercard" } }
 ];
 function welcomeScreen() {
-  const i = F.slide || 0;
   return `<div class="layer">
     ${statusBar()}
-    <div class="navbar" style="padding:0 var(--gutter)">
+    <div class="navbar we-rise" style="padding:0 var(--gutter)">
       <span style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:-.01em">${logoMark(24, "var(--green)", "#FFFFFF")}MoniPay</span>
       <span class="nb-spacer"></span>
-      <button type="button" class="nb-text" data-act="goLock">Se connecter</button>
     </div>
-    <div class="slides" id="slides" data-act-scroll="slides">
-      ${WELCOME_SLIDES.map(s => `<div class="slide">
-        <div style="max-width:290px">${vcardHTML({ ...s.card, pan: "5399471028834412", frozen: false }, {})}</div>
-        <div class="t-page" style="margin-top:30px">${s.title}</div>
-        <div style="font-size:15px;line-height:1.5;color:var(--ink-2);margin-top:10px;max-width:320px;text-wrap:pretty">${s.body}</div>
+    <div class="we-segs we-rise" style="animation-delay:.05s">${WELCOME_SLIDES.map(() => `<span class="ws"><i></i></span>`).join("")}</div>
+    <div class="we-texts we-rise" style="animation-delay:.1s">
+      ${WELCOME_SLIDES.map(s => `<div class="we-t">
+        <div class="t-page">${s.title}</div>
+        <div class="we-body">${s.body}</div>
       </div>`).join("")}
     </div>
-    <div class="gutter" style="padding-bottom:20px">
-      <div class="welcome-dots" style="margin-bottom:20px">${WELCOME_SLIDES.map((_, j) => `<span class="wd ${j === i ? "on" : ""}"></span>`).join("")}</div>
+    <div class="we-deck we-rise" id="we-deck" style="animation-delay:.18s">
+      <div class="we-stage we-float">
+        ${WELCOME_SLIDES.map(s => `<div class="we-card">${vcardHTML({ ...s.card, pan: "5399471028834412", frozen: false }, {})}</div>`).join("")}
+      </div>
+    </div>
+    <div class="gutter we-rise" style="padding-bottom:20px;animation-delay:.26s">
       ${btn("Créer mon compte", "goSignup")}
+      <div style="margin-top:10px">${btn("J’ai déjà un compte", "goLock", { style: "quiet" })}</div>
       <div style="text-align:center;font-size:12px;color:var(--ink-3);margin-top:12px">Cartes émises par notre banque partenaire agréée.</div>
     </div>
     <div class="homebar"></div>
   </div>`;
+}
+
+/* Contrôleur du deck : cycle auto + drag/tap, sans re-rendu (transitions CSS). */
+function initWelcomeDeck(root) {
+  const n = WELCOME_SLIDES.length;
+  const cards = [...root.querySelectorAll(".we-card")];
+  const texts = [...phone.querySelectorAll(".we-t")];
+  const segs = [...phone.querySelectorAll(".we-segs .ws")];
+  let timer = null, x0 = null, front = null;
+  const apply = () => {
+    const i = F.slide || 0;
+    cards.forEach((c, j) => { c.style.transform = ""; c.dataset.depth = String((j - i + n) % n); });
+    texts.forEach((t, j) => t.classList.toggle("on", j === i));
+    segs.forEach((s, j) => {
+      s.classList.toggle("done", j < i);
+      s.classList.remove("run");
+      if (j === i) { void s.offsetWidth; s.classList.add("run"); }
+    });
+  };
+  const arm = () => { clearTimeout(timer); timer = after(4200, () => go(1)); };
+  const go = d => {
+    if (!root.isConnected) return;
+    F.slide = ((F.slide || 0) + d + n) % n;
+    apply(); arm();
+  };
+  root.addEventListener("pointerdown", e => {
+    x0 = e.clientX;
+    front = cards.find(c => c.dataset.depth === "0");
+    clearTimeout(timer);
+    root.setPointerCapture(e.pointerId);
+  });
+  root.addEventListener("pointermove", e => {
+    if (x0 == null || !front) return;
+    const dx = e.clientX - x0;
+    front.classList.add("drag");
+    front.style.transform = `translateX(${dx}px) rotate(${dx / 18}deg)`;
+  });
+  const release = e => {
+    if (x0 == null) return;
+    const dx = e.clientX - x0;
+    x0 = null;
+    if (front) { front.classList.remove("drag"); front.style.transform = ""; front = null; }
+    if (dx < -55) go(1);
+    else if (dx > 55) go(-1);
+    else if (Math.abs(dx) < 6) go(1);
+    else { apply(); arm(); }
+  };
+  root.addEventListener("pointerup", release);
+  root.addEventListener("pointercancel", release);
+  apply(); arm();
 }
 
 function signupScreen() {
@@ -2635,27 +2688,9 @@ function renderPhone(mode) {
     if (under) under.style.display = "none";
   }
 
-  /* diapositives d'accueil */
-  const slides = phone.querySelector("#slides");
-  if (slides) {
-    if ((F.slide || 0) > 0) slides.scrollLeft = F.slide * slides.offsetWidth;
-    {
-      let ticking = false;
-      slides.addEventListener("scroll", () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(() => {
-          ticking = false;
-          const w = slides.offsetWidth || 1;
-          const i = Math.max(0, Math.min(WELCOME_SLIDES.length - 1, Math.round(slides.scrollLeft / w)));
-          if (i !== F.slide) {
-            F.slide = i;
-            phone.querySelectorAll(".wd").forEach((d, j) => d.classList.toggle("on", j === i));
-          }
-        });
-      }, { passive: true });
-    }
-  }
+  /* deck de bienvenue */
+  const weDeck = phone.querySelector("#we-deck");
+  if (weDeck) initWelcomeDeck(weDeck);
 
   /* compteur du solde (arrivée sur l'accueil) */
   if (mode === "tab" && PHASE === "main" && TAB === "home" && !STACKS.home.length && !S.hidden
