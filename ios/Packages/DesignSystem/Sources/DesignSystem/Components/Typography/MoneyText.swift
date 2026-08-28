@@ -2,10 +2,6 @@ import SwiftUI
 
 /// A number with superscript cents and tabular figures. That detail is what
 /// separates a typeset amount from one that is merely printed.
-///
-/// Every parameter is an already-formatted fragment or a currency symbol —
-/// data, never copy — so nothing here goes through a string catalog. The
-/// locale-aware formatting happens in `Fmt`.
 public struct MoneyText: View {
     public init(
         whole: String,

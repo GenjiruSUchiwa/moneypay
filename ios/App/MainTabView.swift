@@ -31,10 +31,7 @@ struct MainTabView: View {
             Tab("Profile", systemImage: "person.fill", value: 4) {
                 SettingsView()
             }
-            // The screen gallery is a review tool, not a product feature. It
-            // lives here because the Gallery package references every screen,
-            // so only the composition root is allowed to depend on it. Its tab
-            // label is the only one that is not translated, for the same reason.
+            // Dev-only review tool: only the composition root may depend on Gallery.
             Tab("Gallery", systemImage: "square.grid.2x2", value: 5) {
                 GalleryView()
             }

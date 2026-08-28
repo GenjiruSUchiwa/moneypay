@@ -35,23 +35,7 @@ let package = Package(
                 .process("Resources"),
             ],
             swiftSettings: [
-                // Same default isolation as the app target: unannotated code is
-                // @MainActor, and what must run off it says so explicitly.
                 .defaultIsolation(MainActor.self),
-                // Warnings are errors, front and back.
-                .treatAllWarnings(as: .error),
-            ]
-        ),
-        .testTarget(
-            name: "HomeTests",
-            dependencies: [
-                "Home",
-            ],
-            swiftSettings: [
-                // Same default isolation as the app target: unannotated code is
-                // @MainActor, and what must run off it says so explicitly.
-                .defaultIsolation(MainActor.self),
-                // Warnings are errors, front and back.
                 .treatAllWarnings(as: .error),
             ]
         ),

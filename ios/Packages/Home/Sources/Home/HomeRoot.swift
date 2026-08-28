@@ -150,8 +150,6 @@ public struct HomeView: View {
         .padding(.vertical, 18)
     }
 
-    /// "In · August": the month comes from a `FormatStyle`, never from a
-    /// hand-typed name.
     private func monthCell(_ label: String.LocalizationValue, _ amount: Int,
                            _ symbol: String, _ tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 5) {

@@ -42,7 +42,6 @@ public struct SettingsView: View {
                         toggleRow("Push notifications", "bell", $notificationsOn)
                         Rule(inset: 51)
                         Row(icon: "globe", title: Text("Language", bundle: .module), chevron: true) {
-                            // The language the app is showing, named in itself.
                             RowValue(text: Text(verbatim: Locale.current.localizedString(
                                 forLanguageCode: Locale.current.language.languageCode?.identifier ?? "en"
                             ) ?? ""))

@@ -22,8 +22,6 @@ public struct CreateCardFlow: View {
 
     private let presets: [Int?] = [5_000, 15_000, 50_000, nil]
 
-    /// Resolved to `String`, not held as keys: the chosen suggestion becomes the
-    /// card's name, so it has to be a value the store can keep and compare.
     private var suggestions: [String] {
         [
             String(localized: "Subscriptions", bundle: .module),
