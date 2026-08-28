@@ -12,13 +12,13 @@
         }
       }
     },
-    "Accepted wherever\nVisa and Mastercard are": {
+    "Accepted everywhere\nonline": {
       "extractionState": "manual",
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acceptée là où\nVisa et Mastercard le sont"
+            "value": "Acceptée partout\nen ligne"
           }
         }
       }
@@ -188,13 +188,13 @@
         }
       }
     },
-    "Netflix, AWS, AliExpress. The rate and the margin are shown before every conversion.": {
+    "Netflix, OpenAI, AliExpress. The rate and the margin are shown before every conversion.": {
       "extractionState": "manual",
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Netflix, AWS, AliExpress. Le taux et la marge sont affichés avant chaque conversion."
+            "value": "Netflix, OpenAI, AliExpress. Le taux et la marge sont affichés avant chaque conversion."
           }
         }
       }
@@ -265,6 +265,28 @@
         }
       }
     },
+    "Servers": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveurs"
+          }
+        }
+      }
+    },
+    "Shopping": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping"
+          }
+        }
+      }
+    },
     "Sign in": {
       "extractionState": "manual",
       "localizations": {
@@ -272,6 +294,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Se connecter"
+          }
+        }
+      }
+    },
+    "Subscriptions": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements"
           }
         }
       }
