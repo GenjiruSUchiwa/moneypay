@@ -2,6 +2,10 @@ import SwiftUI
 
 /// A number with superscript cents and tabular figures. That detail is what
 /// separates a typeset amount from one that is merely printed.
+///
+/// Every parameter is an already-formatted fragment or a currency symbol —
+/// data, never copy — so nothing here goes through a string catalog. The
+/// locale-aware formatting happens in `Fmt`.
 public struct MoneyText: View {
     public init(
         whole: String,
@@ -50,18 +54,18 @@ public struct MoneyText: View {
     public var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             if let prefix {
-                Text(prefix).font(.system(size: size * 0.72, weight: weight))
+                Text(verbatim: prefix).font(.system(size: size * 0.72, weight: weight))
             }
-            Text(whole)
+            Text(verbatim: whole)
                 .font(.system(size: size, weight: weight))
                 .tracking(size > 24 ? -0.8 : 0)
             if let frac {
-                Text(frac)
+                Text(verbatim: frac)
                     .font(.system(size: size * 0.52, weight: weight))
                     .baselineOffset(size * 0.34)
             }
             if let suffix {
-                Text(suffix)
+                Text(verbatim: suffix)
                     .font(.system(size: max(11, size * 0.42), weight: .medium))
                     .foregroundStyle(Brand.inkMuted)
                     .padding(.leading, max(3, size * 0.09))

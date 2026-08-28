@@ -1,12 +1,12 @@
 import SwiftUI
 
 public struct Toast: Equatable {
-    public init(text: String, icon: String = "checkmark") {
+    public init(text: Text, icon: String = "checkmark") {
         self.text = text
         self.icon = icon
     }
 
-    public var text: String
+    public var text: Text
     public var icon: String = "checkmark"
 }
 
@@ -16,7 +16,7 @@ public extension View {
             if let t = toast.wrappedValue {
                 HStack(spacing: 8) {
                     Image(systemName: t.icon).font(.system(size: 12, weight: .bold))
-                    Text(t.text).font(.system(size: 14, weight: .medium))
+                    t.text.font(.system(size: 14, weight: .medium))
                 }
                 .foregroundStyle(Brand.onInk)
                 .padding(.horizontal, 16).padding(.vertical, 11)
@@ -34,6 +34,6 @@ public extension View {
 }
 
 #Preview("Toast") {
-    @Previewable @State var toast: Toast? = Toast(text: "Card frozen", icon: "snowflake")
+    @Previewable @State var toast: Toast? = Toast(text: Text(verbatim: "Card frozen"), icon: "snowflake")
     Color.clear.page().toast($toast)
 }

@@ -21,7 +21,7 @@ public struct NetworkMark: View {
                     .blendMode(.hardLight)
             }
         case .visa:
-            Text("VISA")
+            Text(verbatim: "VISA")
                 .font(.system(size: 15 * scale, weight: .heavy))
                 .italic()
                 .tracking(-0.3)

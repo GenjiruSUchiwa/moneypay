@@ -2,13 +2,13 @@ import SwiftUI
 
 /// Lightweight navigation bar, no chrome.
 public struct NavBar: View {
-    public init(title: String = "", onBack: (() -> Void)? = nil, onClose: (() -> Void)? = nil) {
+    public init(title: Text = Text(verbatim: ""), onBack: (() -> Void)? = nil, onClose: (() -> Void)? = nil) {
         self.title = title
         self.onBack = onBack
         self.onClose = onClose
     }
 
-    public var title: String = ""
+    public var title: Text = Text(verbatim: "")
     public var onBack: (() -> Void)? = nil
     public var onClose: (() -> Void)? = nil
 
@@ -16,7 +16,7 @@ public struct NavBar: View {
         HStack {
             if let onBack {
                 Button { Haptic.tap(); onBack() } label: {
-                    Image(systemName: "chevron.left")
+                    Image(systemName: "chevron.backward")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(Brand.ink)
                         .frame(width: 40, height: 40)
@@ -25,7 +25,7 @@ public struct NavBar: View {
                 .padding(.leading, -10)
             }
             Spacer()
-            Text(title).font(.heading3).foregroundStyle(Brand.ink)
+            title.font(.heading3).foregroundStyle(Brand.ink)
             Spacer()
             if let onClose {
                 Button { Haptic.tap(); onClose() } label: {
@@ -47,9 +47,9 @@ public struct NavBar: View {
 
 #Preview("NavBar") {
     VStack(spacing: 20) {
-        NavBar(title: "Top up", onBack: {})
-        NavBar(title: "New card", onClose: {})
-        NavBar(title: "Both", onBack: {}, onClose: {})
+        NavBar(title: Text(verbatim: "Top up"), onBack: {})
+        NavBar(title: Text(verbatim: "New card"), onClose: {})
+        NavBar(title: Text(verbatim: "Both"), onBack: {}, onClose: {})
     }
     .page()
 }

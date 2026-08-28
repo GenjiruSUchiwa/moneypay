@@ -4,7 +4,7 @@ public enum Tone { case ink, quiet, outline, danger }
 
 public struct MPButton: View {
     public init(
-        title: String,
+        title: Text,
         icon: String? = nil,
         tone: Tone = .ink,
         loading: Bool = false,
@@ -19,7 +19,7 @@ public struct MPButton: View {
         self.action = action
     }
 
-    public var title: String
+    public var title: Text
     public var icon: String? = nil
     public var tone: Tone = .ink
     public var loading = false
@@ -31,7 +31,7 @@ public struct MPButton: View {
             HStack(spacing: 8) {
                 if loading { ProgressView().tint(fg).scaleEffect(0.8) }
                 else if let icon { Image(systemName: icon).font(.system(size: 15, weight: .semibold)) }
-                Text(title).font(.system(size: 16, weight: .medium))
+                title.font(.system(size: 16, weight: .medium))
             }
             .frame(maxWidth: .infinity)
             .frame(height: 52)
@@ -67,12 +67,12 @@ public struct MPButton: View {
 
 #Preview("MPButton, every tone") {
     VStack(spacing: 12) {
-        MPButton(title: "Top up", tone: .ink) {}
-        MPButton(title: "Convert", icon: "arrow.left.arrow.right", tone: .quiet) {}
-        MPButton(title: "New card", tone: .outline) {}
-        MPButton(title: "Delete", tone: .danger) {}
-        MPButton(title: "Loading", loading: true) {}
-        MPButton(title: "Disabled", enabled: false) {}
+        MPButton(title: Text(verbatim: "Top up"), tone: .ink) {}
+        MPButton(title: Text(verbatim: "Convert"), icon: "arrow.left.arrow.right", tone: .quiet) {}
+        MPButton(title: Text(verbatim: "New card"), tone: .outline) {}
+        MPButton(title: Text(verbatim: "Delete"), tone: .danger) {}
+        MPButton(title: Text(verbatim: "Loading"), loading: true) {}
+        MPButton(title: Text(verbatim: "Disabled"), enabled: false) {}
     }
     .gutter()
     .page()

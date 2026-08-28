@@ -35,7 +35,7 @@ public enum CardNetwork: String, Codable, Sendable { case visa, mastercard }
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(theme.fill)
                     .frame(width: 56, height: 36)
-                Text(theme.rawValue).font(.bodyReg).foregroundStyle(Brand.ink)
+                Text(verbatim: theme.rawValue).font(.bodyReg).foregroundStyle(Brand.ink)
                 Spacer()
             }
         }

@@ -28,7 +28,7 @@ TEMPLATE = '''// swift-tools-version: 6.2
 import PackageDescription
 
 let package = Package(
-    name: "{name}",
+    name: "{name}",{localization}
     platforms: [
 {platforms}
     ],
@@ -52,6 +52,10 @@ def imports(paths):
             if m and m.group(1) in PRODUCT_OWNER:
                 found.add(m.group(1))
     return found
+
+def has_resources(pkg, target):
+    return os.path.isdir(os.path.join(PKGS, pkg, 'Sources', target, 'Resources'))
+
 
 def sources(pkg, target):
     base = os.path.join(PKGS, pkg, 'Sources', target)
@@ -83,9 +87,13 @@ for pkg in ALL:
         lines = ''.join(f'\n                .product(name: "{d}", package: "{PRODUCT_OWNER[d]}"),'
                         if PRODUCT_OWNER[d] != pkg else f'\n                "{d}",'
                         for d in sorted(tdeps))
+        # A target that owns UI copy ships its own Localizable.xcstrings;
+        # `defaultLocalization` below is what makes Bundle.module resolve it.
+        res = ',\n            resources: [\n                .process("Resources"),\n            ]' \
+            if has_resources(pkg, t) else ''
         blocks.append(f'        .target(\n            name: "{t}"'
                       + (f',\n            dependencies: [{lines}\n            ]' if tdeps else '')
-                      + SWIFT_SETTINGS + '\n        ),')
+                      + res + SWIFT_SETTINGS + '\n        ),')
     for t in test_targets:
         tdeps = [d for d in imports(tests(pkg, t)) if d != t]
         lines = ''.join(f'\n                .product(name: "{d}", package: "{PRODUCT_OWNER[d]}"),'
@@ -101,7 +109,11 @@ for pkg in ALL:
     ui = any('import SwiftUI' in open(f).read() or 'import UIKit' in open(f).read()
              for f in all_src)
     platforms = '        .iOS(.v26),' + ('' if ui else '\n        .macOS(.v15),')
-    out = TEMPLATE.format(name=pkg, products=products, deps=deps,
+    # English source keys, French as a translation: every catalog-bearing
+    # package declares the same development language as ios/project.yml.
+    localization = ('\n    defaultLocalization: "en",'
+                    if any(has_resources(pkg, t) for t in targets) else '')
+    out = TEMPLATE.format(name=pkg, products=products, deps=deps, localization=localization,
                           platforms=platforms, targets='\n'.join(blocks))
     open(os.path.join(PKGS, pkg, 'Package.swift'), 'w').write(out)
     print(f'{pkg:14s} deps: {" ".join(dep_pkgs) or "-"}')

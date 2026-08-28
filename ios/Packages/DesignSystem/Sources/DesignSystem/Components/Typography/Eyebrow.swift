@@ -3,13 +3,14 @@ import SwiftUI
 /// Eyebrow: monospaced caps with widened tracking, the only form of capitals
 /// the type rules allow here, and it reads like a bank statement.
 public struct Eyebrow: View {
-    public init(text: String) {
+    public init(text: Text) {
         self.text = text
     }
 
-    public var text: String
+    public var text: Text
     public var body: some View {
-        Text(text.uppercased())
+        text
+            .textCase(.uppercase)
             .font(.eyebrow)
             .tracking(1.1)
             .foregroundStyle(Brand.inkFaint)
@@ -18,8 +19,8 @@ public struct Eyebrow: View {
 
 #Preview("Eyebrow") {
     VStack(alignment: .leading, spacing: 12) {
-        Eyebrow(text: "This month")
-        Eyebrow(text: "Paid with")
+        Eyebrow(text: Text(verbatim: "This month"))
+        Eyebrow(text: Text(verbatim: "Paid with"))
     }
     .padding()
     .page()
