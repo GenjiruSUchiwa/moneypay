@@ -205,28 +205,33 @@ public struct LockScreenView: View {
                 .foregroundStyle(error ? Brand.debit : Brand.inkMuted)
                 .padding(.top, 6)
 
-            PasscodeDots(filled: code.count, error: error).padding(.top, 32)
+            PasscodeDots(code: $code, error: error).padding(.top, 32)
 
             Spacer()
 
-            Keypad(side: .biometric,
-                   onDigit: { d in
-                       error = false
-                       guard code.count < 4 else { return }
-                       code.append("\(d)")
-                       if code.count == 4 { check() }
-                   },
-                   onDelete: { if !code.isEmpty { code.removeLast() } },
-                   onSide: { Haptic.success(); onUnlock() })
-
-            Button { Haptic.tap() } label: {
-                Text("Forgot your code?", bundle: .module).font(.subMed).foregroundStyle(Brand.mark)
+            HStack(spacing: Metric.large) {
+                Button { Haptic.success(); onUnlock() } label: {
+                    Label {
+                        Text("Unlock with Face ID", bundle: .module)
+                    } icon: {
+                        Image(systemName: "faceid")
+                    }
+                    .font(.subMed).foregroundStyle(Brand.mark)
+                }
+                Button { Haptic.tap() } label: {
+                    Text("Forgot your code?", bundle: .module).font(.subMed).foregroundStyle(Brand.mark)
+                }
             }
-            .padding(.top, 12)
+            .padding(.top, Metric.small)
         }
         .gutter()
         .padding(.bottom, 20)
         .page()
+        // A typed digit clears the error; a cleared field after a wrong code keeps it.
+        .onChange(of: code) { old, new in
+            if new.count > old.count { error = false }
+            if new.count == 4 { check() }
+        }
     }
 
     private func check() {

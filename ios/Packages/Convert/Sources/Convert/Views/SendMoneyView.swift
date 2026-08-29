@@ -113,16 +113,12 @@ public struct SendMoneyView: View {
             }
 
             Spacer()
-            AmountEntry(digits: digits.isEmpty ? "" : Fmt.group(amount), currency: "FCFA")
+            AmountEntry(digits: $digits, display: Fmt.group(amount), currency: "FCFA")
             Text("Instant MoneyPay transfer, no fee", bundle: .module)
                 .font(.sub).foregroundStyle(Brand.inkMuted).padding(.top, 10)
             Spacer()
 
             Field(placeholder: Text("Add a note", bundle: .module), text: $note, icon: "text.bubble").gutter()
-
-            Keypad(onDigit: { d in if digits.count < 8 { digits.append("\(d)") } },
-                   onDelete: { if !digits.isEmpty { digits.removeLast() } })
-                .gutter().padding(.top, 6)
 
             MPButton(title: amount > 0 ? Text("Send \(Fmt.xaf(amount))", bundle: .module)
                                        : Text("Send", bundle: .module),
@@ -130,7 +126,7 @@ public struct SendMoneyView: View {
                 Haptic.success()
                 withAnimation(.easeOut(duration: 0.25)) { sent = true }
             }
-            .gutter().padding(.bottom, 10)
+            .gutter().padding(.top, Metric.small).padding(.bottom, 10)
         }
         .toolbarTitleDisplayMode(.inline)
         .toolbar {

@@ -29,29 +29,30 @@ public struct PasscodeStep: View {
             }
             .padding(.top, 30)
 
-            PasscodeDots(filled: current.count, error: error).padding(.top, 36)
+            PasscodeDots(code: entry, error: error).padding(.top, 36)
 
             Spacer()
-
-            Keypad(onDigit: { d in
-                       error = false
-                       if confirming {
-                           guard confirm.count < 4 else { return }
-                           confirm.append("\(d)")
-                           if confirm.count == 4 { check() }
-                       } else {
-                           guard first.count < 4 else { return }
-                           first.append("\(d)")
-                       }
-                   },
-                   onDelete: {
-                       if confirming, !confirm.isEmpty { confirm.removeLast() }
-                       else if !confirming, !first.isEmpty { first.removeLast() }
-                   })
-            .padding(.bottom, 18)
         }
         .gutter()
         .frame(maxWidth: .infinity)
+        // A typed digit clears the mismatch; the clearing that follows one keeps it.
+        .onChange(of: first) { old, new in
+            if new.count > old.count { error = false }
+        }
+        .onChange(of: confirm) { old, new in
+            if new.count > old.count { error = false }
+            if new.count == 4 { check() }
+        }
+    }
+
+    /// The step edits one of two codes in place, so the keyboard binds to whichever is current.
+    private var entry: Binding<String> {
+        Binding(
+            get: { current },
+            set: { value in
+                if confirming { confirm = value } else { first = value }
+            }
+        )
     }
 
     private func check() {

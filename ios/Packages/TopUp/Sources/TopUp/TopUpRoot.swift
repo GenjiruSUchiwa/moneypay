@@ -43,7 +43,7 @@ public struct TopUpFlow: View {
     private var amountStep: some View {
         VStack(spacing: 0) {
             Spacer()
-            AmountEntry(digits: digits.isEmpty ? "" : Fmt.group(amount), currency: "FCFA")
+            AmountEntry(digits: $digits, display: Fmt.group(amount), currency: "FCFA")
             Group {
                 if amount > 0 {
                     Text("≈ \(Fmt.usd(usdCents)) to spend on a card", bundle: .module)
@@ -79,15 +79,10 @@ public struct TopUpFlow: View {
             .gutter()
             Rule()
 
-            Keypad(onDigit: { d in if digits.count < 8 { digits.append("\(d)") } },
-                   onDelete: { if !digits.isEmpty { digits.removeLast() } })
-                .gutter()
-                .padding(.top, 6)
-
             MPButton(title: Text("Continue", bundle: .module), enabled: valid) {
                 withAnimation(.easeOut(duration: 0.22)) { step = .confirm }
             }
-            .gutter().padding(.bottom, 10)
+            .gutter().padding(.top, Metric.small).padding(.bottom, 10)
         }
         .navigationTitle(Text("Top up", bundle: .module))
         .toolbarTitleDisplayMode(.inline)

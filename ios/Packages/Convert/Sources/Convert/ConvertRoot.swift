@@ -28,8 +28,10 @@ public struct ConvertView: View {
         VStack(spacing: 0) {
             VStack(spacing: 0) {
                 leg(flag: "🇨🇲", code: "FCFA",
-                    note: Text("Available: \(Fmt.xaf(store.balanceXAF))", bundle: .module),
-                    value: digits.isEmpty ? "0" : Fmt.group(xaf), active: true)
+                    note: Text("Available: \(Fmt.xaf(store.balanceXAF))", bundle: .module)) {
+                    // The leg already names the currency on its left, so the entry carries none.
+                    AmountEntry(digits: $digits, display: Fmt.group(xaf), currency: "", size: 26)
+                }
                 ZStack {
                     Rule()
                     Image(systemName: "arrow.down")
@@ -39,8 +41,13 @@ public struct ConvertView: View {
                         .background(Brand.inkFill, in: .circle)
                 }
                 leg(flag: "🇺🇸", code: "USD",
-                    note: Text("Spendable on all your cards", bundle: .module),
-                    value: Fmt.usd(usdCents, symbol: false), active: false)
+                    note: Text("Spendable on all your cards", bundle: .module)) {
+                    Text(verbatim: Fmt.usd(usdCents, symbol: false))
+                        .font(.system(size: 26, weight: .semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(Brand.inkMuted)
+                        .contentTransition(.numericText())
+                }
             }
             .gutter()
 
@@ -69,10 +76,6 @@ public struct ConvertView: View {
 
             Spacer()
 
-            Keypad(onDigit: { d in if digits.count < 8 { digits.append("\(d)") } },
-                   onDelete: { if !digits.isEmpty { digits.removeLast() } })
-                .gutter()
-
             MPButton(title: Text(xaf > store.balanceXAF ? "Insufficient balance" : "Convert",
                                  bundle: .module),
                      enabled: valid) {
@@ -93,7 +96,8 @@ public struct ConvertView: View {
         }
     }
 
-    private func leg(flag: String, code: String, note: Text, value: String, active: Bool) -> some View {
+    private func leg(flag: String, code: String, note: Text,
+                     @ViewBuilder value: () -> some View) -> some View {
         HStack(spacing: 12) {
             Text(verbatim: flag).font(.system(size: 26))
             VStack(alignment: .leading, spacing: 2) {
@@ -101,11 +105,7 @@ public struct ConvertView: View {
                 note.font(.micro).foregroundStyle(Brand.inkMuted).lineLimit(1)
             }
             Spacer(minLength: 8)
-            Text(verbatim: value)
-                .font(.system(size: 26, weight: .semibold))
-                .monospacedDigit()
-                .foregroundStyle(active ? Brand.ink : Brand.inkMuted)
-                .contentTransition(.numericText())
+            value()
         }
         .padding(.vertical, 18)
     }
