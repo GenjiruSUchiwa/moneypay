@@ -601,9 +601,15 @@ autour des groupes de lignes ; les seuls « conteneurs » sont les creux fonctio
 ## Components
 
 ### Navigation
-**`navbar`** — 52px, sans fond. Boutons `nav-button-glass` (38px, capsule de verre),
+**`navbar`** / **`nav-button-glass`** — 52px sans fond, boutons en capsule de verre de 38px,
 titre centré en `{typography.nav-title}` (absolu, ellipse), `.nb-text` pour les actions
-textuelles (« Annuler », `.strong` pour l'action d'engagement).
+textuelles (« Annuler », `.strong` pour l'action d'engagement) : cela décrit le HTML du
+prototype, qui n'a pas de barre système. Sur iOS, tout écran barré vit dans un
+`NavigationStack` et déclare sa barre avec `.navigationTitle` / `.toolbar` —
+`.topBarLeading` pour le retour, `.topBarTrailing` pour la fermeture, `.principal` pour un
+centre sur mesure tel que `SegmentedProgress`. Le verre, les tailles et les cibles tactiles
+sont ceux du système ; il n'existe plus de composant `NavBar` (#43), et le seul
+`.glassEffect` de l'app est celui de `Toast`.
 
 **`tab-bar-glass`** — capsule de verre flottante (`left/right:14px, bottom:24px`), 5px de
 padding interne. Onglet actif : icône + libellé en `{colors.green}` sur fond
@@ -644,12 +650,27 @@ lien `.sh-link` en `{colors.accent}` ou chevron.
 
 ### Saisie
 **`field`** — 50px, `{colors.well}` ; focus → `{colors.surface}` + liseré 1,5px
-`{colors.green}`. **`keypad`** — grille 3 colonnes, touches 52px `{typography.keypad}`,
-appui = fond `{colors.well}` (variante `.on-green` sur vert profond).
+`{colors.green}`. iOS : `Field(placeholder:text:icon:keyboard:contentType:submit:focused:)`,
+dont le focus est peint par le modificateur partagé `inputChrome(emphasized:)`
+(`Brand.surface` + `Brand.action` 1,5 pt, rayon `Metric.control`).
+**`keypad`** — propre au prototype : HTML n'a pas de clavier. Sur iOS le clavier système le
+remplace partout et le composant `Keypad` a été supprimé (#45).
 **`amount-entry`** — montant centré 44px (`.empty` en `{colors.ink-3}`), sous-ligne de
-conversion (`.warn` si solde insuffisant), pulsation `digitPop` à chaque frappe.
-**`otp-boxes`** — cases 56px, curseur = liseré vert. **`pass-dots`** — 13px, secousse
-`shake` 0,4s à l'erreur.
+conversion (`.warn` si solde insuffisant), pulsation `digitPop` à chaque frappe. iOS :
+`AmountEntry(digits:display:currency:size:maxDigits:autofocus:)` reçoit la frappe par un champ
+`.numberPad` invisible ; la liaison ne porte que des chiffres bruts, l'appelant les groupe.
+**`otp-boxes`** — cases 56px, curseur = liseré vert. iOS : `OTPBoxes(code:length:autofocus:)`,
+cases sur `{colors.well}` au rayon `Metric.control`, curseur = case à `code.count` passée en
+`{colors.surface}` + liseré `Brand.action` par `inputChrome`, frappe et remplissage automatique
+reçus par un champ invisible `.numberPad` + `.oneTimeCode`.
+**`pass-dots`** — 13px, secousse `shake` 0,4s à l'erreur. iOS :
+`PasscodeDots(code:total:error:autofocus:)`, repos = disque plein `{colors.well}`, rempli =
+`Brand.ink`, erreur = `Brand.debit` ; `Shake` est neutralisée en mouvement réduit, et la saisie
+se fait au pavé numérique du système sans type de contenu — un code secret ne se remplit jamais
+automatiquement.
+**`PhoneField`** — bouton pays (`FlagMark` + indicatif) + filet vertical + `TextField`
+`.phonePad` en `Font.input` ; le souligné passe de `Brand.rule` 1 pt à `Brand.ink` 1,5 pt dès
+que le numéro est complet.
 
 ### Surfaces modales
 **`sheet`** — plein écran moins 14px, verre, coins `{rounded.float}`, entrée 380ms
@@ -774,6 +795,98 @@ Avec le mouvement réduit, il n'y a ni cascade ni flottement ; le ré-empilement
 animation, les textes passent en fondu avec `Motion.quick` sans flou, le remplissage du segment
 reste actif, et VoiceOver désactive l'auto-avance ; le deck devient un élément ajustable.
 
+### Inscription (onboarding)
+Réf. Revolut / Wise. Cinq étapes : numéro, code, code secret, biométrie, profil
+(`SignUpStep`). Le point d'entrée public unique du paquet est
+`OnboardingRoot(dependencies:stage:onFinish:)` : il rend le splash, la Bienvenue puis
+`SignUpFlow`, et se termine par `OnboardingOutcome.signedUp(User)` (vers le KYC) ou
+`.signedIn` (vers l'app).
+
+**En-tête commun — la barre de navigation du système.** Le prototype dessine une `navbar` de
+52px avec un bouton en verre de 38px parce que HTML n'en a pas ; `SignUpFlow` pose un
+`NavigationStack` sans chemin ni destination, dont le seul rôle est d'héberger la barre :
+iOS 26 fournit la matière, le centrage et les réserves latérales.
+`SegmentedProgress(count: 5, current: model.step.rawValue)` occupe le
+`ToolbarItem(placement: .principal)` ; le retour est un
+`ToolbarItem(placement: .topBarLeading)`, absent à l'étape 0. Une seule géométrie est fixée
+ici : les segments sont des capsules sans largeur intrinsèque et le créneau principal n'en
+propose aucune, d'où `Metric.stage - Metric.gutter` (276 pt) — la largeur qui dégage le
+créneau de gauche et garde la barre immobile quand le retour apparaît.
+
+**1. Numéro** (`PhoneStepView`) — titre `Font.heading1` + `.tight()`, chapô `Font.bodyReg` /
+`Brand.inkMuted` à `Metric.lede` sous le titre. **`PhoneField`** à `Metric.block` sous le
+chapô : bouton pays (`FlagMark` 24 pt + indicatif en `Font.bodyMed` tabulaire +
+`chevron.down` en `Font.micro` gras / `Brand.inkFaint`, style `Press`), filet vertical
+1 × 22 pt `Brand.rule`, puis un `TextField` `.phonePad` / `.telephoneNumber` en `Font.input`
+tabulaire, substitut `6 XX XX XX XX`. Souligné `Brand.rule` 1 pt → `Brand.ink` 1,5 pt en
+`Motion.quick` dès que le numéro est complet (`SignUpDraft.isPhoneValid`). Groupement
+`Country.grouped(_:)` — une espace avant l'indice i quand i est impair et i < 9, ce qui donne
+`6 99 12 34 56`. Feuille pays (`CountryPickerView`, `.presentationDetents([.medium])`) :
+`FlagMark` 30 pt (`Metric.gutter + Metric.stack`), **`row`** (`Row` + `RowValue` pour
+l'indicatif), `checkmark` sur la sélection, séparateurs `RuledStack` ; le fond de la feuille
+est laissé au système. CTA `MPButton(tone: .primary, enabled: model.draft.isPhoneValid)`,
+mention légale `Font.micro` / `Brand.inkFaint` à `Metric.small` sous le bouton.
+
+**2. Code** (`CodeStepView`) — chapô « Envoyé au » suivi du numéro saisi
+(`SignUpDraft.displayPhone`, jamais une valeur en dur). **`otp-boxes`** :
+`OTPBoxes(code:length:)` à `Metric.section` sous le chapô, six cases de 56 pt sur
+`{colors.well}` au rayon `Metric.control` ; le curseur est la case à `code.count`, que
+`inputChrome(emphasized:)` passe en `{colors.surface}` + liseré `Brand.action` 1,5 pt. Un
+`TextField` invisible `.numberPad` + `.oneTimeCode` reçoit la frappe et le remplissage
+automatique du SMS ; les cases sont masquées à VoiceOver, qui lit le champ. En dessous, à
+`Metric.large` : décompte « Renvoyer le code dans %lld s » (`Font.sub` / `Brand.inkMuted`,
+tabulaire, `SignUpModel.resendDelay` = 42 s, un pas par `resendTick`) ou lien `Font.subMed` /
+`Brand.mark`. CTA `MPButton(tone: .primary, loading: model.isVerifying)` ; la sixième touche
+lance la même vérification que le bouton (`SignUpModel.verifyDelay` = 700 ms), et `verify()`
+est idempotent.
+
+**3. Code secret** (`PasscodeStepView`) — titre `Font.titleLarge` centré, chapô `Font.sub`
+centré sur `Metric.measure` de large. **`pass-dots`** : `PasscodeDots(code:error:)` à
+`Metric.section`, quatre disques de 13 pt espacés de 16 pt — repos `{colors.well}`, rempli
+`Brand.ink`, erreur `Brand.debit` + secousse `Shake`. Saisie au **pavé numérique du système**
+(`.numberPad`, sans type de contenu : un code secret ne se remplit jamais automatiquement) —
+le `keypad` du prototype n'existe pas sur iOS. Machine d'état `PasscodeEntry` : `.creating`
+puis `.confirming` ; une confirmation différente efface les deux saisies et passe le chapô en
+`Brand.debit` (« Les codes ne correspondent pas. Recommencez. »). Pas de CTA : la quatrième
+touche confirmée avance. Retours par `.sensoryFeedback` — `.success` à la confirmation,
+`.warning` à l'écart.
+
+**4. Biométrie** (`BiometricsStepView`) — glyphe `faceid` à `Metric.heroGlyph` (44 pt) en
+graisse légère, titre `Font.heading1` à `Metric.large` sous le glyphe, chapô `Font.bodyReg` à
+`Metric.lede`, puis à `Metric.large` une ligne de réassurance `lock.shield` + `Font.sub` /
+`Brand.inkMuted`. Deux boutons empilés par `Metric.stack` : `MPButton(tone: .primary)`
+« Activer Face ID » et `MPButton(tone: .ghost)` « Plus tard ». Le choix n'est que consigné
+(`SignUpDraft.biometricsEnabled`) ; l'enrôlement `LocalAuthentication` appartient à l'épopée
+Sessions.
+
+**5. Profil** (`ProfileStepView`) — trois **`field`** empilés par `Metric.stack` à
+`Metric.block` sous le chapô : prénom (`person`, `.givenName`, `.next`), nom
+(`person.text.rectangle`, `.familyName`, `.next`), courriel (`envelope`, `.emailAddress`,
+`.done`). Le focus part sur le prénom et `onSubmit` descend la pile. Focus =
+`{colors.surface}` + liseré `Brand.action` 1,5 pt (`inputChrome`). CTA
+`MPButton(tone: .primary, loading: model.isSubmitting, enabled: model.draft.isProfileValid)` :
+`SignUpModel.submit()` appelle `AccountCreating.createAccount(_:)` (`POST /signup` — nom
+complet, indicatif + chiffres sans « + », courriel) puis remet un `User` à l'application. En
+cas d'échec le flux ne bloque pas : `Toast` « Serveur injoignable — mode démo. » pendant 2 s,
+`.sensoryFeedback(.warning)`, et l'utilisateur construit localement poursuit vers le KYC —
+même dégradation silencieuse que le prototype.
+
+**Correspondances iOS** : le pas de flux est `SignUpModel.step` (`SignUpStep`), l'état saisi
+`SignUpDraft` — conservé d'un bout à l'autre, revenir en arrière ne perd rien —, l'entrée du
+code secret `PasscodeEntry`, les pays `Country.supported` (CM +237 · CI +225 · SN +221 ·
+GA +241 · CD +243 · BJ +229, noms rendus par `Locale.localizedString(forRegionCode:)`, jamais
+par un littéral). Comme `WelcomeModel`, `SignUpModel` détient seul les temporisations
+(`resendDelay`, `verifyDelay`, `resendTick`, des `Duration` injectables) et les règles ; les
+vues n'ont ni minuterie ni décision, seulement le retour sensoriel, et le décompte est réarmé
+par `resendGeneration` via `.task(id:)`. La dépendance est le protocole `AccountCreating` :
+`ApiClient` en vrai, `PreviewAccountClient` en aperçu et dans la Gallery, choisis par
+`AppConfiguration.accounts`.
+
+Le changement d'étape utilise `Motion.screen` avec un glissement directionnel + fondu (entrée
+par `.trailing` en avant, par `.leading` en arrière). Avec le mouvement réduit, fondu seul, et
+`PasscodeDots` ne secoue pas — la couleur suffit. Les claviers sont ceux du système sur les
+trois étapes de saisie ; chaque écran est vérifié clavier ouvert et en `accessibility3`.
+
 ### Graphiques (Analyse)
 **`bars-chart`** — barres `{colors.ink}` à 13 %, **active en `{colors.green}`** + étiquette,
 grille pointillée `{colors.hairline}`, ticks 9,5px `{colors.ink-3}`. Pousse `barUp` 0,5s en cascade.
@@ -817,6 +930,8 @@ Tout est conditionné par `.anim` sur la racine ; `prefers-reduced-motion` neutr
 | Bienvenue : flottement | `Motion.float` — 3,2 s ease-in-out, `repeatForever(autoreverses:)`, ± `Motion.floatAmplitude` |
 | Bienvenue : textes (fondu + `Motion.blur` + `Motion.rise`) | `Motion.screen` — 0,35 s |
 | Bienvenue : entrée en cascade | `Motion.screen`, décalage `Motion.stagger` (0,07 s) par élément |
+| Inscription : changement d'étape | `Motion.screen` — 0,35 s, glissement directionnel + fondu ; mouvement réduit → fondu seul |
+| Inscription : vérification simulée / renvoi du code | `SignUpModel.verifyDelay` 700 ms · `SignUpModel.resendDelay` 42 s |
 | Retours de pression | scale .92–.985, 0,12–0,14s |
 | Bascule de thème `.theme-anim` | fondu 0,3s |
 
@@ -900,3 +1015,20 @@ creux = `{colors.well}` · capsule = 999px · gutter = 20px.
   keypad à opérateurs (+ − × ÷) façon Revolut ; étape confirm sur Envoyer.
 - Les icônes sont un jeu SVG interne à `app.js` (traits 1,8–2px) — non formalisées en
   tokens ici.
+- **Barre de navigation** : le prototype dessine sa propre `navbar` (52px, bouton en verre
+  38px) parce que HTML n'a pas de barre système ; iOS utilise celle de `NavigationStack` et
+  son verre natif. Le composant `NavBar` a été supprimé (#43) et les tailles du prototype ne
+  s'appliquent pas — écart assumé, décidé dans #30.
+- **Clavier de saisie** : le prototype dessine son propre `keypad` parce que HTML n'a pas de
+  clavier ; iOS utilise le clavier système partout — `.phonePad` sur le numéro, `.numberPad`
+  + `.oneTimeCode` sur le code, `.numberPad` sur le code secret, le montant et l'écran de
+  verrouillage. Le composant `Keypad` a été supprimé (#45). Écart assumé, décidé dans #30.
+- **Titre « Use Face ID? » à 26px** dans le prototype : hors barème typographique. iOS le rend
+  en `Font.heading1` (28) ; le barème n'a pas de 26 et n'en gagnera pas un pour un seul écran.
+- **Largeur du chapô du code secret** : 290px dans le prototype, `Metric.measure` (320 pt) sur
+  iOS — le jeton le plus proche, écart assumé plutôt qu'un nouveau jeton pour un écran.
+- **Tailles de police en dur** : `MPButton` et `Field` (libellé, icônes) et plusieurs écrans
+  (`Home`, `Settings`) posent encore des `.font(.system(size:))`. Ces textes rendent donc en
+  SF et non en Google Sans Flex — à reprendre en jetons `Font.sans` / `Font.<rôle>`.
+- **Teinte de la barre d'onglets** : `MainTabView` teinte l'onglet actif en `Brand.ink`, là où
+  le prototype le passe en `{colors.green}` sur un fond `color-mix(green 14%)`.
