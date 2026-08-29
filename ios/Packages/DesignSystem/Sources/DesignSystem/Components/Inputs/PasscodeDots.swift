@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Dots of a passcode.
+/// The progress dots for a passcode entry.
+/// Use this for a short passcode indicator; use `OTPBoxes` when the code can be autofilled.
 public struct PasscodeDots: View {
     public init(filled: Int, total: Int = 4, error: Bool = false) {
         self.filled = filled
@@ -11,19 +12,24 @@ public struct PasscodeDots: View {
     public var filled: Int
     public var total: Int = 4
     public var error = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public var body: some View {
         HStack(spacing: 16) {
-            ForEach(0..<total, id: \.self) { i in
+            ForEach(0..<total, id: \.self) { index in
+                let isFilled = index < filled
                 Circle()
-                    .fill(i < filled ? (error ? Brand.debit : Brand.ink) : .clear)
-                    .frame(width: 12, height: 12)
-                    .overlay { Circle().stroke(i < filled ? .clear : Brand.rule, lineWidth: 1.2) }
-                    .animation(.spring(response: 0.2, dampingFraction: 0.6), value: filled)
+                    .fill(isFilled ? (error ? Brand.debit : Brand.ink) : Brand.well)
+                    .frame(width: 13, height: 13)
+                    .scaleEffect(isFilled ? 1.06 : 1)
             }
         }
-        .modifier(Shake(shakes: error ? 1 : 0))
-        .animation(.default, value: error)
+        .animation(Motion.quick, value: filled)
+        .modifier(Shake(shakes: error && !reduceMotion ? 1 : 0))
+        .animation(Motion.quick, value: error)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Passcode", bundle: .module))
+        .accessibilityValue(Text("\(filled) of \(total) digits entered", bundle: .module))
     }
 }
 

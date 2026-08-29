@@ -9,4 +9,14 @@ public extension View {
 
     /// The app's single horizontal margin. Never hard-code a leading padding.
     func gutter() -> some View { padding(.horizontal, Metric.gutter) }
+
+    /// Inset focus ring used by `Field` and `OTPBoxes`.
+    func inputChrome(emphasized: Bool) -> some View {
+        background(emphasized ? Brand.surface : Brand.well,
+                   in: .rect(cornerRadius: Metric.control, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: Metric.control, style: .continuous)
+                .strokeBorder(emphasized ? Brand.action : .clear, lineWidth: 1.5)
+        }
+    }
 }
