@@ -72,6 +72,7 @@ public struct ComponentsShowcase: View {
     @State private var toastMsg: Toast?
     @State private var text = ""
     @State private var otp = "418"
+    @State private var phone = ""
 
     public var body: some View {
         ScrollView {
@@ -159,6 +160,9 @@ public struct ComponentsShowcase: View {
                     OTPBoxes(code: $otp, autofocus: false)
                     PasscodeDots(filled: 2)
                     Field(placeholder: Text(verbatim: "Card name"), text: $text, icon: "creditcard")
+                    PhoneField(flag: .cm, dialCode: "+237", digits: $phone, groupedDigits: phone,
+                               placeholder: "6 XX XX XX XX", isValid: phone.count == 9,
+                               onCountryTap: {})
                 }
                 block("Rows") {
                     VStack(spacing: 0) {
