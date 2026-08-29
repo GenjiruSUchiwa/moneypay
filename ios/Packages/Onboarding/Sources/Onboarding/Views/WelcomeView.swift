@@ -24,7 +24,7 @@ public struct WelcomeView: View {
             SegmentedProgress(
                 count: model.count,
                 current: model.index,
-                style: .story(dwell: model.dwell, cycle: model.generation)
+                style: .story(dwell: model.dwell, since: model.cycleStart)
             )
             .gutter()
             .padding(.top, Metric.small)

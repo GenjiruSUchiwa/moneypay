@@ -75,6 +75,7 @@ public struct ComponentsShowcase: View {
     @State private var phone = ""
     @State private var passcode = "12"
     @State private var amount = "25000"
+    @State private var storyStart = Date.now
 
     public var body: some View {
         ScrollView {
@@ -143,7 +144,7 @@ public struct ComponentsShowcase: View {
                     SegmentedProgress(count: 5, current: 0)
                     SegmentedProgress(count: 5, current: 2)
                     SegmentedProgress(count: 5, current: 4)
-                    SegmentedProgress(count: 3, current: 1, style: .story(dwell: .seconds(4)))
+                    SegmentedProgress(count: 3, current: 1, style: .story(dwell: .seconds(4), since: storyStart))
                 }
                 block("Amounts") {
                     MoneyText.xaf(428_500, size: 34)
