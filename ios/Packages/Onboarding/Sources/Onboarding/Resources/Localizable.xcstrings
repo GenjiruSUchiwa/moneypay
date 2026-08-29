@@ -23,24 +23,24 @@
         }
       }
     },
-    "By continuing you accept MoneyPay's terms and privacy policy.": {
+    "Back": {
       "extractionState": "manual",
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En continuant, vous acceptez les conditions générales et la politique de confidentialité de MoneyPay."
+            "value": "Retour"
           }
         }
       }
     },
-    "Cards issued by our licensed partner bank.": {
+    "By continuing you accept MoniPay's terms and privacy policy.": {
       "extractionState": "manual",
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cartes émises par notre banque partenaire agréée."
+            "value": "En continuant, vous acceptez les conditions générales et la politique de confidentialité de MoniPay."
           }
         }
       }
@@ -52,6 +52,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Carte %lld sur %lld"
+          }
+        }
+      }
+    },
+    "Cards issued by our licensed partner bank.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cartes émises par notre banque partenaire agréée."
           }
         }
       }
@@ -85,6 +96,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pays"
+          }
+        }
+      }
+    },
+    "Country code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicatif pays"
           }
         }
       }

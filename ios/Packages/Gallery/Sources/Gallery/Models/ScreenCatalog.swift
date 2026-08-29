@@ -59,10 +59,10 @@ public enum ScreenCatalog {
             WelcomeView(onStart: {}, onSignIn: {})
         },
         e(.init("phone", "Phone number", "Onboarding", "phone", Viz.categorical[2])) { _ in
-            wrap { PhoneStep(next: {}) }
+            wrap { SignUpFlow(startingAt: .phone, onDone: {}) }
         },
         e(.init("otp", "Verification code", "Onboarding", "123.rectangle", Viz.categorical[3])) { _ in
-            wrap { OTPStep(next: {}) }
+            wrap { SignUpFlow(startingAt: .code, onDone: {}) }
         },
         e(.init("passcode", "Passcode creation", "Onboarding", "lock", Brand.ink)) { _ in
             wrap { PasscodeStep(next: {}) }
