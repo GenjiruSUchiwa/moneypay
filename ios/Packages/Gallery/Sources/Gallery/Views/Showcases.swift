@@ -71,6 +71,7 @@ public struct ComponentsShowcase: View {
     @State private var seg = 0
     @State private var toastMsg: Toast?
     @State private var text = ""
+    @State private var phone = ""
     @State private var otp = "418"
 
     public var body: some View {
@@ -142,6 +143,20 @@ public struct ComponentsShowcase: View {
                     SegmentedProgress(count: 5, current: 4)
                     SegmentedProgress(count: 3, current: 1, style: .story(dwell: .seconds(4)))
                 }
+                block("Navigation") {
+                    VStack(spacing: Metric.small) {
+                        NavBar(title: Text(verbatim: "Top up"), onBack: {})
+                        NavBar(title: Text(verbatim: "New card"), onClose: {})
+                        NavBar(center: .progress(count: 5, current: 2), onBack: {})
+                        NavBar(center: .progress(count: 5, current: 0))
+                    }
+                    // Glass is fill + blur + edge; it only reads against something behind it.
+                    .padding(Metric.small)
+                    .background(
+                        Brand.markSoft,
+                        in: RoundedRectangle(cornerRadius: Metric.card, style: .continuous)
+                    )
+                }
                 block("Amounts") {
                     MoneyText.xaf(428_500, size: 34)
                     MoneyText.usd(109_945, size: 28)
@@ -159,6 +174,15 @@ public struct ComponentsShowcase: View {
                     OTPBoxes(code: $otp, autofocus: false)
                     PasscodeDots(filled: 2)
                     Field(placeholder: Text(verbatim: "Card name"), text: $text, icon: "creditcard")
+                    PhoneField(
+                        flag: .cm,
+                        dialCode: "+237",
+                        digits: $phone,
+                        groupedDigits: phone,
+                        placeholder: "6 XX XX XX XX",
+                        isValid: phone.count == 9,
+                        onCountryTap: {}
+                    )
                 }
                 block("Rows") {
                     VStack(spacing: 0) {

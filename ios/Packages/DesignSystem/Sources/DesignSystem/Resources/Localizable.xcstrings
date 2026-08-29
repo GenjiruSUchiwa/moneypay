@@ -1,6 +1,61 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Back": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retour"
+          }
+        }
+      }
+    },
+    "Close": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        }
+      }
+    },
+    "Country code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicatif du pays"
+          }
+        }
+      }
+    },
+    "Passcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code secret"
+          }
+        }
+      }
+    },
+    "Phone number": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numéro de téléphone"
+          }
+        }
+      }
+    },
     "Step %lld of %lld": {
       "extractionState": "manual",
       "localizations": {
@@ -23,17 +78,6 @@
         }
       }
     },
-    "Yesterday": {
-      "extractionState": "manual",
-      "localizations": {
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hier"
-          }
-        }
-      }
-    },
     "Verification code": {
       "extractionState": "manual",
       "localizations": {
@@ -45,13 +89,13 @@
         }
       }
     },
-    "Passcode": {
+    "Yesterday": {
       "extractionState": "manual",
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Code secret"
+            "value": "Hier"
           }
         }
       }
