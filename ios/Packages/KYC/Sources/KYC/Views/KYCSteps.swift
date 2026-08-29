@@ -213,7 +213,7 @@ public struct KYCCaptureView: View {
                 if captured {
                     Image(systemName: "checkmark")
                         .font(.system(size: 32, weight: .semibold))
-                        .foregroundStyle(Brand.onInk)
+                        .foregroundStyle(Brand.onAction)
                         .frame(width: 70, height: 70)
                         .background(Brand.credit, in: .circle)
                         .transition(.scale.combined(with: .opacity))
@@ -244,7 +244,7 @@ public struct KYCCaptureView: View {
                 } label: {
                     ZStack {
                         Circle().stroke(Brand.rule, lineWidth: 2).frame(width: 70, height: 70)
-                        Circle().fill(Brand.inkFill).frame(width: 57, height: 57)
+                        Circle().fill(Brand.action).frame(width: 56, height: 56)
                     }
                 }
                 .buttonStyle(Press())
@@ -322,7 +322,7 @@ public struct KYCReviewView: View {
                 if done {
                     Image(systemName: "checkmark")
                         .font(.system(size: 30, weight: .semibold))
-                        .foregroundStyle(Brand.onInk)
+                        .foregroundStyle(Brand.onAction)
                         .frame(width: 60, height: 60)
                         .background(Brand.credit, in: .circle)
                 } else {

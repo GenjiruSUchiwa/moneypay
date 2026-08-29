@@ -9,7 +9,7 @@ public struct SuccessMark: View {
     public var body: some View {
         Image(systemName: "checkmark")
             .font(.system(size: 26, weight: .semibold))
-            .foregroundStyle(Brand.onInk)
+            .foregroundStyle(Brand.onAction)
             .frame(width: 56, height: 56)
             .background(Brand.credit, in: .circle)
             .scaleEffect(on ? 1 : 0.7)

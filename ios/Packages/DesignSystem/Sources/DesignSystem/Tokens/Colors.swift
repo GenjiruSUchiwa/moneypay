@@ -22,17 +22,11 @@ public enum Brand {
     public static let ink = Color.adaptive(light: 0x0E1413, dark: 0xF1F4F3)
     public static let inkMuted = Color.adaptive(light: 0x5E6D69, dark: 0x8C9B97)
     public static let inkFaint = Color.adaptive(light: 0x93A19D, dark: 0x5A6764)
-    /// Reversed ink: text on an ink fill.
-    public static let onInk = Color.adaptive(light: 0xFFFFFF, dark: 0x0C0F10)
-    /// Ink fill: a solid ink surface (`Tone.ink` buttons, chips in their "on" state).
-    /// The primary action is `action`, as in the prototype; this is the monochrome
-    /// alternative for a secondary emphasis.
-    public static let inkFill = Color.adaptive(light: 0x101615, dark: 0xF1F4F3)
 
-    /// The action green (`--green`): primary CTA, the logo tile, active chips and
-    /// toggles. Never decoration.
+    /// The action green (`--green`): primary CTA, the logo tile, selected chips,
+    /// toggles, avatars, the active tab. Never decoration, never ink.
     public static let action = Color.adaptive(light: 0x067647, dark: 0x2FC988)
-    /// Text color that remains legible on the primary action fill.
+    /// Glyphs and text on `action` and on the money discs (`--on-green`).
     public static let onAction = Color.adaptive(light: 0xFFFFFF, dark: 0x04301F)
 
     /// Identity tint: the monogram, the active tab, links. Never a large

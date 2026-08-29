@@ -1,15 +1,15 @@
 import SwiftUI
 
-/// Button emphasis: `.primary` is green, `.ink` is monochrome, and `.danger` is destructive.
-/// `.quiet` fills a well, `.outline` draws a border, and `.ghost` uses muted ink without either.
-public enum Tone { case primary, ink, quiet, outline, ghost, danger }
+/// Button emphasis, as in the prototype: `.primary` is the action green, `.quiet` fills a
+/// well, `.outline` draws a border, `.ghost` is muted ink without either, `.danger` is destructive.
+public enum Tone { case primary, quiet, outline, ghost, danger }
 
 /// Full-width button with standard MoniPay emphasis and loading states.
 public struct MPButton: View {
     public init(
         title: Text,
         icon: String? = nil,
-        tone: Tone = .ink,
+        tone: Tone = .primary,
         loading: Bool = false,
         enabled: Bool = true,
         action: @escaping () -> Void
@@ -24,7 +24,7 @@ public struct MPButton: View {
 
     public var title: Text
     public var icon: String? = nil
-    public var tone: Tone = .ink
+    public var tone: Tone = .primary
     public var loading = false
     public var enabled = true
     public var action: () -> Void
@@ -54,7 +54,6 @@ public struct MPButton: View {
     private var bg: Color {
         switch tone {
         case .primary: Brand.action
-        case .ink: Brand.inkFill
         case .quiet: Brand.well
         case .outline: .clear
         case .ghost: .clear
@@ -64,7 +63,6 @@ public struct MPButton: View {
     private var fg: Color {
         switch tone {
         case .primary: Brand.onAction
-        case .ink: Brand.onInk
         case .quiet, .outline: Brand.ink
         case .ghost: Brand.inkMuted
         case .danger: Brand.debit
@@ -75,7 +73,6 @@ public struct MPButton: View {
 #Preview("MPButton, every tone") {
     VStack(spacing: 12) {
         MPButton(title: Text(verbatim: "Primary action"), tone: .primary) {}
-        MPButton(title: Text(verbatim: "Top up"), tone: .ink) {}
         MPButton(title: Text(verbatim: "Convert"), icon: "arrow.left.arrow.right", tone: .quiet) {}
         MPButton(title: Text(verbatim: "New card"), tone: .outline) {}
         MPButton(title: Text(verbatim: "Later"), tone: .ghost) {}

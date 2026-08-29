@@ -126,7 +126,7 @@ public struct AuthorizationSheet: View {
             } else {
                 Image(systemName: o == .expired ? "clock" : "xmark")
                     .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(Brand.onInk)
+                    .foregroundStyle(Brand.onAction)
                     .frame(width: 56, height: 56)
                     .background(Brand.debit, in: .circle)
             }

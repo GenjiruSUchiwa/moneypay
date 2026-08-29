@@ -37,9 +37,9 @@ public struct ConvertView: View {
                     Rule()
                     Image(systemName: "arrow.down")
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Brand.onInk)
+                        .foregroundStyle(Brand.onAction)
                         .frame(width: 26, height: 26)
-                        .background(Brand.inkFill, in: .circle)
+                        .background(Brand.action, in: .circle)
                 }
                 leg(flag: "🇺🇸", code: "USD",
                     note: Text("Spendable on all your cards", bundle: .module)) {

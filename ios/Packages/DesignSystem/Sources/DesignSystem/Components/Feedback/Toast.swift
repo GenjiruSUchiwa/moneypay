@@ -18,9 +18,9 @@ public extension View {
                     Image(systemName: t.icon).font(.system(size: 12, weight: .bold))
                     t.text.font(.system(size: 14, weight: .medium))
                 }
-                .foregroundStyle(Brand.onInk)
+                .foregroundStyle(Brand.ink)
                 .padding(.horizontal, 16).padding(.vertical, 11)
-                .background(Brand.inkFill, in: .capsule)
+                .glassEffect()
                 .padding(.bottom, 34)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .task {

@@ -1,17 +1,16 @@
 import SwiftUI
 
-/// Quick action: a quiet tile with the label underneath. No coloured disc.
+/// Quick action (prototype `.qa`): a well disc with the label underneath. Every action
+/// looks the same; the prototype gives none of them a coloured disc.
 public struct QuickAction: View {
-    public init(icon: String, label: Text, emphasis: Bool = false, action: @escaping () -> Void = {}) {
+    public init(icon: String, label: Text, action: @escaping () -> Void = {}) {
         self.icon = icon
         self.label = label
-        self.emphasis = emphasis
         self.action = action
     }
 
     public var icon: String
     public var label: Text
-    public var emphasis = false
     public var action: () -> Void = {}
 
     public var body: some View {
@@ -19,9 +18,9 @@ public struct QuickAction: View {
             VStack(spacing: 7) {
                 Image(systemName: icon)
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(emphasis ? Brand.onInk : Brand.ink)
+                    .foregroundStyle(Brand.ink)
                     .frame(width: 46, height: 46)
-                    .background(emphasis ? Brand.inkFill : Brand.well, in: .circle)
+                    .background(Brand.well, in: .circle)
                 label
                     .font(.micro)
                     .foregroundStyle(Brand.inkMuted)
@@ -35,7 +34,7 @@ public struct QuickAction: View {
 
 #Preview("QuickAction") {
     HStack(spacing: 22) {
-        QuickAction(icon: "plus", label: Text(verbatim: "Top up"), emphasis: true)
+        QuickAction(icon: "plus", label: Text(verbatim: "Top up"))
         QuickAction(icon: "arrow.left.arrow.right", label: Text(verbatim: "Convert"))
         QuickAction(icon: "creditcard", label: Text(verbatim: "Cards"))
     }
