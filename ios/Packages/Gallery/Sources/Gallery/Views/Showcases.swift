@@ -73,6 +73,8 @@ public struct ComponentsShowcase: View {
     @State private var text = ""
     @State private var otp = "418"
     @State private var phone = ""
+    @State private var passcode = "12"
+    @State private var amount = "25000"
 
     public var body: some View {
         ScrollView {
@@ -154,7 +156,10 @@ public struct ComponentsShowcase: View {
                 }
                 block("Inputs") {
                     OTPBoxes(code: $otp, autofocus: false)
+                    PasscodeDots(code: $passcode, autofocus: false)
                     PasscodeDots(filled: 2)
+                    AmountEntry(digits: $amount, display: Fmt.group(Int(amount) ?? 0),
+                                currency: "FCFA", autofocus: false)
                     Field(placeholder: Text(verbatim: "Card name"), text: $text, icon: "creditcard")
                     PhoneField(flag: .cm, dialCode: "+237", digits: $phone, groupedDigits: phone,
                                placeholder: "6 XX XX XX XX", isValid: phone.count == 9,
