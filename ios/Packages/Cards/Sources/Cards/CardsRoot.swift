@@ -115,7 +115,7 @@ public struct CardsListView: View {
                         Text("cap \(Fmt.usd(limit))", bundle: .module)
                             .font(.sub).foregroundStyle(Brand.inkFaint)
                     }
-                    ProgressView(value: card.usage)
+                    ProgressView(value: min(1, card.usage))
                         .tint(card.usage > 0.85 ? Brand.debit : Brand.ink)
                         .accessibilityLabel(Text("Card spending", bundle: .module))
                 }

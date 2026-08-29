@@ -200,7 +200,7 @@ public struct CardDetailView: View {
             .gutter().padding(.top, 10)
 
             if let l = live.monthlyLimitUSDCents {
-                ProgressView(value: live.usage)
+                ProgressView(value: min(1, live.usage))
                     .tint(live.usage > 0.85 ? Brand.debit : Brand.ink)
                     .accessibilityLabel(Text("Card spending", bundle: .module))
                     .gutter().padding(.top, 12)
