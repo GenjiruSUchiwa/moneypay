@@ -7,7 +7,7 @@ import SwiftUI
 /// provide its account creator and receive one completion outcome.
 public struct OnboardingRoot: View {
     /// The account creator selected by the composition root or a preview.
-    public struct Dependencies {
+    public struct Dependencies: Sendable {
         public let accounts: any AccountCreating
 
         public init(accounts: any AccountCreating) {
