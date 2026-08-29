@@ -1,0 +1,67 @@
+import ApiClient
+import DesignSystem
+import SwiftUI
+
+/// Step 0: the number every code and every Mobile Money top-up will use.
+struct PhoneStepView: View {
+    let model: SignUpModel
+    let onContinue: () -> Void
+    @State private var isPickingCountry = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("What is your\nnumber?", bundle: .module)
+                .font(.heading1).tight().foregroundStyle(Brand.ink)
+                .accessibilityAddTraits(.isHeader)
+
+            Text("A six-digit code goes out to this line. It is also the line your Mobile Money top-ups arrive on.",
+                 bundle: .module)
+                .font(.bodyReg).foregroundStyle(Brand.inkMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, Metric.lede)
+
+            PhoneField(
+                flag: model.draft.country.flag,
+                dialCode: model.draft.country.dialCode,
+                digits: Binding(get: { model.draft.phoneDigits },
+                                set: { model.setPhoneDigits($0) }),
+                groupedDigits: model.draft.country.grouped(model.draft.phoneDigits),
+                placeholder: model.draft.country.placeholder,
+                isValid: model.draft.isPhoneValid,
+                onCountryTap: { isPickingCountry = true }
+            )
+            .padding(.top, Metric.block)
+
+            Spacer(minLength: Metric.block)
+
+            MPButton(title: Text("Send me the code", bundle: .module),
+                     tone: .primary,
+                     enabled: model.draft.isPhoneValid,
+                     action: onContinue)
+
+            Text("By continuing you accept MoniPay's terms and privacy policy.", bundle: .module)
+                .font(.micro).foregroundStyle(Brand.inkFaint)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, Metric.small)
+        }
+        .gutter()
+        .padding(.bottom, Metric.small)
+        .sheet(isPresented: $isPickingCountry) {
+            CountryPickerView(selected: model.draft.country) { model.selectCountry($0) }
+                .presentationDetents([.medium])
+        }
+    }
+}
+
+#Preview("Phone step — fr") {
+    PhoneStepView(model: SignUpModel(accounts: PreviewAccountClient()), onContinue: {})
+        .page()
+        .environment(\.locale, Locale(identifier: "fr"))
+}
+
+#Preview("Phone step — fr, XXL") {
+    PhoneStepView(model: SignUpModel(accounts: PreviewAccountClient()), onContinue: {})
+        .page()
+        .environment(\.locale, Locale(identifier: "fr"))
+        .environment(\.dynamicTypeSize, .accessibility3)
+}
