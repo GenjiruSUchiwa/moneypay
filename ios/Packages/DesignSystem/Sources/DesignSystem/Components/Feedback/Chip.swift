@@ -21,7 +21,7 @@ public struct Chip: View {
                             in: .rect(cornerRadius: 9, style: .continuous))
         }
         .buttonStyle(Press())
-        .sensoryFeedback(.selection, trigger: selected)
+        .sensoryFeedback(.selection, trigger: selected) { _, new in new }
     }
 }
 
