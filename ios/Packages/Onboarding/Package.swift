@@ -11,6 +11,7 @@ let package = Package(
         .library(name: "Onboarding", targets: ["Onboarding"]),
     ],
     dependencies: [
+        .package(path: "../ApiClient"),
         .package(path: "../DesignSystem"),
         .package(path: "../Money"),
     ],
@@ -18,6 +19,7 @@ let package = Package(
         .target(
             name: "Onboarding",
             dependencies: [
+                .product(name: "ApiClient", package: "ApiClient"),
                 .product(name: "DesignSystem", package: "DesignSystem"),
                 .product(name: "Money", package: "Money"),
             ],
@@ -33,6 +35,7 @@ let package = Package(
             name: "OnboardingTests",
             dependencies: [
                 "Onboarding",
+                .product(name: "ApiClient", package: "ApiClient"),
             ],
             swiftSettings: [
                 .defaultIsolation(MainActor.self),
