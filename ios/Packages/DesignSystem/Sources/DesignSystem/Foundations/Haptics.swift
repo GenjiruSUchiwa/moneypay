@@ -6,7 +6,6 @@ import UIKit
 @MainActor
 public enum Haptic {
     public static func tap() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
-    public static func soft() { UIImpactFeedbackGenerator(style: .soft).impactOccurred() }
     public static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
     public static func warning() { UINotificationFeedbackGenerator().notificationOccurred(.warning) }
 }

@@ -617,6 +617,17 @@
         }
       }
     },
+    "Unlock with Face ID": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déverrouiller avec Face ID"
+          }
+        }
+      }
+    },
     "Welcome back, %@": {
       "extractionState": "manual",
       "localizations": {
