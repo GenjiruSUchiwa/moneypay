@@ -200,7 +200,9 @@ public struct CardDetailView: View {
             .gutter().padding(.top, 10)
 
             if let l = live.monthlyLimitUSDCents {
-                Meter(value: live.usage, tint: live.usage > 0.85 ? Brand.debit : Brand.ink)
+                ProgressView(value: live.usage)
+                    .tint(live.usage > 0.85 ? Brand.debit : Brand.ink)
+                    .accessibilityLabel(Text("Card spending", bundle: .module))
                     .gutter().padding(.top, 12)
                 HStack {
                     Text("\(Fmt.usd(max(0, l - live.spentUSDCents))) left", bundle: .module)

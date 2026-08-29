@@ -243,6 +243,17 @@
         }
       }
     },
+    "Card spending": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dépenses de la carte"
+          }
+        }
+      }
+    },
     "Card unfrozen": {
       "extractionState": "manual",
       "localizations": {

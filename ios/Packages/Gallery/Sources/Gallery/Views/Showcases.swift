@@ -151,10 +151,6 @@ public struct ComponentsShowcase: View {
                         MoneyText.xaf(-6_907, size: 17, weight: .medium, signed: true)
                     }
                 }
-                block("Meters") {
-                    Meter(value: 0.32)
-                    Meter(value: 0.88, tint: Brand.debit)
-                }
                 block("Inputs") {
                     OTPBoxes(code: $otp, autofocus: false)
                     PasscodeDots(filled: 2)

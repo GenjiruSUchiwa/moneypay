@@ -606,6 +606,17 @@
         }
       }
     },
+    "Limit used": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plafond utilisé"
+          }
+        }
+      }
+    },
     "MTN MoMo and Orange Money credit your wallet in seconds. A bank transfer takes 1 to 2 business days.": {
       "extractionState": "manual",
       "localizations": {

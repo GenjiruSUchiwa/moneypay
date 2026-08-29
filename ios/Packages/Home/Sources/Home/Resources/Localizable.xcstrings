@@ -496,6 +496,17 @@
         }
       }
     },
+    "Share of spending": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part des dépenses"
+          }
+        }
+      }
+    },
     "Spend": {
       "extractionState": "manual",
       "localizations": {

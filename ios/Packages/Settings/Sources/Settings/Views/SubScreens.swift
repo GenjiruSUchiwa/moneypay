@@ -147,7 +147,9 @@ public struct LimitsView: View {
                                 Text(limit.ratio, format: .percent.precision(.fractionLength(0)))
                                     .font(.subMed).foregroundStyle(Brand.inkMuted).monospacedDigit()
                             }
-                            Meter(value: limit.ratio, tint: Brand.ink, height: 4)
+                            ProgressView(value: limit.ratio)
+                                .tint(Brand.ink)
+                                .accessibilityLabel(Text("Limit used", bundle: .module))
                             HStack {
                                 limit.usage.font(.sub).foregroundStyle(Brand.inkMuted)
                                     .monospacedDigit()
