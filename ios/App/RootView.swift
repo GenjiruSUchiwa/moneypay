@@ -5,11 +5,12 @@ import Onboarding
 import SwiftUI
 import WalletStore
 
-enum AppPhase { case splash, welcome, signup, kyc, main }
+enum AppPhase: Equatable { case onboarding, kyc, main }
 
 struct RootView: View {
+    let configuration: AppConfiguration
     @Environment(Store.self) private var store
-    @State private var phase: AppPhase = .splash
+    @State private var phase: AppPhase = .onboarding
 
     /// `-screen <key>` opens one catalog view directly. Used for review
     /// screenshots; no effect in normal use.
@@ -26,19 +27,25 @@ struct RootView: View {
             if let directScreen {
                 directScreen.make(store)
             } else {
-
-            switch phase {
-            case .splash:
-                SplashView { phase = .welcome }
-            case .welcome:
-                WelcomeView(onStart: { phase = .signup }, onSignIn: { phase = .main })
-            case .signup:
-                SignUpFlow(onDone: { phase = .kyc })
-            case .kyc:
-                KYCFlow(onDone: { phase = .main }, onSkip: { phase = .main })
-            case .main:
-                MainTabView()
-            }
+                switch phase {
+                case .onboarding:
+                    OnboardingRoot(
+                        dependencies: .init(accounts: configuration.accounts),
+                        onFinish: { outcome in
+                            switch outcome {
+                            case .signedUp(let user):
+                                store.user = user
+                                phase = .kyc
+                            case .signedIn:
+                                phase = .main
+                            }
+                        }
+                    )
+                case .kyc:
+                    KYCFlow(onDone: { phase = .main }, onSkip: { phase = .main })
+                case .main:
+                    MainTabView()
+                }
             }
         }
         .animation(Motion.screen, value: phase)

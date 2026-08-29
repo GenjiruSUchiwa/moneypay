@@ -1,19 +1,19 @@
 import DesignSystem
 import SwiftUI
 
-public struct SplashView: View {
-    public init(onFinish: @escaping () -> Void) {
+struct SplashView: View {
+    init(onFinish: @escaping () -> Void) {
         self.onFinish = onFinish
     }
 
-    public var onFinish: () -> Void
+    var onFinish: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var model = SplashModel()
 
     private var shown: Bool { model.phase != .hidden }
     private var rise: CGFloat { shown || reduceMotion ? 0 : Motion.rise }
 
-    public var body: some View {
+    var body: some View {
         ZStack {
             Brand.greenDeep.ignoresSafeArea()
             VStack(spacing: Metric.rowVertical) {

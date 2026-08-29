@@ -51,30 +51,28 @@ public enum ScreenCatalog {
     }
 
     public static let all: [CatalogEntry] = [
-        // Onboarding
         e(.init("splash", "Splash", "Onboarding", "sparkles", Viz.categorical[6])) { _ in
-            SplashView(onFinish: {})
+            OnboardingRoot(dependencies: .preview, stage: .splash, onFinish: { _ in })
         },
         e(.init("welcome", "Welcome carousel", "Onboarding", "rectangle.stack", Viz.categorical[0])) { _ in
-            WelcomeView(onStart: {}, onSignIn: {})
+            OnboardingRoot(dependencies: .preview, stage: .welcome, onFinish: { _ in })
         },
         e(.init("phone", "Phone number", "Onboarding", "phone", Viz.categorical[2])) { _ in
-            wrap { SignUpFlow(startingAt: .phone, onDone: {}) }
+            OnboardingRoot(dependencies: .preview, stage: .signUp(.phone), onFinish: { _ in })
         },
         e(.init("otp", "Verification code", "Onboarding", "123.rectangle", Viz.categorical[3])) { _ in
-            wrap { SignUpFlow(startingAt: .code, onDone: {}) }
+            OnboardingRoot(dependencies: .preview, stage: .signUp(.code), onFinish: { _ in })
         },
         e(.init("passcode", "Passcode creation", "Onboarding", "lock", Brand.ink)) { _ in
-            wrap { SignUpFlow(startingAt: .passcode, onDone: {}) }
+            OnboardingRoot(dependencies: .preview, stage: .signUp(.passcode), onFinish: { _ in })
         },
         e(.init("faceid", "Face ID", "Onboarding", "faceid", Viz.categorical[6])) { _ in
-            wrap { SignUpFlow(startingAt: .biometrics, onDone: {}) }
+            OnboardingRoot(dependencies: .preview, stage: .signUp(.biometrics), onFinish: { _ in })
         },
         e(.init("profilestep", "Profile details", "Onboarding", "person.text.rectangle", Viz.categorical[1])) { _ in
-            wrap { SignUpFlow(startingAt: .profile, onDone: {}) }
+            OnboardingRoot(dependencies: .preview, stage: .signUp(.profile), onFinish: { _ in })
         },
 
-        // KYC
         e(.init("kyc-intro", "KYC introduction", "Identity verification", "checkmark.shield", Brand.ink)) { _ in
             NavigationStack { KYCIntroView(onStart: {}, onLater: {}).padding(.top, 16).page() }
         },
@@ -92,7 +90,6 @@ public enum ScreenCatalog {
             NavigationStack { KYCReviewView(onDone: {}).page() }
         },
 
-        // Main app
         e(.init("home", "Home / wallet", "App", "house", Brand.ink)) { _ in
             HomeView(onTopUp: {}, onNewCard: {})
         },
@@ -134,7 +131,6 @@ public enum ScreenCatalog {
             NotificationsView()
         },
 
-        // Flows
         e(.init("create-card", "Create a card", "Money flows", "plus.rectangle.on.rectangle", Brand.ink)) { _ in
             CreateCardFlow()
         },
@@ -151,7 +147,6 @@ public enum ScreenCatalog {
             SendMoneyView()
         },
 
-        // Settings
         e(.init("settings", "Profile", "Profile and settings", "person.crop.circle", Brand.ink)) { _ in SettingsView() },
         e(.init("profile", "Personal details", "Profile and settings", "person.text.rectangle", Viz.categorical[0])) { _ in
             NavigationStack { ProfileView() }
@@ -175,7 +170,6 @@ public enum ScreenCatalog {
             NavigationStack { HelpView() }
         },
 
-        // Showcases
         e(.init("empty", "Empty states", "States and components", "tray", Brand.inkMuted)) { _ in
             NavigationStack { EmptyStatesShowcase() }
         },
@@ -215,9 +209,5 @@ public enum ScreenCatalog {
                      icon: info.icon, tint: info.tint) {
             AnyView(make($0))
         }
-    }
-
-    private static func wrap<C: View>(@ViewBuilder _ c: () -> C) -> some View {
-        c().padding(.top, 16).page()
     }
 }

@@ -1,3 +1,4 @@
+import ApiClient
 import Foundation
 import PlatformTestSupport
 import Testing
@@ -34,5 +35,15 @@ struct AppCompositionTests {
     func testSupportIsLinked() {
         let clock = FixedClock(now: Date(timeIntervalSince1970: 42))
         #expect(clock.now.timeIntervalSince1970 == 42)
+    }
+
+    @Test("The configuration always provides an account creator")
+    func accountsFallBackToThePreviewClient() {
+        let config = AppConfiguration.live()
+        if config.api == nil {
+            #expect(config.accounts is PreviewAccountClient)
+        } else {
+            #expect(config.accounts is ApiClient)
+        }
     }
 }
