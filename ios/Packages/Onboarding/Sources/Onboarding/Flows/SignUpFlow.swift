@@ -69,9 +69,9 @@ public struct SignUpFlow: View {
         switch model.step {
         case .phone: PhoneStepView(model: model, onContinue: advance)
         case .code: CodeStepView(model: model)
-        case .passcode: PasscodeStep(next: advance)      // replaced by #37
-        case .biometrics: BiometricStep(next: advance)   // replaced by #37
-        case .profile: ProfileStep(next: { onFinish(model.draft.user) })  // replaced by #37
+        case .passcode: PasscodeStepView(model: model)
+        case .biometrics: BiometricsStepView(model: model)
+        case .profile: ProfileStepView(model: model, onFinish: onFinish)
         }
     }
 

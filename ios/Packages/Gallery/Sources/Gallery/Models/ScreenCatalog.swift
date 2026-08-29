@@ -65,13 +65,13 @@ public enum ScreenCatalog {
             wrap { SignUpFlow(startingAt: .code, onDone: {}) }
         },
         e(.init("passcode", "Passcode creation", "Onboarding", "lock", Brand.ink)) { _ in
-            wrap { PasscodeStep(next: {}) }
+            wrap { SignUpFlow(startingAt: .passcode, onDone: {}) }
         },
         e(.init("faceid", "Face ID", "Onboarding", "faceid", Viz.categorical[6])) { _ in
-            wrap { BiometricStep(next: {}) }
+            wrap { SignUpFlow(startingAt: .biometrics, onDone: {}) }
         },
         e(.init("profilestep", "Profile details", "Onboarding", "person.text.rectangle", Viz.categorical[1])) { _ in
-            wrap { ProfileStep(next: {}) }
+            wrap { SignUpFlow(startingAt: .profile, onDone: {}) }
         },
 
         // KYC

@@ -309,6 +309,17 @@
         }
       }
     },
+    "Server unreachable — continuing in demo mode.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveur injoignable — mode démo."
+          }
+        }
+      }
+    },
     "Servers": {
       "extractionState": "manual",
       "localizations": {
@@ -353,13 +364,13 @@
         }
       }
     },
-    "The passcodes do not match": {
+    "The passcodes do not match. Start again.": {
       "extractionState": "manual",
       "localizations": {
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les codes ne correspondent pas"
+            "value": "Les codes ne correspondent pas. Recommencez."
           }
         }
       }
