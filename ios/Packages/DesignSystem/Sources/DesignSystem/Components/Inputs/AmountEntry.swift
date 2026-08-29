@@ -50,8 +50,10 @@ public struct AmountEntry: View {
         }
     }
 
+    // VoiceOver activates the field to type, so the announcement lives on the field.
     private var editableBody: some View {
         amount
+            .accessibilityHidden(true)
             .overlay { field }
             .contentShape(.rect)
             .onTapGesture { keyboardFocused = true }
@@ -60,7 +62,7 @@ public struct AmountEntry: View {
 
     private var amount: some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Text(verbatim: display.isEmpty ? "0" : display)
+            Text(verbatim: displayText)
                 .font(.system(size: size, weight: .semibold))
                 .tracking(-1)
                 .foregroundStyle(digits.isEmpty ? Brand.inkFaint : Brand.ink)
@@ -85,13 +87,15 @@ public struct AmountEntry: View {
 
     private var field: some View {
         TextField(text: sanitized, prompt: Text(verbatim: "")) {
-            Text(verbatim: currency)
+            Text("Amount", bundle: .module)
         }
         .keyboardType(.numberPad)
         .focused($keyboardFocused)
         .opacity(0)
-        .accessibilityHidden(true)
+        .accessibilityValue(Text(verbatim: "\(displayText) \(currency)"))
     }
+
+    private var displayText: String { display.isEmpty ? "0" : display }
 
     private var sanitized: Binding<String> {
         Binding(

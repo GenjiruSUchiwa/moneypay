@@ -39,13 +39,22 @@ public struct PasscodeDots: View {
             if editable {
                 editableBody
             } else {
-                dots
+                displayBody
             }
         }
     }
 
+    private var displayBody: some View {
+        dots
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text("Passcode", bundle: .module))
+            .accessibilityValue(progress)
+    }
+
+    // VoiceOver activates the field to type, so the announcement lives on the field.
     private var editableBody: some View {
         dots
+            .accessibilityHidden(true)
             .overlay { field }
             .contentShape(.rect)
             .onTapGesture { keyboardFocused = true }
@@ -65,9 +74,6 @@ public struct PasscodeDots: View {
         .animation(Motion.quick, value: filled)
         .modifier(Shake(shakes: error && !reduceMotion ? 1 : 0))
         .animation(Motion.quick, value: error)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Passcode", bundle: .module))
-        .accessibilityValue(Text("\(filled) of \(total) digits entered", bundle: .module))
     }
 
     private var field: some View {
@@ -77,12 +83,16 @@ public struct PasscodeDots: View {
         .keyboardType(.numberPad)
         .focused($keyboardFocused)
         .opacity(0)
-        .accessibilityHidden(true)
+        .accessibilityValue(progress)
     }
 
     private var digits: String { Self.sanitize(code, total: total) }
 
     private var filled: Int { digits.count }
+
+    private var progress: Text {
+        Text("\(filled) of \(total) digits entered", bundle: .module)
+    }
 
     private var sanitized: Binding<String> {
         Binding(
