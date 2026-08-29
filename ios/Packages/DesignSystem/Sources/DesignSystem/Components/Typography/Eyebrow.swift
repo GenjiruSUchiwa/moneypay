@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Eyebrow: monospaced caps with widened tracking, the only form of capitals
-/// the type rules allow here, and it reads like a bank statement.
+/// A short label above a title: "≈ 3 minutes", "This month". Prototype `.eyebrow`:
+/// 13 pt medium, muted ink, no capitals. For raw data such as a PAN, use `Font.dataMono`.
 public struct Eyebrow: View {
     public init(text: Text) {
         self.text = text
@@ -10,17 +10,15 @@ public struct Eyebrow: View {
     public var text: Text
     public var body: some View {
         text
-            .textCase(.uppercase)
             .font(.eyebrow)
-            .tracking(1.1)
-            .foregroundStyle(Brand.inkFaint)
+            .foregroundStyle(Brand.inkMuted)
     }
 }
 
 #Preview("Eyebrow") {
     VStack(alignment: .leading, spacing: 12) {
+        Eyebrow(text: Text(verbatim: "≈ 3 minutes"))
         Eyebrow(text: Text(verbatim: "This month"))
-        Eyebrow(text: Text(verbatim: "Paid with"))
     }
     .padding()
     .page()
