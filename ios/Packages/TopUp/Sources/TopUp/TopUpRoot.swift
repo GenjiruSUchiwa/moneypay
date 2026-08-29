@@ -36,6 +36,7 @@ public struct TopUpFlow: View {
             }
             .page()
         }
+        .sensoryFeedback(.success, trigger: step) { _, new in new == .done }
     }
 
     // MARK: Amount
@@ -62,7 +63,7 @@ public struct TopUpFlow: View {
             .gutter()
 
             Rule().padding(.top, 18)
-            Button { Haptic.tap(); showMethods = true } label: {
+            Button { showMethods = true } label: {
                 HStack(spacing: 12) {
                     IconTile(symbol: method.symbol, tint: method.tint)
                     VStack(alignment: .leading, spacing: 2) {
@@ -144,7 +145,6 @@ public struct TopUpFlow: View {
 
             MPButton(title: Text("Confirm the top-up", bundle: .module)) {
                 store.topUp(xaf: amount, method: method)
-                Haptic.success()
                 withAnimation(.easeOut(duration: 0.25)) { step = .done }
             }
             .gutter().padding(.bottom, 10)

@@ -18,7 +18,7 @@ public struct SectionHead: View {
 
     public var body: some View {
         Button {
-            if tappable { Haptic.tap(); action() }
+            if tappable { action() }
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 title.font(.heading2).tight().foregroundStyle(Brand.ink)

@@ -71,6 +71,7 @@ public struct CardDetailView: View {
             }
         }
         .toast($toastMsg)
+        .sensoryFeedback(.success, trigger: toastMsg) { _, new in new != nil }
         .sheet(isPresented: $showControls) { CardControlsView(card: live) }
         .confirmationDialog(Text(live.isFrozen ? "Unfreeze this card?" : "Freeze this card?",
                                  bundle: .module),
@@ -157,7 +158,6 @@ public struct CardDetailView: View {
         let title = String(localized: label, bundle: .module)
         return Button {
             UIPasteboard.general.string = value
-            Haptic.success()
             toastMsg = Toast(text: Text("\(title) copied", bundle: .module), icon: "doc.on.doc")
         } label: {
             HStack {

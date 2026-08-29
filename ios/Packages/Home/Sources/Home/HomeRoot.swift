@@ -66,7 +66,7 @@ public struct HomeView: View {
             }
             .buttonStyle(.plain)
             Spacer()
-            Button { Haptic.tap(); showNotifications = true } label: {
+            Button { showNotifications = true } label: {
                 ZStack(alignment: .topTrailing) {
                     Image(systemName: "bell")
                         .font(.system(size: 17, weight: .regular))
@@ -90,7 +90,6 @@ public struct HomeView: View {
             HStack(spacing: 7) {
                 Eyebrow(text: Text("Available balance", bundle: .module))
                 Button {
-                    Haptic.tap()
                     withAnimation(.easeOut(duration: 0.2)) { store.hiddenBalance.toggle() }
                 } label: {
                     Image(systemName: store.hiddenBalance ? "eye.slash" : "eye")
@@ -183,12 +182,12 @@ public struct HomeView: View {
                 ScrollView(.horizontal) {
                     HStack(spacing: 11) {
                         ForEach(store.cards) { card in
-                            Button { Haptic.tap(); selectedCard = card } label: {
+                            Button { selectedCard = card } label: {
                                 VirtualCardView(card: card, compact: true).frame(width: 196)
                             }
                             .buttonStyle(Press())
                         }
-                        Button { Haptic.tap(); onNewCard() } label: {
+                        Button(action: onNewCard) {
                             VStack(spacing: 8) {
                                 Image(systemName: "plus").font(.system(size: 16, weight: .medium))
                                 Text("New", bundle: .module).font(.microMed)

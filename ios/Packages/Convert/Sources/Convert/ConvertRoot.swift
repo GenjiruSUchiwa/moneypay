@@ -22,6 +22,7 @@ public struct ConvertView: View {
 
     public var body: some View {
         NavigationStack { if done { success } else { form } }
+            .sensoryFeedback(.success, trigger: done)
     }
 
     private var form: some View {
@@ -79,7 +80,6 @@ public struct ConvertView: View {
             MPButton(title: Text(xaf > store.balanceXAF ? "Insufficient balance" : "Convert",
                                  bundle: .module),
                      enabled: valid) {
-                Haptic.success()
                 withAnimation(.easeOut(duration: 0.25)) { done = true }
             }
             .gutter().padding(.bottom, 10)

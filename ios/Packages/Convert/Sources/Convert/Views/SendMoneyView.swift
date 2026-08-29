@@ -46,6 +46,7 @@ public struct SendMoneyView: View {
             }
             .page()
         }
+        .sensoryFeedback(.success, trigger: sent)
     }
 
     private var picker: some View {
@@ -59,7 +60,6 @@ public struct SendMoneyView: View {
                     VStack(spacing: 0) {
                         ForEach(Array(filtered.enumerated()), id: \.element.id) { i, c in
                             Button {
-                                Haptic.tap()
                                 withAnimation(.easeOut(duration: 0.22)) { recipient = c }
                             } label: {
                                 HStack(spacing: 12) {
@@ -123,7 +123,6 @@ public struct SendMoneyView: View {
             MPButton(title: amount > 0 ? Text("Send \(Fmt.xaf(amount))", bundle: .module)
                                        : Text("Send", bundle: .module),
                      enabled: amount >= 500 && amount <= store.balanceXAF) {
-                Haptic.success()
                 withAnimation(.easeOut(duration: 0.25)) { sent = true }
             }
             .gutter().padding(.top, Metric.small).padding(.bottom, 10)

@@ -10,6 +10,7 @@ public struct PasscodeStep: View {
     @State private var first = ""
     @State private var confirm = ""
     @State private var error = false
+    @State private var matched = false
 
     private var confirming: Bool { first.count == 4 }
     private var current: String { confirming ? confirm : first }
@@ -43,6 +44,8 @@ public struct PasscodeStep: View {
             if new.count > old.count { error = false }
             if new.count == 4 { check() }
         }
+        .sensoryFeedback(.success, trigger: matched)
+        .sensoryFeedback(.warning, trigger: error) { _, new in new }
     }
 
     /// The step edits one of two codes in place, so the keyboard binds to whichever is current.
@@ -56,9 +59,8 @@ public struct PasscodeStep: View {
     }
 
     private func check() {
-        if confirm == first { Haptic.success(); next() }
+        if confirm == first { matched = true; next() }
         else {
-            Haptic.warning()
             withAnimation { error = true }
             confirm = ""; first = ""
         }

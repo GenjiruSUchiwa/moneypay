@@ -36,6 +36,7 @@ public struct CreateCardFlow: View {
         NavigationStack {
             if let created { CardCreatedView(card: created) { dismiss() } } else { form }
         }
+        .sensoryFeedback(.success, trigger: created != nil)
     }
 
     private var form: some View {
@@ -97,7 +98,6 @@ public struct CreateCardFlow: View {
             HStack(spacing: 10) {
                 ForEach(CardTheme.allCases) { t in
                     Button {
-                        Haptic.tap()
                         withAnimation(.easeOut(duration: 0.18)) { theme = t }
                     } label: {
                         RoundedRectangle(cornerRadius: 7, style: .continuous)
@@ -128,7 +128,6 @@ public struct CreateCardFlow: View {
             HStack(spacing: 8) {
                 ForEach([CardNetwork.mastercard, .visa], id: \.rawValue) { n in
                     Button {
-                        Haptic.tap()
                         withAnimation(.easeOut(duration: 0.18)) { network = n }
                     } label: {
                         HStack(spacing: 9) {
@@ -211,7 +210,6 @@ public struct CreateCardFlow: View {
             try? await Task.sleep(for: .milliseconds(850))
             let card = store.createCard(label: label, theme: theme, network: network,
                                         limitUSDCents: presets[limitIndex], singleUse: singleUse)
-            Haptic.success()
             withAnimation(.easeOut(duration: 0.25)) { created = card; issuing = false }
         }
     }

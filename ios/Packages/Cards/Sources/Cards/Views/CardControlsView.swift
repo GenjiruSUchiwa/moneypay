@@ -10,6 +10,7 @@ public struct CardControlsView: View {
 
     @State private var draft: VirtualCard
     @State private var limitIndex: Int
+    @State private var saved = false
 
     private static let presets: [Int?] = [5_000, 15_000, 50_000, 100_000, nil]
 
@@ -49,13 +50,14 @@ public struct CardControlsView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         draft.monthlyLimitUSDCents = Self.presets[limitIndex]
-                        store.update(draft); Haptic.success(); dismiss()
+                        store.update(draft); saved = true; dismiss()
                     } label: {
                         Text("Save", bundle: .module)
                     }
                     .font(.bodyMed).foregroundStyle(Brand.ink)
                 }
             }
+            .sensoryFeedback(.success, trigger: saved)
         }
     }
 
