@@ -42,8 +42,6 @@ public struct TopUpFlow: View {
 
     private var amountStep: some View {
         VStack(spacing: 0) {
-            NavBar(title: Text("Top up", bundle: .module), onClose: { dismiss() })
-
             Spacer()
             AmountEntry(digits: digits.isEmpty ? "" : Fmt.group(amount), currency: "FCFA")
             Group {
@@ -91,6 +89,15 @@ public struct TopUpFlow: View {
             }
             .gutter().padding(.bottom, 10)
         }
+        .navigationTitle(Text("Top up", bundle: .module))
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { dismiss() } label: {
+                    Label { Text("Close", bundle: .module) } icon: { Image(systemName: "xmark") }
+                }
+            }
+        }
         .sheet(isPresented: $showMethods) {
             MethodSheet(selection: $method)
                 .presentationDetents([.medium]).presentationBackground(Brand.bg)
@@ -101,10 +108,6 @@ public struct TopUpFlow: View {
 
     private var confirmStep: some View {
         VStack(spacing: 0) {
-            NavBar(title: Text("Confirm", bundle: .module), onBack: {
-                withAnimation(.easeOut(duration: 0.22)) { step = .amount }
-            })
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     MoneyText.xaf(amount, size: 36).gutter().padding(.top, 8)
@@ -150,6 +153,15 @@ public struct TopUpFlow: View {
                 withAnimation(.easeOut(duration: 0.25)) { step = .done }
             }
             .gutter().padding(.bottom, 10)
+        }
+        .navigationTitle(Text("Confirm", bundle: .module))
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button { withAnimation(Motion.quick) { step = .amount } } label: {
+                    Label { Text("Back", bundle: .module) } icon: { Image(systemName: "chevron.backward") }
+                }
+            }
         }
     }
 
@@ -197,6 +209,7 @@ public struct TopUpFlow: View {
             .padding(.bottom, 14)
         }
         .gutter()
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 

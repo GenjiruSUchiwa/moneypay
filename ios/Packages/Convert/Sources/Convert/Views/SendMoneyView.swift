@@ -50,7 +50,6 @@ public struct SendMoneyView: View {
 
     private var picker: some View {
         VStack(spacing: 0) {
-            NavBar(title: Text("Send", bundle: .module), onClose: { dismiss() })
             Field(placeholder: Text("Name or MoneyPay number", bundle: .module),
                   text: $query, icon: "magnifyingglass").gutter()
 
@@ -91,12 +90,19 @@ public struct SendMoneyView: View {
             }
             .scrollIndicators(.hidden)
         }
+        .navigationTitle(Text("Send", bundle: .module))
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { dismiss() } label: {
+                    Label { Text("Close", bundle: .module) } icon: { Image(systemName: "xmark") }
+                }
+            }
+        }
     }
 
     private func amountView(_ c: Contact) -> some View {
         VStack(spacing: 0) {
-            NavBar(onBack: { withAnimation(.easeOut(duration: 0.22)) { recipient = nil } })
-
             VStack(spacing: 8) {
                 Text(verbatim: c.initials)
                     .font(.system(size: 18, weight: .medium)).foregroundStyle(Brand.ink)
@@ -126,6 +132,14 @@ public struct SendMoneyView: View {
             }
             .gutter().padding(.bottom, 10)
         }
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button { withAnimation(Motion.quick) { recipient = nil } } label: {
+                    Label { Text("Back", bundle: .module) } icon: { Image(systemName: "chevron.backward") }
+                }
+            }
+        }
     }
 
     private var success: some View {
@@ -141,5 +155,6 @@ public struct SendMoneyView: View {
             MPButton(title: Text("Done", bundle: .module)) { dismiss() }.padding(.bottom, 14)
         }
         .gutter()
+        .toolbar(.hidden, for: .navigationBar)
     }
 }

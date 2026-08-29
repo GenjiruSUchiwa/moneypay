@@ -76,6 +76,7 @@ public struct KYCIntroView: View {
         }
         .padding(.top, 24)
         .padding(.bottom, 10)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 
@@ -110,8 +111,6 @@ public struct KYCDocumentPickerView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            NavBar(onBack: onBack)
-
             Text("Which document\nare you using?", bundle: .module)
                 .font(.system(size: 28, weight: .semibold)).tight(-0.7)
                 .foregroundStyle(Brand.ink).gutter()
@@ -149,6 +148,14 @@ public struct KYCDocumentPickerView: View {
 
             Spacer()
         }
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: onBack) {
+                    Label { Text("Back", bundle: .module) } icon: { Image(systemName: "chevron.backward") }
+                }
+            }
+        }
     }
 }
 
@@ -167,9 +174,6 @@ public struct KYCCaptureView: View {
 
     public var body: some View {
         VStack(spacing: 0) {
-            NavBar(title: Text(mode == .document ? "Identity document" : "Selfie", bundle: .module),
-                   onBack: onBack)
-
             Text(mode == .document ? "Frame the front of your document"
                  : "Place your face inside the circle", bundle: .module)
                 .font(.heading3).foregroundStyle(Brand.ink)
@@ -248,6 +252,15 @@ public struct KYCCaptureView: View {
             }
         }
         .padding(.bottom, 20)
+        .navigationTitle(Text(mode == .document ? "Identity document" : "Selfie", bundle: .module))
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: onBack) {
+                    Label { Text("Back", bundle: .module) } icon: { Image(systemName: "chevron.backward") }
+                }
+            }
+        }
     }
 
     private var tips: [LocalizedStringKey] {
@@ -357,6 +370,7 @@ public struct KYCReviewView: View {
         }
         .gutter()
         .padding(.bottom, 18)
+        .toolbar(.hidden, for: .navigationBar)
         .task {
             withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) { spin = true }
             try? await Task.sleep(for: .milliseconds(1700))

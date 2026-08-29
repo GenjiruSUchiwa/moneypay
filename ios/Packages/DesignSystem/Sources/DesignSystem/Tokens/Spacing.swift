@@ -23,5 +23,4 @@ public enum Metric {
     public static let lede: CGFloat = 10
     public static let block: CGFloat = 28
     public static let heroGlyph: CGFloat = 44
-    public static let navButton: CGFloat = 38
 }
