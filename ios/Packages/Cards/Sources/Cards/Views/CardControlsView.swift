@@ -144,7 +144,7 @@ public struct CardControlsView: View {
             Text(title, bundle: .module).font(.bodyReg).foregroundStyle(Brand.ink)
             Spacer()
             Toggle(isOn: value) { Text(title, bundle: .module) }
-                .labelsHidden().tint(Brand.inkFill)
+                .labelsHidden().tint(Brand.action)
         }
         .padding(.vertical, 11)
     }

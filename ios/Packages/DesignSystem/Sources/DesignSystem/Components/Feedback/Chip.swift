@@ -16,8 +16,8 @@ public struct Chip: View {
             text
                 .font(.system(size: 14, weight: .medium))
                 .padding(.horizontal, 14).padding(.vertical, 8)
-                .foregroundStyle(selected ? Brand.onInk : Brand.ink)
-                .background(selected ? Brand.inkFill : Brand.well,
+                .foregroundStyle(selected ? Brand.onAction : Brand.ink)
+                .background(selected ? Brand.action : Brand.well,
                             in: .rect(cornerRadius: 9, style: .continuous))
         }
         .buttonStyle(Press())

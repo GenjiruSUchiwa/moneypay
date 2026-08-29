@@ -55,9 +55,9 @@ public struct HomeView: View {
                 HStack(spacing: 8) {
                     Text(verbatim: store.user.initials)
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Brand.onInk)
+                        .foregroundStyle(Brand.onAction)
                         .frame(width: 26, height: 26)
-                        .background(Brand.inkFill, in: .rect(cornerRadius: 7, style: .continuous))
+                        .background(Brand.action, in: .rect(cornerRadius: 7, style: .continuous))
                     Text(verbatim: store.user.fullName).font(.subMed).foregroundStyle(Brand.ink)
                     Image(systemName: "chevron.down")
                         .font(.system(size: 9, weight: .bold))
@@ -123,8 +123,7 @@ public struct HomeView: View {
 
     private var actions: some View {
         HStack(spacing: 4) {
-            QuickAction(icon: "plus", label: Text("Top up", bundle: .module),
-                        emphasis: true, action: onTopUp)
+            QuickAction(icon: "plus", label: Text("Top up", bundle: .module), action: onTopUp)
             QuickAction(icon: "arrow.left.arrow.right",
                         label: Text("Convert", bundle: .module)) { showConvert = true }
             QuickAction(icon: "creditcard", label: Text("New card", bundle: .module),

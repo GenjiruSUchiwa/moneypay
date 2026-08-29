@@ -21,7 +21,7 @@ public struct IconTile: View {
                 .fill(filled ? tint : Brand.well)
             Image(systemName: symbol)
                 .font(.system(size: size * 0.42, weight: .medium))
-                .foregroundStyle(filled ? Brand.onInk : tint)
+                .foregroundStyle(filled ? Brand.onAction : tint)
         }
         .frame(width: size, height: size)
     }

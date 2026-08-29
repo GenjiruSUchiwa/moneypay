@@ -102,9 +102,9 @@ public struct SettingsView: View {
             HStack(spacing: 14) {
                 Text(verbatim: store.user.initials)
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(Brand.onInk)
+                    .foregroundStyle(Brand.onAction)
                     .frame(width: 48, height: 48)
-                    .background(Brand.inkFill, in: .rect(cornerRadius: 13, style: .continuous))
+                    .background(Brand.action, in: .rect(cornerRadius: 13, style: .continuous))
                 VStack(alignment: .leading, spacing: 4) {
                     Text(verbatim: store.user.fullName).font(.bodyMed).foregroundStyle(Brand.ink)
                     Text(verbatim: store.user.phone).font(.sub).foregroundStyle(Brand.inkMuted).monospacedDigit()
@@ -173,7 +173,7 @@ public struct SettingsView: View {
             Text(title, bundle: .module).font(.bodyReg).foregroundStyle(Brand.ink)
             Spacer()
             Toggle(isOn: value) { Text(title, bundle: .module) }
-                .labelsHidden().tint(Brand.inkFill)
+                .labelsHidden().tint(Brand.action)
         }
         .padding(.vertical, 11)
     }

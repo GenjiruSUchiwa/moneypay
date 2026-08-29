@@ -17,9 +17,9 @@ public struct ProfileView: View {
                 HStack(spacing: 14) {
                     Text(verbatim: store.user.initials)
                         .font(.system(size: 22, weight: .medium))
-                        .foregroundStyle(Brand.onInk)
+                        .foregroundStyle(Brand.onAction)
                         .frame(width: 64, height: 64)
-                        .background(Brand.inkFill, in: .rect(cornerRadius: 17, style: .continuous))
+                        .background(Brand.action, in: .rect(cornerRadius: 17, style: .continuous))
                     VStack(alignment: .leading, spacing: 5) {
                         Text(verbatim: store.user.fullName).font(.heading3)
                             .foregroundStyle(Brand.ink)
@@ -257,7 +257,7 @@ public struct SecurityView: View {
             Text(title, bundle: .module).font(.bodyReg).foregroundStyle(Brand.ink)
             Spacer()
             Toggle(isOn: value) { Text(title, bundle: .module) }
-                .labelsHidden().tint(Brand.inkFill)
+                .labelsHidden().tint(Brand.action)
         }
         .padding(.vertical, 11)
     }

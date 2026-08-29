@@ -197,7 +197,7 @@ public struct CreateCardFlow: View {
             }
             Spacer(minLength: 8)
             Toggle(isOn: $singleUse) { Text("Single-use card", bundle: .module) }
-                .labelsHidden().tint(Brand.inkFill)
+                .labelsHidden().tint(Brand.action)
         }
         .padding(.vertical, 14)
         .gutter()

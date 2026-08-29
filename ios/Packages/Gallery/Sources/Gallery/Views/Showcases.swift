@@ -80,8 +80,7 @@ public struct ComponentsShowcase: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 block("Buttons") {
-                    MPButton(title: Text(verbatim: "Primary action"), tone: .primary) {}
-                    MPButton(title: Text(verbatim: "Ink action"), tone: .ink) {
+                    MPButton(title: Text(verbatim: "Primary action")) {
                         toastMsg = Toast(text: Text(verbatim: "Tapped"))
                     }
                     MPButton(title: Text(verbatim: "Neutral action"), tone: .quiet) {}
@@ -115,7 +114,7 @@ public struct ComponentsShowcase: View {
                 }
                 block("Quick actions") {
                     HStack(spacing: 4) {
-                        QuickAction(icon: "plus", label: Text(verbatim: "Top up"), emphasis: true)
+                        QuickAction(icon: "plus", label: Text(verbatim: "Top up"))
                         QuickAction(icon: "arrow.left.arrow.right", label: Text(verbatim: "Convert"))
                         QuickAction(icon: "snowflake", label: Text(verbatim: "Freeze"))
                         QuickAction(icon: "trash", label: Text(verbatim: "Delete"))
