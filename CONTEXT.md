@@ -8,6 +8,18 @@ Ce fichier fixe la **langue du domaine**. L'interface parle français ; le code,
 
 **Utilisateur** (`User`) : personne titulaire d'un compte MoniPay, identifiée par son numéro de téléphone camerounais. Un compte, un solde, une file de cartes. _Éviter_ : client, customer — `customer` désigne l'objet créé chez le fournisseur de cartes, pas la personne chez nous.
 
+**Inscription** (`sign-up`) : processus qui prouve le contrôle du numéro, crée l'utilisateur et ouvre sa première session. Le KYC commence après l'inscription et reste un processus distinct. _Éviter_ : KYC, ouverture de compte
+
+**Vérification téléphonique** (`phone verification`) : preuve que l'utilisateur contrôle le numéro donné pendant l'inscription. Elle ne prouve pas son identité civile. _Éviter_ : KYC, authentification
+
+**Code de vérification** (`verification code`) : secret temporaire envoyé au numéro pour la vérification téléphonique. Il ne remplace ni le code secret ni une session. _Éviter_ : OTP dans le code produit, PIN
+
+**Code secret** (`passcode`) : secret choisi par l'utilisateur pour déverrouiller l'application et confirmer une action sensible. _Éviter_ : code de vérification, mot de passe
+
+**Connexion** (`sign-in`) : ouverture d'une nouvelle session pour un utilisateur existant, par vérification téléphonique sur l'appareil qui la demande. Elle ne crée ni utilisateur ni consentement. _Éviter_ : login, authentification au sens large
+
+**Session** (`Session`) : relation authentifiée et révocable entre un utilisateur, un appareil et MoniPay. Plusieurs sessions peuvent appartenir au même utilisateur. _Éviter_ : connexion, compte
+
 **Solde** (`balance`) : montant en FCFA que l'utilisateur peut engager, tenu par le portefeuille et lui seul. Les cartes n'ont pas de solde propre. _Éviter_ : compte, crédit, provision
 
 **Portefeuille** (`Wallet`) : registre du solde en FCFA, des retenues en cours et de la décision d'autorisation. Il est l'unique source de vérité du montant disponible. _Éviter_ : compte, ledger seul
@@ -49,6 +61,8 @@ Ce fichier fixe la **langue du domaine**. L'interface parle français ; le code,
 **Fournisseur** (`provider`) : tiers qui exécute une opération pour MoniPay — Campay pour la collecte MoMo, Sudo Africa pour l'émission de cartes. Un caprice de fournisseur (plafond de bac à sable, corps de réponse enveloppé, code d'erreur maison) est traduit en erreur de domaine à la frontière, et ne remonte jamais tel quel dans une vue. _Éviter_ : partenaire, API
 
 **Bac à sable** (`sandbox`) : environnement de test d'un fournisseur, avec ses propres limites. Ce n'est pas le mode simulé : le bac à sable appelle un vrai service distant. _Éviter_ : mock, démo
+
+**Notification** (`Notification`) : message que MoniPay envoie à l'utilisateur par SMS ou par e-mail — code de vérification, alerte de sécurité, bienvenue. Le module qui vit l'événement écrit le texte ; le module de notification ne fait que livrer, réessayer et tracer. _Éviter_ : alerte, push (canal non retenu à ce stade)
 
 **Refus** (`refusal`) : réponse par laquelle MoniPay explique pourquoi une action n'a pas eu lieu, dans les mots de l'utilisateur. Un refus est une réponse attendue, pas une panne. _Éviter_ : erreur, échec
 
