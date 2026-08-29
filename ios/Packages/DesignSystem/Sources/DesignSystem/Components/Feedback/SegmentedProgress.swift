@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Progress across a small, fixed number of steps — a sign-up flow, a story-style carousel.
 /// `story` animates the fill of the current segment over its dwell (the welcome deck);
-/// `steps` only marks the reached segments (sign-up). For an amount against a cap, use `Meter`.
+/// `steps` only marks the reached segments (sign-up). For an amount against a cap, use
+/// `ProgressView(value:)`.
 public struct SegmentedProgress: View {
     /// How the current step is shown.
     public enum Style: Sendable, Equatable {

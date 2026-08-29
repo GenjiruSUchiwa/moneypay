@@ -192,7 +192,9 @@ public struct InsightsView: View {
                             Text(verbatim: Fmt.group(row.xaf)).font(.subMed)
                                 .foregroundStyle(Brand.ink).monospacedDigit()
                         }
-                        Meter(value: Double(row.xaf) / Double(maxV), tint: Brand.ink, height: 4)
+                        ProgressView(value: Double(row.xaf) / Double(maxV))
+                            .tint(Brand.ink)
+                            .accessibilityLabel(Text("Share of spending", bundle: .module))
                     }
                 }
             }
