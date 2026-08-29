@@ -66,6 +66,30 @@
           }
         }
       }
+    },
+    "Country code": {
+      "comment": "Accessibility label of the country button in a phone entry row.",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicatif du pays"
+          }
+        }
+      }
+    },
+    "Phone number": {
+      "comment": "Accessibility label of the national digits field in a phone entry row.",
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numéro de téléphone"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
