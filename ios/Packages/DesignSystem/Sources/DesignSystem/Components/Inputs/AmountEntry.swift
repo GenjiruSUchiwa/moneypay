@@ -1,22 +1,66 @@
 import SwiftUI
 
 /// Amount entry: the digits so far plus a caret, currency set as a suffix.
+/// Pass a `Binding` to own the system number pad; pass a `String` for a display-only
+/// amount. The binding carries raw digits; the caller groups them for display.
 public struct AmountEntry: View {
+    /// Display-only amount. No keyboard.
     public init(digits: String, currency: String, size: CGFloat = 46) {
-        self.digits = digits
+        self._digits = .constant(digits)
+        self.display = digits
         self.currency = currency
         self.size = size
+        self.maxDigits = 0
+        self.autofocus = false
+        self.editable = false
     }
 
-    public var digits: String
-    public var currency: String
-    public var size: CGFloat = 46
+    /// Editable amount. Owns the system number pad; the caller holds the raw digits
+    /// and formats them for display (`Fmt.group`).
+    /// `digits` is clamped to `maxDigits` and never contains a non-digit.
+    public init(digits: Binding<String>, display: String, currency: String, size: CGFloat = 46,
+                maxDigits: Int = 8, autofocus: Bool = true) {
+        self._digits = digits
+        self.display = display
+        self.currency = currency
+        self.size = size
+        self.maxDigits = max(0, maxDigits)
+        self.autofocus = autofocus
+        self.editable = true
+    }
+
+    @Binding private var digits: String
+    private let display: String
+    private let currency: String
+    private let size: CGFloat
+    private let maxDigits: Int
+    private let autofocus: Bool
+    private let editable: Bool
 
     @State private var blink = true
+    @FocusState private var keyboardFocused: Bool
 
     public var body: some View {
+        Group {
+            if editable {
+                editableBody
+            } else {
+                amount
+            }
+        }
+    }
+
+    private var editableBody: some View {
+        amount
+            .overlay { field }
+            .contentShape(.rect)
+            .onTapGesture { keyboardFocused = true }
+            .onAppear { if autofocus { keyboardFocused = true } }
+    }
+
+    private var amount: some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Text(verbatim: digits.isEmpty ? "0" : digits)
+            Text(verbatim: display.isEmpty ? "0" : display)
                 .font(.system(size: size, weight: .semibold))
                 .tracking(-1)
                 .foregroundStyle(digits.isEmpty ? Brand.inkFaint : Brand.ink)
@@ -30,7 +74,7 @@ public struct AmountEntry: View {
                 .font(.system(size: size * 0.4, weight: .medium))
                 .foregroundStyle(Brand.inkMuted)
         }
-        .animation(.spring(response: 0.22, dampingFraction: 0.85), value: digits)
+        .animation(.spring(response: 0.22, dampingFraction: 0.85), value: display)
         .task {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(560))
@@ -38,12 +82,39 @@ public struct AmountEntry: View {
             }
         }
     }
+
+    private var field: some View {
+        TextField(text: sanitized, prompt: Text(verbatim: "")) {
+            Text(verbatim: currency)
+        }
+        .keyboardType(.numberPad)
+        .focused($keyboardFocused)
+        .opacity(0)
+        .accessibilityHidden(true)
+    }
+
+    private var sanitized: Binding<String> {
+        Binding(
+            get: { Self.sanitize(digits, maxDigits: maxDigits) },
+            set: { digits = Self.sanitize($0, maxDigits: maxDigits) }
+        )
+    }
+
+    static func sanitize(_ raw: String, maxDigits: Int) -> String {
+        String(raw.filter { $0.isASCII && $0.isNumber }.prefix(max(0, maxDigits)))
+    }
 }
 
 #Preview("AmountEntry") {
+    @Previewable @State var entry = ""
+    @Previewable @State var typed = "25000"
     VStack(spacing: 30) {
+        AmountEntry(digits: $entry, display: Fmt.group(Int(entry) ?? 0), currency: "FCFA",
+                    autofocus: false)
+        AmountEntry(digits: $typed, display: Fmt.group(Int(typed) ?? 0), currency: "FCFA",
+                    autofocus: false)
         AmountEntry(digits: "", currency: "FCFA")
-        AmountEntry(digits: "25000", currency: "FCFA")
+        AmountEntry(digits: "25 000", currency: "FCFA")
         AmountEntry(digits: "12.50", currency: "USD", size: 34)
     }
     .padding()
