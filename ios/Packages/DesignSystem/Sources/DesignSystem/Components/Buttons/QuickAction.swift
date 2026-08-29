@@ -15,7 +15,7 @@ public struct QuickAction: View {
     public var action: () -> Void = {}
 
     public var body: some View {
-        Button { Haptic.tap(); action() } label: {
+        Button(action: action) {
             VStack(spacing: 7) {
                 Image(systemName: icon)
                     .font(.system(size: 17, weight: .medium))

@@ -15,7 +15,6 @@ public struct Segments: View {
         HStack(spacing: 22) {
             ForEach(items.indices, id: \.self) { i in
                 Button {
-                    Haptic.tap()
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { selection = i }
                 } label: {
                     VStack(spacing: 8) {
@@ -36,6 +35,7 @@ public struct Segments: View {
             }
             Spacer(minLength: 0)
         }
+        .sensoryFeedback(.selection, trigger: selection)
     }
 }
 

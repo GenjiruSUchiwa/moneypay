@@ -27,6 +27,6 @@ public struct KYCFlow: View {
         }
     }
 
-    private func advance() { Haptic.tap(); step += 1 }
-    private func back() { Haptic.tap(); step = max(0, step - 1) }
+    private func advance() { step += 1 }
+    private func back() { step = max(0, step - 1) }
 }

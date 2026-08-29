@@ -98,7 +98,6 @@ public final class Store {
     public func toggleFreeze(_ card: VirtualCard) {
         guard let i = cards.firstIndex(where: { $0.id == card.id }) else { return }
         cards[i].isFrozen.toggle()
-        Haptic.success()
     }
 
     public func update(_ card: VirtualCard) {

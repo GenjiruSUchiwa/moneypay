@@ -26,7 +26,6 @@ public struct ReferralView: View {
 
                 Button {
                     UIPasteboard.general.string = code
-                    Haptic.success()
                     toastMsg = Toast(text: Text("Code copied", bundle: .module), icon: "doc.on.doc")
                 } label: {
                     HStack {
@@ -68,6 +67,7 @@ public struct ReferralView: View {
         .navigationTitle(Text("Referrals", bundle: .module))
         .navigationBarTitleDisplayMode(.inline)
         .toast($toastMsg)
+        .sensoryFeedback(.success, trigger: toastMsg) { _, new in new != nil }
     }
 
     private func stat(_ label: Text, _ value: Text) -> some View {
@@ -145,7 +145,6 @@ public struct HelpView: View {
                     ForEach(filtered) { item in
                         VStack(alignment: .leading, spacing: 8) {
                             Button {
-                                Haptic.tap()
                                 withAnimation(.easeOut(duration: 0.2)) {
                                     openIndex = openIndex == item.id ? nil : item.id
                                 }

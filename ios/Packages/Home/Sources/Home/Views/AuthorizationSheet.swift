@@ -35,6 +35,7 @@ public struct AuthorizationSheet: View {
         Group { if let outcome { result(outcome) } else { request } }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .page()
+            .sensoryFeedback(.warning, trigger: outcome) { _, new in new == .declined }
     }
 
     private var request: some View {
@@ -87,7 +88,6 @@ public struct AuthorizationSheet: View {
                     withAnimation(.easeOut(duration: 0.25)) { outcome = .approved }
                 }
                 MPButton(title: Text("Decline", bundle: .module), tone: .danger) {
-                    Haptic.warning()
                     withAnimation(.easeOut(duration: 0.25)) { outcome = .declined }
                 }
             }
@@ -187,6 +187,7 @@ public struct LockScreenView: View {
     @Environment(Store.self) private var store
     @State private var code = ""
     @State private var error = false
+    @State private var unlocked = false
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -210,7 +211,7 @@ public struct LockScreenView: View {
             Spacer()
 
             HStack(spacing: Metric.large) {
-                Button { Haptic.success(); onUnlock() } label: {
+                Button { unlock() } label: {
                     Label {
                         Text("Unlock with Face ID", bundle: .module)
                     } icon: {
@@ -218,7 +219,7 @@ public struct LockScreenView: View {
                     }
                     .font(.subMed).foregroundStyle(Brand.mark)
                 }
-                Button { Haptic.tap() } label: {
+                Button {} label: {
                     Text("Forgot your code?", bundle: .module).font(.subMed).foregroundStyle(Brand.mark)
                 }
             }
@@ -232,14 +233,20 @@ public struct LockScreenView: View {
             if new.count > old.count { error = false }
             if new.count == 4 { check() }
         }
+        .sensoryFeedback(.success, trigger: unlocked)
+        .sensoryFeedback(.warning, trigger: error) { _, new in new }
     }
 
     private func check() {
-        if code == "1234" { Haptic.success(); onUnlock() }
+        if code == "1234" { unlock() }
         else {
-            Haptic.warning()
             withAnimation { error = true }
             code = ""
         }
+    }
+
+    private func unlock() {
+        unlocked = true
+        onUnlock()
     }
 }

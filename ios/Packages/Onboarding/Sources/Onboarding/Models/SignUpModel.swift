@@ -3,7 +3,7 @@ import Money
 import Observation
 
 /// The whole sign-up flow's state and timing. Views read it and call intents; they own no
-/// timers and no business rules. Haptics stay in the views.
+/// timers and no business rules. Feedback stays in the views.
 @Observable
 final class SignUpModel {
     /// Prototype `every(1000)` counting 42 s down (`signupOTP`).

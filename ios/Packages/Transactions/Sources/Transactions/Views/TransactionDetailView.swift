@@ -34,6 +34,7 @@ public struct TransactionDetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toast($toastMsg)
+        .sensoryFeedback(.success, trigger: toastMsg) { _, new in new != nil }
     }
 
     private var header: some View {
@@ -110,7 +111,6 @@ public struct TransactionDetailView: View {
                 Rule()
                 Button {
                     UIPasteboard.general.string = tx.id.uuidString
-                    Haptic.success()
                     toastMsg = Toast(text: Text("Reference copied", bundle: .module), icon: "doc.on.doc")
                 } label: {
                     HStack {

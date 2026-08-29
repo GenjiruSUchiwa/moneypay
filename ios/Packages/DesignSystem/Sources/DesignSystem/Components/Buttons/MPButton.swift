@@ -30,7 +30,7 @@ public struct MPButton: View {
     public var action: () -> Void
 
     public var body: some View {
-        Button { Haptic.tap(); action() } label: {
+        Button(action: action) {
             HStack(spacing: 8) {
                 if loading { ProgressView().controlSize(.small).tint(fg) }
                 else if let icon { Image(systemName: icon).font(.system(size: 15, weight: .semibold)) }

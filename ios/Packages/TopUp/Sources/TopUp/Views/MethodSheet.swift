@@ -19,7 +19,7 @@ public struct MethodSheet: View {
             ScrollView {
                 VStack(spacing: 0) {
                     ForEach(Array(SampleData.methods.enumerated()), id: \.element.id) { i, m in
-                        Button { Haptic.tap(); selection = m; dismiss() } label: {
+                        Button { selection = m; dismiss() } label: {
                             HStack(spacing: 12) {
                                 IconTile(symbol: m.symbol, tint: m.tint)
                                 VStack(alignment: .leading, spacing: 3) {

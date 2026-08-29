@@ -83,7 +83,6 @@ public struct InsightsView: View {
                 SectionHead(title: Text("By month", bundle: .module), trailing: "FCFA")
                 Spacer()
                 Button {
-                    Haptic.tap()
                     withAnimation(.easeOut(duration: 0.18)) { showTable.toggle() }
                 } label: {
                     Text(showTable ? "Chart" : "Table", bundle: .module)

@@ -51,7 +51,7 @@ public struct CardsListView: View {
 
                     if !store.cards.isEmpty {
                         Rule()
-                        Button { Haptic.tap(); onNewCard() } label: {
+                        Button(action: onNewCard) {
                             Row(icon: "plus", title: Text("Create a new card", bundle: .module), chevron: true)
                         }
                         .buttonStyle(.plain)
@@ -74,7 +74,7 @@ public struct CardsListView: View {
                     HStack {
                         Text("Cards", bundle: .module).font(.heading1).tight(-0.6).foregroundStyle(Brand.ink)
                         Spacer()
-                        Button { Haptic.tap(); onNewCard() } label: {
+                        Button(action: onNewCard) {
                             Image(systemName: "plus").font(.system(size: 17, weight: .medium))
                                 .foregroundStyle(Brand.ink).frame(width: 34, height: 34)
                         }

@@ -240,7 +240,6 @@ public struct KYCCaptureView: View {
                 MPButton(title: Text("Continue", bundle: .module), action: onNext).gutter()
             } else {
                 Button {
-                    Haptic.success()
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) { captured = true }
                 } label: {
                     ZStack {
@@ -252,6 +251,7 @@ public struct KYCCaptureView: View {
             }
         }
         .padding(.bottom, 20)
+        .sensoryFeedback(.success, trigger: captured)
         .navigationTitle(Text(mode == .document ? "Identity document" : "Selfie", bundle: .module))
         .toolbarTitleDisplayMode(.inline)
         .toolbar {
@@ -374,9 +374,9 @@ public struct KYCReviewView: View {
         .task {
             withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) { spin = true }
             try? await Task.sleep(for: .milliseconds(1700))
-            Haptic.success()
             withAnimation(.easeOut(duration: 0.3)) { done = true }
         }
+        .sensoryFeedback(.success, trigger: done)
     }
 }
 
