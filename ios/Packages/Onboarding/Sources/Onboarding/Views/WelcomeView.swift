@@ -1,19 +1,19 @@
 import DesignSystem
 import SwiftUI
 
-public struct WelcomeView: View {
-    public init(onStart: @escaping () -> Void, onSignIn: @escaping () -> Void) {
+struct WelcomeView: View {
+    init(onStart: @escaping () -> Void, onSignIn: @escaping () -> Void) {
         self.onStart = onStart
         self.onSignIn = onSignIn
     }
 
-    public var onStart: () -> Void
-    public var onSignIn: () -> Void
+    var onStart: () -> Void
+    var onSignIn: () -> Void
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     @State private var model = WelcomeModel(count: WelcomeSlide.all.count)
     @State private var appeared = false
 
-    public var body: some View {
+    var body: some View {
         VStack(spacing: .zero) {
             Wordmark(size: 17)
                 .frame(maxWidth: .infinity, alignment: .leading)

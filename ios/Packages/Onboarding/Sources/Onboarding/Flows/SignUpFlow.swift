@@ -3,16 +3,7 @@ import DesignSystem
 import Money
 import SwiftUI
 
-/// The sign-up shell: it owns the model, the navigation stack, the bar, the step switch and
-/// the directional transition between steps. No other view in the package owns a step.
-public struct SignUpFlow: View {
-    /// Temporary bridge. `ios/App/RootView.swift` and `Gallery` → `ScreenCatalog` still build
-    /// `SignUpFlow`; #38 routes both through `OnboardingRoot` and deletes this initialiser
-    /// together with the `public` on the type.
-    public init(startingAt step: SignUpStep = .phone, onDone: @escaping () -> Void) {
-        self.init(accounts: PreviewAccountClient(), startingAt: step, onFinish: { _ in onDone() })
-    }
-
+struct SignUpFlow: View {
     init(accounts: any AccountCreating,
          startingAt step: SignUpStep = .phone,
          onFinish: @escaping (User) -> Void) {
@@ -26,11 +17,10 @@ public struct SignUpFlow: View {
 
     private let onFinish: (User) -> Void
     @State private var model: SignUpModel
-    /// Which way the next step slides in. Set before the step changes, read by `stepTransition`.
     @State private var isAdvancing = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    public var body: some View {
+    var body: some View {
         // The stack has no path and no destinations: it exists to host the system bar.
         NavigationStack {
             ZStack {
@@ -92,12 +82,12 @@ public struct SignUpFlow: View {
 }
 
 #Preview("Sign-up flow — fr") {
-    SignUpFlow(onDone: {})
+    SignUpFlow(accounts: PreviewAccountClient(), onFinish: { _ in })
         .environment(\.locale, Locale(identifier: "fr"))
 }
 
 #Preview("Sign-up flow — dark") {
-    SignUpFlow(startingAt: .code, onDone: {})
+    SignUpFlow(accounts: PreviewAccountClient(), startingAt: .code, onFinish: { _ in })
         .environment(\.locale, Locale(identifier: "fr"))
         .preferredColorScheme(.dark)
 }

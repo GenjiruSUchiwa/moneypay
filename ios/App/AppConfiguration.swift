@@ -12,6 +12,8 @@ struct AppConfiguration {
     /// `nil` when `APIBaseURL` is empty: the app stays in mock mode, the way
     /// the prototype does when `poc/server.js` is down (see docs/handoff).
     let api: ApiClient?
+    /// Uses the live account creator when configured and an in-memory creator otherwise.
+    var accounts: any AccountCreating { api ?? PreviewAccountClient() }
 
     static func live() -> AppConfiguration {
         AppConfiguration(
