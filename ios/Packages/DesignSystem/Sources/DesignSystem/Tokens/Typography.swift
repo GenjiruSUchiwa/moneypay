@@ -15,9 +15,8 @@ public extension Font {
     static let micro = Font.system(size: 12, weight: .regular)
     static let microMed = Font.system(size: 12, weight: .medium)
 
-    /// Eyebrow: capitals are allowed only in monospace, with widened
-    /// tracking. That is the type rule, and it reads like a bank statement.
-    static let eyebrow = Font.system(size: 11, weight: .medium, design: .monospaced)
+    /// Eyebrow label above a title (prototype `.eyebrow`).
+    static let eyebrow = Font.system(size: 13, weight: .medium)
     /// Raw data: PAN, references, codes.
     static let dataMono = Font.system(size: 15, weight: .regular, design: .monospaced)
 }
