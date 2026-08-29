@@ -20,6 +20,8 @@ final class WelcomeModel {
     /// resume. The view runs one `autoAdvanceAfterDwell()` task per generation, so a
     /// user action always restarts a full dwell, as the prototype's `clearTimeout` does.
     private(set) var generation = 0
+    /// When the running dwell started sleeping; the story bar fills from here.
+    private(set) var cycleStart = Date.now
 
     init(count: Int, dwell: Duration = .milliseconds(4200)) {
         precondition(count >= 1, "A welcome deck needs at least one slide.")
@@ -72,6 +74,7 @@ final class WelcomeModel {
     /// the stale task, which would otherwise page twice.
     func autoAdvanceAfterDwell() async {
         let armed = generation
+        cycleStart = .now
         try? await Task.sleep(for: dwell)
         guard !Task.isCancelled, !paused, generation == armed else { return }
         advance()
