@@ -26,8 +26,6 @@ public struct ConvertView: View {
 
     private var form: some View {
         VStack(spacing: 0) {
-            NavBar(title: Text("Convert", bundle: .module), onClose: { dismiss() })
-
             VStack(spacing: 0) {
                 leg(flag: "🇨🇲", code: "FCFA",
                     note: Text("Available: \(Fmt.xaf(store.balanceXAF))", bundle: .module),
@@ -84,6 +82,15 @@ public struct ConvertView: View {
             .gutter().padding(.bottom, 10)
         }
         .page()
+        .navigationTitle(Text("Convert", bundle: .module))
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { dismiss() } label: {
+                    Label { Text("Close", bundle: .module) } icon: { Image(systemName: "xmark") }
+                }
+            }
+        }
     }
 
     private func leg(flag: String, code: String, note: Text, value: String, active: Bool) -> some View {
@@ -127,6 +134,7 @@ public struct ConvertView: View {
         }
         .gutter()
         .page()
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 

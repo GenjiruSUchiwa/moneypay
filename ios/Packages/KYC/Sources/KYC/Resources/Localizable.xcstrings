@@ -23,6 +23,17 @@
         }
       }
     },
+    "Back": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retour"
+          }
+        }
+      }
+    },
     "CEMAC rules require us to identify you before issuing a card in your name.": {
       "extractionState": "manual",
       "localizations": {

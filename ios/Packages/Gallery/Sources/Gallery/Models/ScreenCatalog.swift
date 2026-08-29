@@ -76,20 +76,20 @@ public enum ScreenCatalog {
 
         // KYC
         e(.init("kyc-intro", "KYC introduction", "Identity verification", "checkmark.shield", Brand.ink)) { _ in
-            KYCIntroView(onStart: {}, onLater: {}).padding(.top, 16).page()
+            NavigationStack { KYCIntroView(onStart: {}, onLater: {}).padding(.top, 16).page() }
         },
         e(.init("kyc-doc", "Document choice", "Identity verification", "doc.text.magnifyingglass", Viz.categorical[0])) { _ in
-            KYCDocumentPickerView(onPick: { _ in }, onBack: {}).padding(.top, 16).page()
+            NavigationStack { KYCDocumentPickerView(onPick: { _ in }, onBack: {}).page() }
         },
         e(.init("kyc-capture", "Document capture", "Identity verification", "camera.viewfinder", Viz.categorical[3])) { _ in
-            KYCCaptureView(mode: .document, onNext: {}, onBack: {}).padding(.top, 16).page()
+            NavigationStack { KYCCaptureView(mode: .document, onNext: {}, onBack: {}).page() }
         },
         e(.init("kyc-selfie", "Liveness selfie", "Identity verification",
                 "person.crop.circle.badge.checkmark", Viz.categorical[2])) { _ in
-            KYCCaptureView(mode: .selfie, onNext: {}, onBack: {}).padding(.top, 16).page()
+            NavigationStack { KYCCaptureView(mode: .selfie, onNext: {}, onBack: {}).page() }
         },
         e(.init("kyc-review", "Verification in progress", "Identity verification", "hourglass", Viz.categorical[6])) { _ in
-            KYCReviewView(onDone: {}).page()
+            NavigationStack { KYCReviewView(onDone: {}).page() }
         },
 
         // Main app

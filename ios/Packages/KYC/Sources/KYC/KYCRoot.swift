@@ -12,17 +12,19 @@ public struct KYCFlow: View {
     @State private var step = 0
 
     public var body: some View {
-        ZStack {
-            switch step {
-            case 0: KYCIntroView(onStart: { advance() }, onLater: onSkip)
-            case 1: KYCDocumentPickerView(onPick: { _ in advance() }, onBack: { back() })
-            case 2: KYCCaptureView(mode: .document, onNext: { advance() }, onBack: { back() })
-            case 3: KYCCaptureView(mode: .selfie, onNext: { advance() }, onBack: { back() })
-            default: KYCReviewView(onDone: onDone)
+        NavigationStack {
+            ZStack {
+                switch step {
+                case 0: KYCIntroView(onStart: { advance() }, onLater: onSkip)
+                case 1: KYCDocumentPickerView(onPick: { _ in advance() }, onBack: { back() })
+                case 2: KYCCaptureView(mode: .document, onNext: { advance() }, onBack: { back() })
+                case 3: KYCCaptureView(mode: .selfie, onNext: { advance() }, onBack: { back() })
+                default: KYCReviewView(onDone: onDone)
+                }
             }
+            .page()
+            .animation(.easeOut(duration: 0.22), value: step)
         }
-        .page()
-        .animation(.easeOut(duration: 0.22), value: step)
     }
 
     private func advance() { Haptic.tap(); step += 1 }
