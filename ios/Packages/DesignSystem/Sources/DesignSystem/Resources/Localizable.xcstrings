@@ -33,6 +33,39 @@
           }
         }
       }
+    },
+    "Verification code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code de vérification"
+          }
+        }
+      }
+    },
+    "Passcode": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code secret"
+          }
+        }
+      }
+    },
+    "%lld of %lld digits entered": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld chiffres sur %lld saisis"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

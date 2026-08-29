@@ -71,6 +71,7 @@ public struct ComponentsShowcase: View {
     @State private var seg = 0
     @State private var toastMsg: Toast?
     @State private var text = ""
+    @State private var otp = "418"
 
     public var body: some View {
         ScrollView {
@@ -155,7 +156,7 @@ public struct ComponentsShowcase: View {
                     Meter(value: 0.88, tint: Brand.debit)
                 }
                 block("Inputs") {
-                    OTPBoxes(code: "418")
+                    OTPBoxes(code: $otp, autofocus: false)
                     PasscodeDots(filled: 2)
                     Field(placeholder: Text(verbatim: "Card name"), text: $text, icon: "creditcard")
                 }
