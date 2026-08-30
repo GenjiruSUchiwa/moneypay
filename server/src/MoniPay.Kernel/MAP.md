@@ -9,4 +9,9 @@ knows what a top-up is, it belongs in `MoniPay.TopUps`, not in the kernel.
 - `KernelModule.cs` — registers `TimeProvider`, so no module reads the clock directly and a
   test can substitute `FakeTimeProvider`.
 
+- `Http/` — JSON:API 1.1 envelope records (`JsonApiRequest`, `JsonApiResponse` and the
+  resource, relationship, version and link types), plus `MoniPayMediaTypes`, `MoniPayHeaders`
+  and `MoniPayConventions`. Transport names only: no domain rule and no ASP.NET Core
+  dependency. Each slice still owns its resource and attribute records.
+
 References nothing.

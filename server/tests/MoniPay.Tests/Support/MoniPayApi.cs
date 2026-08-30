@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MoniPay.Api;
+using MoniPay.Kernel.Http;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -52,8 +53,7 @@ public sealed class MoniPayApi : IAsyncLifetime
         WebApplicationFactory<Program> currentFactory = factory ?? throw new InvalidOperationException(
             "The MoniPay test host has not been initialized.");
         HttpClient client = currentFactory.CreateClient();
-        client.DefaultRequestHeaders.Accept.ParseAdd(
-            "application/vnd.api+json, application/problem+json");
+        client.DefaultRequestHeaders.Accept.ParseAdd(MoniPayMediaTypes.Accept);
         return client;
     }
 
