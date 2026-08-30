@@ -39,7 +39,7 @@ Required changes:
 
 | Change | Reason |
 |---|---|
-| Add `COPY` lines for `MoniPay.Users`, `MoniPay.Sessions`, and `MoniPay.Notifications` project files before `dotnet restore` | The restore layer must see every project, or the cache misses on every build |
+| Add a `COPY` line for each new project file before `dotnet restore`, in the pull request that creates the project | The restore layer must see every project: the image does not build without the line, and the cache misses on every build without the ordering |
 | Add `icu-libs` next to `tzdata` in the runtime stage | `fr-CM` resolves to the invariant culture without ICU, and every `.resx` lookup falls back to English |
 | Keep `InvariantGlobalization` unset or `false` | Same reason |
 | Add `HEALTHCHECK` unchanged | `/health` stays the liveness route |
@@ -86,6 +86,7 @@ Every value is read through validated options with `ValidateOnStart`. A missing 
 | `MoniPay:Sessions:Cleanup:BatchSize` | No | `500` |
 | `MoniPay:Sessions:Legal:TermsVersion` | No | Required |
 | `MoniPay:Sessions:Legal:PrivacyVersion` | No | Required |
+| `MoniPay:Sessions:LegacyVerificationProblemTypes` | No | `false`; `true` only during the sign-in rename rollout, then removed |
 
 ### Users keys
 
@@ -115,8 +116,8 @@ Every value is read through validated options with `ValidateOnStart`. A missing 
 
 | Key | Meaning |
 |---|---|
-| `MoniPay:ForwardedHeaders:KnownProxies` | The edge addresses the host trusts |
-| `MoniPay:RateLimits:*` | Per-route IP limits from [Security and operations](security-and-operations.md#rate-limits) |
+| `MoniPay:ForwardedHeaders:KnownProxies` | The edge addresses the host trusts; read by the forwarded-headers setup that ships with the rate limiter |
+| `MoniPay:RateLimits:StartPerHour`, `ResendPerHour`, `VerifyPerHour`, `CompletePerHour`, `RefreshPerHour` | Per-route IP limits from [Security and operations](security-and-operations.md#rate-limits) |
 
 Environment variables replace `:` with `__`: `MoniPay__Sessions__SigningKeyBase64`.
 
@@ -207,7 +208,7 @@ dotnet ef migrations bundle --project server/src/MoniPay.Data --startup-project 
 ./efbundle --connection "$ConnectionStrings__MoniPay"
 ```
 
-The bundle is built in the release workflow and run by the deployment before the rollout. It is idempotent and applies only pending migrations.
+The bundle is built in the release workflow (`dotnet tool restore`, then `dotnet ef migrations has-pending-model-changes` to fail a release whose model has no migration, then the bundle for `linux-x64`) and attached to the GitHub release as `efbundle-linux-x64`. The deployment downloads it and runs it before the rollout. It is idempotent and applies only pending migrations. `dotnet-ef` lives in `dotnet-tools.json`, added with the first migration.
 
 Every migration is expand-only during a rollout: add a column, add a table, add an index. A destructive change waits one release, so the previous image still works against the new schema.
 

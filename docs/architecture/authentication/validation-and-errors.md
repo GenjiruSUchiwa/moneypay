@@ -171,6 +171,8 @@ public PhoneVerificationOutcome VerifyPhone(
 
 A wrong code returns an outcome instead of throwing. The handler must persist the attempt count before it answers, and an exception would skip that save.
 
+`MoniPay.Kernel` has no ASP.NET Core reference, so `RefusalException` carries a `System.Net.HttpStatusCode`; the `StatusCodes` names above are shorthand for the same values. The lock sets `LockedUntil`, stored in `sign_ups.locked_until`, and `Retry-After` is derived from it.
+
 One transition, one method, guard clauses first. A method that needs more than eight branches is split by state, not by adding a flag.
 
 ### Guard table
@@ -189,7 +191,7 @@ One transition, one method, guard clauses first. A method that needs more than e
 | Verify | Not locked | Aggregate | `signup-attempt-limit` | `429` |
 | Verify | Code not expired | Aggregate | `verification-code-expired` | `410` |
 | Verify | Digest matches | Aggregate, constant time | `verification-code-invalid` | `422` |
-| Verify | Phone not already registered | Handler, Users port lookup by hash | `phone-already-registered` | `409` |
+| Verify | Phone not already registered | Handler, `IRegisteredPhoneLookup` port on the normalized phone | `phone-already-registered` | `409` |
 | Complete | Registration token valid and bound to `signUpId` | Authentication handler | `registration-token-invalid` | `401` |
 | Complete | Status is `PhoneVerified` or `Completed` | Aggregate | `signup-state-invalid` | `409` |
 | Complete | Email not registered | Users handler, then unique index | `email-already-registered` | `409` |
@@ -241,7 +243,7 @@ The Users registration handler catches `DbUpdateException`, reads the PostgreSQL
 |---|---|---|---:|
 | `ValidationException` | Layer 2 failure with pointers | Endpoint | `422 validation` |
 | `RefusalException` | An expected domain refusal with a stable code | Aggregate, handler, `SessionTokenService` | The code's status |
-| `ProviderUnavailableException` | A provider did not accept a request | Notification channel adapter | `503` with `Retry-After` |
+| `ProviderUnavailableException` | The verification code could not be queued inside the request | `VerificationCodeDeliveryAdapter` on an enqueue failure | `503` with `Retry-After` |
 | `DbUpdateConcurrencyException` | Lost update on a concurrency token | EF Core | `409 concurrent-modification` |
 | `DbUpdateException` with a known constraint | Uniqueness violation | EF Core, mapped in the handler | `409` with the constraint's code |
 | `OperationCanceledException` while the request is aborted | The client left | Anywhere | No response is written |
@@ -301,6 +303,8 @@ internal sealed class MoniPayExceptionHandler(
 The writer never copies `exception.Message` into the body. A `500` body has `type`, `status`, `title`, `instance`, and `traceId` only.
 
 `UseStatusCodePages` stays in the pipeline for responses the framework produces without an exception, such as a `401` from the authentication handler. The same writer formats them, so every error body has one shape.
+
+The writer is registered as the `IProblemDetailsWriter`, so the existing Wallet refusal built with `Results.Problem` keeps its localized `title` and status and gains `traceId`, `instance` and `Cache-Control: no-store`. `WalletLocalizationTests` must pass unchanged.
 
 ## Authentication failures
 

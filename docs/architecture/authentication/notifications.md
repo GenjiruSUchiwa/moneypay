@@ -43,8 +43,11 @@ The first implementation delivers SMS and email. Push and in-app need their own 
 | `Welcome` | Email | Users, Registration slice | User created | No, skipped when email delivery is unavailable |
 | `SessionRevoked` | Email | Sessions, RevokeCurrent slice | User revoked a session | No |
 | `RefreshTokenReuseDetected` | SMS and email | Sessions, `SessionTokenService` | Token family revoked after replay | Yes |
+| `NewDeviceSignIn` | SMS | Sessions, sign-in VerifyPhone slice | A sign-in on a device with no prior session | Yes |
 
 A required message that cannot be delivered after all retries raises an alert. An optional message that fails is logged and dropped.
+
+The three security alerts go through one Sessions port, `ISecurityAlertSender`, keyed by `UserId`: Sessions holds no contact data, so the host adapter resolves the phone, the email and the locale through the public Users slice `UserContactLookup` before it enqueues.
 
 Sign-up does not send a completion SMS. The user is on the device that completed sign-up.
 
@@ -91,10 +94,10 @@ server/src/MoniPay.Notifications/
       NotificationOutbox.cs
       OutboundMessage.cs
       NotificationChannel.cs
+      DeliverySignal.cs
     Deliver/
       NotificationWorker.cs
       NotificationProcessor.cs
-      DeliverySignal.cs
       DeliveryOutcome.cs
     Purge/
       DeliveredNotificationPurgeService.cs
@@ -105,6 +108,7 @@ server/src/MoniPay.Notifications/
   Persistence/
     NotificationConfiguration.cs
     NotificationSets.cs
+    NotificationCommitInterceptor.cs
   Security/
     RecipientProtector.cs
   Channels/
@@ -125,6 +129,7 @@ Only these types are public:
 - `NotificationOutbox`
 - `OutboundMessage`
 - `NotificationChannel`
+- `NotificationStatus`, because `NotificationOutbox.FindLatestStatusAsync` returns it
 
 `OutboundMessage` carries:
 
@@ -152,12 +157,19 @@ public sealed class NotificationOutbox(
     TimeProvider timeProvider)
 {
     public void Enqueue(OutboundMessage message);
+
+    public Task<NotificationStatus?> FindLatestStatusAsync(
+        Guid correlationId,
+        string kind,
+        CancellationToken cancellationToken);
 }
 ```
 
 `Enqueue` adds a `Notification` row to the caller's `MoniPayDbContext`. It does not save. The calling handler's `SaveChangesAsync` commits the sign-up and the notification together.
 
-`Enqueue` raises the signal only after the transaction commits, through the `SaveChangesCompleted` interceptor on the scoped context. A signal raised before the commit would wake the worker to find nothing.
+`FindLatestStatusAsync` is the read behind `codeDelivery`: the host adapter for `IVerificationCodeSender` calls it with the sign-up identifier and the `VerificationCode` kind, so Sessions learns the delivery state without opening the `notifications` table.
+
+The signal is raised only after the transaction commits, by `NotificationCommitInterceptor` (a `SaveChangesInterceptor` that also listens to the transaction's commit when one is open). A signal raised before the commit would wake the worker to find nothing. `MoniPay.Data` never references the module: the interceptor reaches the `DbContext` options through a Kernel-declared contributor collection the host composes.
 
 ## Deliver
 
@@ -198,6 +210,10 @@ public interface ISmsChannel
 A provider that supports an idempotency key receives `idempotencyKey`, so a retry after a lost response does not send twice.
 
 Each channel is a typed `HttpClient` registered with `AddHttpClient<ISmsChannel, SelectedSmsChannel>`, with the provider credentials from validated options and `ProviderTimeout` as the client timeout. Retries belong to the worker schedule, so no HTTP resilience package is added.
+
+A channel returns, it does not throw: a transport exception, a timeout or a malformed body becomes `Retry` or `Rejected` with a stable code. Caller cancellation propagates as `OperationCanceledException`.
+
+Before a provider is selected, the module registers **no** channel and no placeholder pretends to send. The processor resolves the channel with `GetService`; when none is registered it records `Retry` with the code `channel-not-configured`, logs one `Warning` per cycle, and the row waits in the outbox until a channel exists.
 
 ## Persistence
 
@@ -254,7 +270,8 @@ Money and dates in a future receipt message are formatted with the recipient's c
 
 | Failure | Behavior |
 |---|---|
-| Enqueue fails | The whole sign-up transaction rolls back. The client receives `503`. |
+| Enqueue fails | The adapter wraps the failure in `ProviderUnavailableException`; the whole sign-up transaction rolls back and the client receives `503 verification-delivery-unavailable`. |
+| No channel registered yet | The row stays `Pending` with `channel-not-configured`; delivery starts when the provider channel ships. |
 | Provider rejects a verification code | Retry on the short schedule. `codeDelivery` reports `failed` after exhaustion. Resend stays available. |
 | Provider accepts but the response is lost | The idempotency key prevents a duplicate on retry when the provider supports it. |
 | Verification code expires before delivery | The row is marked `Expired`. The client resends. |
@@ -287,6 +304,8 @@ Log events carry `NotificationId`, `Kind`, `Channel`, `CorrelationId`, `Attempts
 `MoniPay.Tests/Fakes/RecordingEmailChannel.cs` does the same for email.
 
 The test host sets `MoniPay:Notifications:Worker:Enabled` to `false`. A test calls `Api.RunNotificationCycleAsync()` to deliver. See [Testing strategy](testing-strategy.md#the-test-host).
+
+Until the host adapter exists, the Sessions slice tests use `Fakes/RecordingVerificationCodeSender.cs`, which records the message and adds nothing to the context; the adapter replaces it in the delivery-composition change.
 
 ## Provider decision gate
 
