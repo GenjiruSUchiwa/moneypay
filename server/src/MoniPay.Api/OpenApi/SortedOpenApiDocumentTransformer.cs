@@ -17,10 +17,12 @@ internal sealed class SortedOpenApiDocumentTransformer : IOpenApiDocumentTransfo
     {
         if (document.Paths is { Count: > 0 })
         {
-            var sorted = document.Paths.OrderBy(path => path.Key, StringComparer.Ordinal).ToList();
+            List<KeyValuePair<string, IOpenApiPathItem>> sorted = document.Paths
+                .OrderBy(path => path.Key, StringComparer.Ordinal)
+                .ToList();
             document.Paths.Clear();
 
-            foreach (var (key, value) in sorted)
+            foreach ((string key, IOpenApiPathItem value) in sorted)
             {
                 document.Paths.Add(key, value);
             }

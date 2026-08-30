@@ -14,8 +14,7 @@ public class MoniPayDbContext(DbContextOptions<MoniPayDbContext> options, ModelA
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
-
-        foreach (var assembly in modelAssemblies.Assemblies)
+        foreach (Assembly assembly in modelAssemblies.Assemblies)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(assembly);
         }

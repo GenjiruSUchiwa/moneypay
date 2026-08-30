@@ -49,7 +49,7 @@ public static class LocalizationExtensions
         services.AddLocalization(options => options.ResourcesPath = LocalizationDefaults.ResourcesPath);
         services.Configure<RequestLocalizationOptions>(options =>
         {
-            var supported = Localization.SupportedCultures();
+            CultureInfo[] supported = Localization.SupportedCultures();
 
             options.DefaultRequestCulture = new RequestCulture(Localization.DefaultCulture);
             options.SupportedCultures = supported;          // formats numbers and dates

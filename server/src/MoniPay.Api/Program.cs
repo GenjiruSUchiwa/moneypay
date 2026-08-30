@@ -1,9 +1,9 @@
 using MoniPay.Api.Hosting;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.AddMoniPay();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 await app.UseMoniPayAsync();
 
 await app.RunAsync();
