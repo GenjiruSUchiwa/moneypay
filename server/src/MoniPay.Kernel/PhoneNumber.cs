@@ -1,18 +1,5 @@
 namespace MoniPay.Kernel;
 
-/// <summary>Explains why a phone number could not be normalized.</summary>
-public enum PhoneFailure
-{
-    /// <summary>The number has not failed validation.</summary>
-    None,
-
-    /// <summary>The number is not a digits-only value between 8 and 15 characters.</summary>
-    Format,
-
-    /// <summary>The calling code or local digit count is not supported.</summary>
-    CountryUnsupported,
-}
-
 /// <summary>An immutable digits-only E.164 phone number.</summary>
 public readonly record struct PhoneNumber(string Value)
 {
@@ -34,22 +21,31 @@ public readonly record struct PhoneNumber(string Value)
 
         foreach (CountryPhoneRule rule in rules)
         {
-            if (input.StartsWith(rule.CallingCode, StringComparison.Ordinal)
-                && input.Length - rule.CallingCode.Length == rule.LocalLength)
+            if (!IsMatch(input, rule))
             {
-                phone = new(input);
-                failure = PhoneFailure.None;
-                return true;
+                continue;
             }
+
+            phone = new(input);
+            failure = PhoneFailure.None;
+            return true;
         }
 
         failure = PhoneFailure.CountryUnsupported;
         return false;
     }
 
-    /// <summary>Reports whether a phone number satisfies the configured country rules.</summary>
-    public static bool IsValid(string? input, IReadOnlyCollection<CountryPhoneRule> rules) =>
-        TryNormalize(input, rules, out _, out _);
+    private static bool IsMatch(string input, CountryPhoneRule rule)
+    {
+        string callingCode = rule.CallingCode;
+        if (string.IsNullOrEmpty(callingCode) || rule.LocalLength <= 0)
+        {
+            return false;
+        }
+
+        return input.StartsWith(callingCode, StringComparison.Ordinal)
+            && input.Length - callingCode.Length == rule.LocalLength;
+    }
 
     private static bool ContainsOnlyAsciiDigits(string value)
     {

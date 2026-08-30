@@ -78,9 +78,41 @@ public sealed class PhoneNumberTests
     }
 
     [Fact]
-    public void IsValid_matches_the_normalization_result()
+    public void An_empty_calling_code_cannot_be_constructed()
     {
-        Assert.True(PhoneNumber.IsValid("237612345678", Rules));
-        Assert.False(PhoneNumber.IsValid("23761234567", Rules));
+        Assert.Throws<ArgumentException>(() => new CountryPhoneRule("", 9));
+    }
+
+    [Fact]
+    public void A_non_digit_calling_code_cannot_be_constructed()
+    {
+        Assert.Throws<ArgumentException>(() => new CountryPhoneRule("+237", 9));
+    }
+
+    [Fact]
+    public void A_non_positive_local_length_cannot_be_constructed()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new CountryPhoneRule("237", 0));
+    }
+
+    [Fact]
+    public void A_default_rule_does_not_match_a_number()
+    {
+        bool normalized = PhoneNumber.TryNormalize("237612345678", [default], out _, out PhoneFailure failure);
+
+        Assert.False(normalized);
+        Assert.Equal(PhoneFailure.CountryUnsupported, failure);
+    }
+
+    [Fact]
+    public void A_default_rule_is_skipped_when_a_valid_rule_matches()
+    {
+        CountryPhoneRule[] rules = [default, .. Rules];
+
+        bool normalized = PhoneNumber.TryNormalize("237612345678", rules, out PhoneNumber phone, out PhoneFailure failure);
+
+        Assert.True(normalized);
+        Assert.Equal("237612345678", phone.Value);
+        Assert.Equal(PhoneFailure.None, failure);
     }
 }

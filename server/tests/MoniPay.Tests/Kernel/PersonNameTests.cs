@@ -38,7 +38,10 @@ public sealed class PersonNameTests
     [InlineData("Jean2")]
     [InlineData("Jean.")]
     [InlineData("Jean!")]
-    public void Digits_and_other_punctuation_are_rejected_in_a_name(string input)
+    [InlineData("---")]
+    [InlineData("'''")]
+    [InlineData("\u0301")]
+    public void Digits_punctuation_and_letterless_names_are_rejected(string input)
     {
         bool normalized = PersonName.TryNormalize(input, out _);
 
@@ -57,6 +60,17 @@ public sealed class PersonNameTests
     }
 
     [Fact]
+    public void A_name_of_64_letters_is_accepted()
+    {
+        string input = new('A', 64);
+
+        bool normalized = PersonName.TryNormalize(input, out PersonName name);
+
+        Assert.True(normalized);
+        Assert.Equal(input, name.Value);
+    }
+
+    [Fact]
     public void A_name_longer_than_64_characters_is_rejected()
     {
         string input = new('A', 65);
@@ -64,6 +78,17 @@ public sealed class PersonNameTests
         bool normalized = PersonName.TryNormalize(input, out _);
 
         Assert.False(normalized);
+    }
+
+    [Fact]
+    public void A_supplementary_plane_letter_is_accepted()
+    {
+        string input = char.ConvertFromUtf32(0x1E900);
+
+        bool normalized = PersonName.TryNormalize(input, out PersonName name);
+
+        Assert.True(normalized);
+        Assert.Equal(input, name.Value);
     }
 
     [Fact]
