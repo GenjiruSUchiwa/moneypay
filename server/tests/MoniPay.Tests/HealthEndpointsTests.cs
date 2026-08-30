@@ -1,5 +1,8 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using MoniPay.Api;
 using MoniPay.Api.Contracts;
 using MoniPay.Api.Endpoints;
 using MoniPay.Tests.Support;
@@ -12,7 +15,9 @@ public sealed class HealthEndpointsTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task Liveness_answers_without_touching_a_dependency()
     {
-        HttpResponseMessage response = await Client.GetAsync(
+        await using WebApplicationFactory<Program> factory = new();
+        using HttpClient client = factory.CreateClient();
+        using HttpResponseMessage response = await client.GetAsync(
             new Uri(HealthRoutes.Live, UriKind.Relative),
             Cancellation);
 
@@ -20,5 +25,18 @@ public sealed class HealthEndpointsTests(MoniPayApi api) : MoniPayApiTest(api)
         JsonElement body = await response.Content.ReadFromJsonAsync<JsonElement>(Cancellation);
 
         Assert.Equal(HealthResponse.Healthy, body.GetProperty("status").GetString());
+    }
+
+    [Fact]
+    public async Task Readiness_checks_the_real_database()
+    {
+        using HttpResponseMessage response = await Client.GetAsync(
+            new Uri(HealthRoutes.Ready, UriKind.Relative),
+            Cancellation);
+
+        response.EnsureSuccessStatusCode();
+        string body = await response.Content.ReadAsStringAsync(Cancellation);
+
+        Assert.Equal(HealthStatus.Healthy.ToString(), body);
     }
 }
