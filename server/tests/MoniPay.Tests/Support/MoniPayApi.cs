@@ -7,6 +7,7 @@ using Testcontainers.PostgreSql;
 using Xunit;
 
 [assembly: AssemblyFixture(typeof(MoniPay.Tests.Support.MoniPayApi))]
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace MoniPay.Tests.Support;
 
