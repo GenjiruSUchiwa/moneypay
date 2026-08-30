@@ -19,7 +19,7 @@ public static class DatabaseStartup
             return;
         }
 
-        await using var scope = app.Services.CreateAsyncScope();
+        await using AsyncServiceScope scope = app.Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<MoniPayDbContext>().Database.MigrateAsync();
     }
 }

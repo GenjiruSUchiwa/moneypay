@@ -18,7 +18,7 @@ public class WalletEndpointsTests
 
         // Read the builder's own data sources: the DI-registered EndpointDataSource is only
         // populated once the host builds its request pipeline, which this test never does.
-        var routes = app.DataSources
+        IEnumerable<string?> routes = app.DataSources
             .SelectMany(source => source.Endpoints)
             .OfType<RouteEndpoint>()
             .Select(endpoint => NormalizeGroupRoot(endpoint.RoutePattern.RawText));
@@ -32,8 +32,7 @@ public class WalletEndpointsTests
         IEndpointRouteBuilder app = WebApplication.CreateBuilder().Build();
 
         app.MapWalletEndpoints();
-
-        var names = app.DataSources
+        IEnumerable<string?> names = app.DataSources
             .SelectMany(source => source.Endpoints)
             .Select(endpoint => endpoint.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName);
 

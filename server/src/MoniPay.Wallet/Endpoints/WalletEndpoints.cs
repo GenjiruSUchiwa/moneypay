@@ -23,7 +23,7 @@ public static class WalletEndpoints
         ArgumentNullException.ThrowIfNull(app);
 
         // One group per module: the prefix is declared once and every route below inherits it.
-        var wallet = app.MapGroup(WalletRoutes.Group).WithTags(WalletTags.Wallet);
+        RouteGroupBuilder wallet = app.MapGroup(WalletRoutes.Group).WithTags(WalletTags.Wallet);
 
         wallet.MapGet(WalletRoutes.Root, GetWallet)
             .WithName(WalletEndpointNames.GetWallet)
@@ -45,7 +45,7 @@ public static class WalletEndpoints
         // the route only composes when the host happens to have registered localization.
         [FromServices] IStringLocalizer<WalletMessages> messages)
     {
-        var requested = currency ?? nameof(Currency.Xaf);
+        string requested = currency ?? nameof(Currency.Xaf);
 
         if (!string.Equals(requested, nameof(Currency.Xaf), StringComparison.OrdinalIgnoreCase))
         {
@@ -58,7 +58,7 @@ public static class WalletEndpoints
 
         // A stub until the ledger lands: the shape of the answer is the contract, and it is
         // worth agreeing on before there is a balance to put in it.
-        var balance = WalletBalance.Empty;
+        WalletBalance balance = WalletBalance.Empty;
 
         return Results.Ok(new WalletResponse(
             Currency: balance.Balance.Currency.ToString().ToUpperInvariant(),
