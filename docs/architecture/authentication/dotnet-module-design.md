@@ -77,6 +77,10 @@ server/src/MoniPay.Sessions/
         IUserProvisioning.cs
         ProvisionUserRequest.cs
         ProvisionedUser.cs
+  Ports/
+    IRegisteredPhoneLookup.cs
+    ISecurityAlertSender.cs
+    SecurityAlert.cs
     Sessions/
       SessionResource.cs
       SessionResourceTypes.cs
@@ -123,13 +127,19 @@ server/src/MoniPay.Sessions/
   Providers/
     IVerificationCodeSender.cs
     VerificationCodeMessage.cs
-    <SelectedProvider>VerificationCodeSender.cs
+    CodeDeliveryState.cs
+    VerificationCodeRenderer.cs
   Resources/
     SessionMessages.resx
     SessionMessages.fr.resx
 ```
 
-Do not create `<SelectedProvider>VerificationCodeSender` until the SMS provider is selected.
+Sessions never talks to an SMS provider. `IVerificationCodeSender` is implemented by a host adapter over the notification outbox (see [Notification architecture](notifications.md)); the provider channel lives in `MoniPay.Notifications`.
+
+The `Ports/` folder holds the other contracts the host implements for Sessions:
+
+- `IRegisteredPhoneLookup.FindUserIdAsync(PhoneNumber, CancellationToken)` returns the `UserId` that owns a verified phone, or `null`. The verify-phone handler uses it for `phone-already-registered`; the sign-in verify handler uses it to find the user. It takes the normalized phone, not a hash: each module hashes with its own key.
+- `ISecurityAlertSender.EnqueueAsync(SecurityAlert, CancellationToken)` queues `RefreshTokenReuseDetected`, `SessionRevoked` and `NewDeviceSignIn` by `UserId`; the host adapter resolves the recipient through Users.
 
 ## `MoniPay.Users` layout
 
@@ -144,6 +154,10 @@ server/src/MoniPay.Users/
       RegisterUserHandler.cs
       RegisterUserCommand.cs
       RegisteredUser.cs
+      PhoneRegistrationLookup.cs
+    Contact/
+      UserContactLookup.cs
+      UserContact.cs
     CurrentUser/
       GetCurrentUserEndpoint.cs
       GetCurrentUserHandler.cs
@@ -164,6 +178,9 @@ server/src/MoniPay.Users/
   Security/
     UserPersonalDataProtector.cs
     UserLookupDigest.cs
+  Ports/
+    IWelcomeMessageSender.cs
+    WelcomeMessage.cs
   Resources/
     UserMessages.resx
     UserMessages.fr.resx
@@ -217,36 +234,54 @@ A slice test calls its handler for behavior and its endpoint for HTTP semantics.
 server/src/MoniPay.Api/
   Composition/
     UserProvisioningAdapter.cs
+    RegisteredPhoneLookupAdapter.cs
+    VerificationCodeDeliveryAdapter.cs
+    WelcomeMessageDeliveryAdapter.cs
+    SecurityAlertDeliveryAdapter.cs
   Errors/
     MoniPayExceptionHandler.cs
     MoniPayProblemDetailsWriter.cs
     ValidationProblemItem.cs
+  Http/
+    JsonApiContentNegotiationFilter.cs
   Hosting/
     PipelineExtensions.cs
+    ForwardedHeadersOptionsSetup.cs
+    RateLimitOptions.cs
   MoniPayModules.cs
 ```
 
-`UserProvisioningAdapter` implements the port from the Complete Sign-up slice. It calls `RegisterUserHandler` from the Users Registration slice.
+Each adapter implements a port one module declares by calling a public slice of another module:
 
-This adapter is the only code that names both modules. Neither module references the other module project.
+| Adapter | Port (declared by) | Calls |
+|---|---|---|
+| `UserProvisioningAdapter` | `IUserProvisioning` (Sessions) | `RegisterUserHandler` (Users) |
+| `RegisteredPhoneLookupAdapter` | `IRegisteredPhoneLookup` (Sessions) | `PhoneRegistrationLookup` (Users) |
+| `VerificationCodeDeliveryAdapter` | `IVerificationCodeSender` (Sessions) | `NotificationOutbox` (Notifications) |
+| `WelcomeMessageDeliveryAdapter` | `IWelcomeMessageSender` (Users) | `NotificationOutbox` (Notifications) |
+| `SecurityAlertDeliveryAdapter` | `ISecurityAlertSender` (Sessions) | `UserContactLookup` (Users), `NotificationOutbox` (Notifications) |
+
+These adapters are the only code that names two modules. No module references another module project.
 
 ## Public interface
 
 Only these Sessions types are public:
 
 - `SessionsModule`
-- `IUserProvisioning`
-- `ProvisionUserRequest`
-- `ProvisionedUser`
+- `IUserProvisioning`, `ProvisionUserRequest`, `ProvisionedUser`
+- `IRegisteredPhoneLookup`
+- `IVerificationCodeSender`, `VerificationCodeMessage`, `CodeDeliveryState`
+- `ISecurityAlertSender`, `SecurityAlert`, `SecurityAlertKind`
 
 Only these Users types are public:
 
 - `UsersModule`
-- `RegisterUserHandler`
-- `RegisterUserCommand`
-- `RegisteredUser`
+- `RegisterUserHandler`, `RegisterUserCommand`, `RegisteredUser`
+- `PhoneRegistrationLookup`
+- `UserContactLookup`, `UserContact`
+- `IWelcomeMessageSender`, `WelcomeMessage`
 
-Endpoint classes, JSON:API resource records, entities, EF configurations, token helpers, and provider DTOs stay internal.
+A port is public because the host implements it; a slice is public because a host adapter calls it. Endpoint classes, JSON:API resource records, entities, EF configurations, token helpers, and provider DTOs stay internal. `Architecture/PublicSurfaceTests.cs` asserts these lists.
 
 ## Slice methods
 
@@ -315,6 +350,7 @@ internal sealed class CreatePhoneVerificationHandler(
     VerificationCodeDigest codeDigest,
     RegistrationTokenFactory registrationTokens,
     RegistrationTokenDigest registrationTokenDigest,
+    IRegisteredPhoneLookup registeredPhones,
     TimeProvider timeProvider,
     IOptions<SessionsOptions> options)
 {
@@ -325,7 +361,11 @@ internal sealed class CreatePhoneVerificationHandler(
 }
 ```
 
-The handler counts attempts atomically. Success invalidates the Sign-up token and returns the Registration token once.
+The handler counts attempts atomically: on a mismatch it saves the attempt count and commits before it throws. On a match it asks `IRegisteredPhoneLookup` whether a user owns the phone and refuses with `phone-already-registered`; otherwise success invalidates the Sign-up token and returns the Registration token once.
+
+### Get sign-up delivery state
+
+`GetSignUpHandler` reports `codeDelivery` through `IVerificationCodeSender.GetLatestDeliveryAsync(signUpId)`, which the host adapter answers from `NotificationOutbox.FindLatestStatusAsync(correlationId: signUpId, kind: "VerificationCode")`. Sessions never opens the `notifications` table.
 
 ### Complete sign-up
 
@@ -360,6 +400,19 @@ public interface IUserProvisioning
 
 `ProvisionUserRequest` contains `SignUpId`, `UserId`, verified `PhoneNumber`, profile data, locale, consent versions, and acceptance time.
 
+### Registered-phone port
+
+```csharp
+public interface IRegisteredPhoneLookup
+{
+    Task<UserId?> FindUserIdAsync(
+        PhoneNumber phone,
+        CancellationToken cancellationToken);
+}
+```
+
+The Users side is `PhoneRegistrationLookup`, a public slice that hashes the phone with the Users lookup key and reads `users.phone_lookup_hash`.
+
 ### Users registration slice
 
 ```csharp
@@ -375,7 +428,7 @@ public sealed class RegisterUserHandler(
 }
 ```
 
-The handler normalizes and encrypts contact data. `SignUpId` makes the operation idempotent.
+The handler encrypts the already normalized contact data. `SignUpId` makes the operation idempotent. It calls `SaveChangesAsync` inside the caller's ambient transaction — that is how it observes a unique-constraint violation and maps it — but it opens no transaction of its own and never commits.
 
 ### Host adapter
 
@@ -553,6 +606,7 @@ PostgreSQL is authoritative. Use `TimeProvider`, `DateTimeOffset`, string enum c
 | `failed_attempts` | `integer` | Never reset by resend. |
 | `resend_count` | `integer` | Limited by policy. |
 | `can_resend_at` | `timestamptz` | Cooldown. |
+| `locked_until` | `timestamptz`, nullable | Set when the attempt limit is reached; the source of `Retry-After`. |
 | `expires_at` | `timestamptz` | Maximum sign-up lifetime. |
 | `terms_version` | `varchar(64)` | Client-displayed version. |
 | `privacy_version` | `varchar(64)` | Client-displayed version. |
@@ -627,7 +681,13 @@ Indexes:
 | `used_at` | `timestamptz`, nullable | Set during rotation. |
 | `replaced_by_id` | `uuid`, nullable | Rotation chain. |
 
-Use unique indexes on `token_digest` and active token per session.
+Use unique indexes on `token_digest` and active token per session (partial on `session_id` where `used_at is null`), and an index on `expires_at` for cleanup.
+
+`sessions.user_id` is a scalar, not a foreign key: Sessions never references the `users` table.
+
+### Migrations
+
+`MoniPay.Data` has no migration today. The first one arrives with the Users schema and also adds `dotnet-ef` to `dotnet-tools.json`; every later schema change adds one migration in the pull request that introduces it, with its generated SQL pasted in the pull request.
 
 ## Cache decision
 
@@ -647,10 +707,10 @@ Implementation adds:
 
 - Users and Sessions assemblies to `MoniPayModules.ModuleAssemblies`
 - Module DI and route mapping calls
-- `IUserProvisioning` to `UserProvisioningAdapter` registration
+- The five host adapters, registered against their ports
 - Project references from `MoniPay.Api`
 - Project entries in `server/MoniPay.slnx`
-- Project copy entries in `server/Dockerfile`
+- Project copy entries in `server/Dockerfile`, added by the pull request that creates each project — the image does not build without them
 - Generated EF migrations in `MoniPay.Data`
 
 ## Package policy

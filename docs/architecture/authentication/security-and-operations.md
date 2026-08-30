@@ -78,6 +78,8 @@ These values are security defaults, not product pricing rules. Keep them in `Ses
 | Refresh-token lifetime | 30 days |
 | Clock skew | 30 seconds |
 
+Reaching the attempt limit sets `locked_until` to the sign-up expiry; the `429` carries `Retry-After` from it.
+
 Use these configuration names:
 
 - `MoniPay:Sessions:Issuer`
