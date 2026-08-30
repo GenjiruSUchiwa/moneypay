@@ -28,6 +28,8 @@ flowchart LR
     C1 --> C2[2 Users domain]
     C1 --> C3[3 Sessions sign-up state]
     C1 --> C4[4 Notifications module]
+    C2 --> C3
+    C2 --> C4
     C3 --> C5[5 Session tokens]
     C2 --> C6[6 Completion composition]
     C5 --> C6
@@ -36,9 +38,15 @@ flowchart LR
     C6 --> C8[8 Routes and OpenAPI]
     C7 --> C8
     C8 --> C9[9 Provider channels]
+    C5 --> C12[12 Security alerts]
+    C7 --> C12
     C8 --> C10[10 Runtime changes]
     C8 --> C11[11 iOS cutover]
 ```
+
+Change 2 precedes 3 and 4 because it creates the migration infrastructure (the first migration, `dotnet-ef` in the tool manifest, the `Migrations/` and `Architecture/` test classes) the other two extend.
+
+The GitHub issues (#79 to #113, grouped under epics #75 to #78) are the operational form of this plan; each names the exact types, files, options and acceptance checks of its pull request.
 
 ### Change 0: test harness
 
@@ -46,17 +54,17 @@ Scope: `server/tests/MoniPay.Tests/` and its package references only.
 
 Add:
 
-- `Testcontainers.PostgreSql` package reference; the version is already pinned centrally
-- `Support/MoniPayApi.cs` assembly fixture with one PostgreSQL container
+- `Testcontainers.PostgreSql` and `Npgsql` package references; both versions are already pinned centrally
+- `Support/MoniPayApi.cs` assembly fixture with one PostgreSQL container and `ApplyMigrationsOnStartup = true`
 - `Support/TestTimeProvider.cs`, `TestKeys.cs`, `TestPhones.cs`
-- `Support/JsonApiAssertions.cs` and `ProblemDetailsAssertions.cs`
+- `Support/JsonApiAssertions.cs`, `ProblemDetailsAssertions.cs`, `DatabaseAssertions.cs`
 - `Fakes/StubHandler.cs`
-- Migration of the existing Wallet tests onto the fixture
+- Migration of the two host-booting tests (`HealthEndpointsTests`, `WalletLocalizationTests`) onto the fixture; `WalletEndpointsTests` and `MoneyTests` do not boot the host and stay as they are
 
 Acceptance:
 
 - `dotnet test server/MoniPay.slnx` starts one container and passes.
-- The existing Wallet and health tests keep their behavior.
+- The two migrated tests keep their assertions unchanged.
 - A test can advance time through the fixture.
 
 See [Testing strategy](testing-strategy.md#the-test-host).
@@ -68,12 +76,14 @@ Scope: `MoniPay.Kernel` and Kernel tests.
 Add:
 
 - `UserId`
-- `PhoneNumber`, `EmailAddress`, `PersonName` value types with normalization
+- `CountryPhoneRule`, `PhoneNumber`, `EmailAddress`, `PersonName` value types with normalization
 - `Http/` JSON:API records and `MoniPayMediaTypes`
-- `Validation/` records and `ValidationException`
-- `RefusalException`
+- `Validation/` records, `ValidationCodes`, and `ValidationException`
+- `RefusalException` (carrying a `System.Net.HttpStatusCode`: Kernel has no ASP.NET Core reference) and `ProviderUnavailableException`
 - `MoniPayHeaders`, `MoniPayPolicies`, `MoniPayClaimTypes`, `MoniPayConventions`
 - Sign-up, session, and notification entries in `MoniPayErrorTypes`
+
+This is three pull requests (value types; HTTP records and constants; validation, refusal and error types) because the change is about twenty files.
 
 Acceptance:
 
@@ -93,8 +103,9 @@ Add:
 - `UserPersonalDataProtector` and `UserLookupDigest`
 - EF configurations with named constraints
 - Unique indexes for `sign_up_id`, phone hash, and email hash
+- The first migration of the repository, `dotnet-ef` in `dotnet-tools.json`, and the `Migrations/SchemaTests.cs`, `Architecture/ModuleBoundaryTests.cs` and `Architecture/PublicSurfaceTests.cs` classes
 
-Do not add HTTP routes in this change.
+Two pull requests: the project with its schema, then the handler. Do not add HTTP routes in this change.
 
 Acceptance:
 
@@ -110,15 +121,15 @@ Scope: `MoniPay.Sessions`, module tests, and one EF migration.
 
 Add:
 
-- `SignUp` aggregate and `SignUpStatus`
+- `SignUp` aggregate and `SignUpStatus`, with `locked_until` in the schema
 - `VerificationCodeGenerator` and `VerificationCodeDigest`
 - `SignUpTokenFactory`, `SignUpTokenDigest`, `RegistrationTokenFactory`, `RegistrationTokenDigest`
-- `IVerificationCodeSender` port
-- `StartSignUpHandler`, `CreateVerificationCodeDeliveryHandler`, `CreatePhoneVerificationHandler`
+- `IVerificationCodeSender` and `IRegisteredPhoneLookup` ports
+- `StartSignUpHandler`, `GetSignUpHandler`, `CreateVerificationCodeDeliveryHandler`, `CreatePhoneVerificationHandler`
 - Persistent attempt and resend limits
 - `SessionsOptions` with startup validation
 
-Tests use a recording sender fake. Do not add a production SMS fallback.
+Three pull requests: the project with the aggregate and its schema, the security primitives, the handlers with the ports. Tests use a recording sender fake and a stub phone lookup until the host adapters land. Do not add a production SMS fallback.
 
 Acceptance:
 
@@ -137,12 +148,14 @@ Scope: `MoniPay.Notifications`, module tests, and one EF migration.
 Add:
 
 - `Notification` entity and `NotificationStatus`
-- `NotificationOutbox` and `OutboundMessage`
-- `NotificationWorker`, `NotificationProcessor`, `DeliverySignal`, `RetrySchedule`
+- `NotificationOutbox` (with `FindLatestStatusAsync`), `OutboundMessage`, `DeliverySignal`, `NotificationCommitInterceptor`
+- `NotificationWorker`, `NotificationProcessor`, `RetrySchedule`
 - `DeliveredNotificationPurgeService`
-- `ISmsChannel`, `IEmailChannel`, `ChannelResult`
+- `ISmsChannel`, `IEmailChannel`, `ChannelResult`; no channel registered before the provider is selected
 - `RecipientProtector`
 - `NotificationsOptions` with startup validation
+
+Two pull requests: the project with the outbox, signal and schema, then the worker, schedule, purge and channel contract with the recording channels.
 
 Acceptance:
 
@@ -166,10 +179,10 @@ Add:
 - `SessionTokenService`
 - `SignUpAuthenticationHandler` and `RegistrationAuthenticationHandler`
 - JWT bearer authentication with previous-key support
-- Named policies and rate-limit policies
+- Named policies and rate-limit policies, with the forwarded-headers configuration the IP partitioning needs
 - `ExpiredCredentialCleanupService`
 
-The JWT bearer package already has a central version. Add no package version to a project file.
+Three pull requests: the schema and cleanup, the token service, the schemes and policies. The JWT bearer package already has a central version. Add no package version to a project file.
 
 Acceptance:
 
@@ -188,7 +201,7 @@ Scope: `MoniPay.Sessions`, `MoniPay.Users`, and the host adapter. This is one cr
 Add:
 
 - `IUserProvisioning`, `ProvisionUserRequest`, `ProvisionedUser`
-- `UserProvisioningAdapter` in the host
+- `UserProvisioningAdapter` and `RegisteredPhoneLookupAdapter` in the host, `PhoneRegistrationLookup` in Users
 - `CreateSignUpCompletionHandler`
 - Atomic user and bootstrap-session creation
 - Safe completion retry
@@ -210,14 +223,16 @@ Add:
 - `VerificationCodeDeliveryAdapter` in the host
 - `IWelcomeMessageSender` port in Users and `WelcomeMessageDeliveryAdapter` in the host
 - Localized message rendering in `SessionMessages.resx` and `UserMessages.resx`
-- `codeDelivery` projection on the sign-up read model
+- `codeDelivery` projection on the sign-up read model, through `IVerificationCodeSender.GetLatestDeliveryAsync`
+
+Two pull requests: the verification code, then the welcome email.
 
 Acceptance:
 
 - Starting a sign-up enqueues one SMS in the same transaction.
 - The rendered SMS is French by default and English on request.
 - The SMS contains the code and its lifetime, and nothing personal.
-- A welcome email is enqueued after completion, and its failure does not affect sign-up.
+- A welcome email is enqueued in the registration transaction; an exception from its port is swallowed with a `Warning`, and a delivery failure is dropped, so neither affects sign-up.
 - No module references another module.
 
 ### Change 8: routes, contracts, and OpenAPI
@@ -243,7 +258,24 @@ Acceptance:
 - Every documented status has a test.
 - The generated OpenAPI document matches [HTTP contract](http-contract.md).
 
-This change exceeds the size limit as one pull request. Split it by route group: host error handling first, then sign-ups, sessions, and users.
+This change exceeds the size limit as one pull request. It is five: host error handling first; then the sign-ups group with its start and get routes, the sessions group, and the users group, in parallel; then the sign-up command routes (resend, verify, complete), which reuse the `sessions` resource record the sessions group owns.
+
+### Change 12: security alerts
+
+Scope: `MoniPay.Sessions`, `MoniPay.Users`, `MoniPay.Notifications`, and the host adapter.
+
+Add:
+
+- `ISecurityAlertSender` and `SecurityAlert` in Sessions
+- `UserContactLookup` in Users
+- `SecurityAlertDeliveryAdapter` in the host
+- `RefreshTokenReuseDetected` (required, SMS and email) from `SessionTokenService`, and `SessionRevoked` (optional, email) from the revocation slice, with their `.resx` entries
+
+Acceptance:
+
+- A refresh-token replay enqueues one SMS and one email for the family's user, in the transaction that revokes the family.
+- A revocation enqueues one optional email; a failing port leaves the revocation committed.
+- Rendered text names the time and the product only.
 
 ### Change 9: provider channels
 
@@ -266,12 +298,12 @@ Scope: `server/Dockerfile`, `server/compose.yaml`, `appsettings.json`, and the r
 
 Add:
 
-- Project `COPY` lines for the three modules
-- `icu-libs` in the runtime image
+- `icu-libs` in the runtime image (the project `COPY` lines arrived with each module)
 - Every new configuration key with its default or an empty secret value
-- Forwarded-headers configuration
-- The migration bundle step in the release workflow
+- The migration bundle step in the release workflow, with the `has-pending-model-changes` check in CI and release
 - `server/compose.yaml`
+
+Two pull requests: the image, Compose and configuration; the release workflow.
 
 Acceptance:
 
@@ -297,8 +329,11 @@ The iOS work must:
 - Restore the session with the refresh route.
 - Stop creating a local authenticated user after a backend error.
 - Route to KYC only after sign-up completion succeeds.
+- Load the profile from `GET /users/me` after completion and at restore, and build the local `User` from it.
 
 The client must not send passcode or biometric data.
+
+Four pull requests, by layer: the sign-up routes and JSON:API decoding in `ApiClient`; `CredentialStoring` and the Keychain store in `Platform` with the session and current-user routes and `SessionStore` in `ApiClient` (`ApiClient` gains its first package dependency, `Platform`); the phone and code steps on the real routes; completion, session restore at launch, and the removal of `AccountCreating` and the demo-mode fallback.
 
 ## Test plan
 
@@ -386,7 +421,7 @@ Review generated migration SQL before merge.
 This design does not add:
 
 - Password authentication
-- Existing-user sign-in, designed in [Sign-in and device change](sign-in.md) and delivered after this plan
+- Existing-user sign-in, designed in [Sign-in and device change](sign-in.md) and delivered after this plan in four pull requests, including the breaking `verification-*` rename
 - Email verification
 - Social sign-in
 - Customer roles

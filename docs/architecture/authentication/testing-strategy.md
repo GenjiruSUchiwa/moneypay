@@ -10,9 +10,9 @@ The repository rules in `agents/rules/testing-xunit-testcontainers.md` and `agen
 
 ## Current state
 
-`server/tests/MoniPay.Tests/` exists with `HealthEndpointsTests`, `MoneyTests`, and two Wallet tests. It boots the host through `WebApplicationFactory<Program>` without a database.
+`server/tests/MoniPay.Tests/` exists with `HealthEndpointsTests`, `MoneyTests`, and two Wallet tests. `HealthEndpointsTests` and `WalletLocalizationTests` boot the host through `WebApplicationFactory<Program>` without a database; `WalletEndpointsTests` maps the module on a bare builder and `MoneyTests` is a pure domain test. Only the first two move onto the fixture.
 
-The project does not yet reference `Testcontainers.PostgreSql`, and it has no `Support/` or `Fakes/` folder. The package version is already pinned in `server/Directory.Packages.props`.
+The project does not yet reference `Testcontainers.PostgreSql` or `Npgsql`, and it has no `Support/` or `Fakes/` folder. Both package versions are already pinned in `server/Directory.Packages.props`. `MoniPay.Data` has no migration yet, so the fixture's `ApplyMigrationsOnStartup = true` only creates the migration history table until the first schema change lands.
 
 The harness below is the first delivery change. Every sign-up test depends on it.
 
@@ -108,6 +108,10 @@ Isolation comes from data, not from containers. Each test starts its own sign-up
 | `RecordingEmailChannel` | `IEmailChannel` | Recipient, subject, body | Next `ChannelResult` |
 | `TestTimeProvider` | `TimeProvider` | Nothing | `Advance`, `Set`, `Reset` |
 | `StubHandler` | `HttpMessageHandler` | Requests | Canned status and body |
+| `RecordingVerificationCodeSender` | `IVerificationCodeSender` | Messages | Next `CodeDeliveryState`; used only until the host adapter lands |
+| `StubRegisteredPhoneLookup` | `IRegisteredPhoneLookup` | Phones | The `UserId?` to return; used only until the host adapter lands |
+
+`Support/DatabaseAssertions.cs` reads every table through Npgsql and returns the columns holding a given plaintext, for the "no personal data in a row" assertions.
 
 A fake contains no branch. If a test needs the fake to decide something, the decision belongs in the code under test.
 
@@ -141,12 +145,15 @@ server/tests/MoniPay.Tests/
     SignUpFlow.cs
     JsonApiAssertions.cs
     ProblemDetailsAssertions.cs
+    DatabaseAssertions.cs
     TestKeys.cs
     TestPhones.cs
     TestTimeProvider.cs
   Fakes/
     RecordingSmsChannel.cs
     RecordingEmailChannel.cs
+    RecordingVerificationCodeSender.cs
+    StubRegisteredPhoneLookup.cs
     StubHandler.cs
   Architecture/
     ModuleBoundaryTests.cs

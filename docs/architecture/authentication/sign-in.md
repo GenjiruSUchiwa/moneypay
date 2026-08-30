@@ -122,7 +122,13 @@ Indexes mirror `sign_ups`. The cleanup worker deletes expired sign-ins in the sa
 | `signin-state-invalid` | `409` | The sign-in is not in a state that allows this action. |
 | `phone-not-registered` | `409` | The verified phone has no user. Returned only after phone verification. |
 
-`verification-code-invalid`, `verification-code-expired`, `signup-attempt-limit`, `signup-resend-limit`, and `signup-resend-too-soon` are renamed to a neutral `verification-*` family when sign-in lands, so one problem type serves both flows. The rename is a contract change and ships with the iOS cutover for sign-in.
+`signup-attempt-limit`, `signup-resend-limit`, and `signup-resend-too-soon` are renamed to `verification-attempt-limit`, `verification-resend-limit`, and `verification-resend-too-soon` so one problem type serves both flows; `verification-code-invalid` and `verification-code-expired` already carry the neutral name. `signup-expired`, `signup-state-invalid`, and `signup-token-invalid` stay: they name the sign-up resource, not the challenge.
+
+The rename is a breaking contract change for the deployed sign-up client, so it ships as its own server pull request, after the sign-in slices and before the iOS sign-in cutover, with a temporary `MoniPay:Sessions:LegacyVerificationProblemTypes` switch: on at deploy time so the deployed app keeps working, off once the iOS cutover reaches the store, then removed.
+
+## Ports
+
+The sign-in verify handler resolves the user through `IRegisteredPhoneLookup.FindUserIdAsync(phone)` from the sign-up design; it returns the `UserId` a registered phone belongs to, or `null` for `phone-not-registered`. The `NewDeviceSignIn` alert goes through `ISecurityAlertSender`, the port the refresh-replay and revocation alerts already use.
 
 ## Tests
 
@@ -137,7 +143,9 @@ The sign-in slices follow [Testing strategy](testing-strategy.md) with the sign-
 
 ## Delivery
 
-Sign-in is a change after the sign-up plan in [Delivery plan](delivery-plan.md), in three pull requests: the `PhoneChallenge` promotion, the `SignIn` aggregate and slices, and the iOS welcome-screen entry.
+Sign-in is a change after the sign-up plan in [Delivery plan](delivery-plan.md), in four pull requests, strictly in this order: the `PhoneChallenge` promotion, the `SignIn` aggregate and slices, the `verification-*` rename, and the iOS welcome-screen entry.
+
+The iOS entry runs phone, code, then the local passcode and Face ID steps: a new device has no passcode yet ([ADR 0002](../../adr/0002-passcode-and-biometrics-stay-on-the-device.md)). It reuses the sign-up step views.
 
 ## Deliberate omissions
 
