@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using MoniPay.Kernel.Http;
 using Xunit;
 
 namespace MoniPay.Tests.Support;
@@ -7,17 +8,15 @@ namespace MoniPay.Tests.Support;
 /// <summary>Shared assertions for successful JSON:API resource documents.</summary>
 public static class JsonApiAssertions
 {
-    private const string JsonApiMediaType = "application/vnd.api+json";
-
     public static async Task<JsonElement> ReadJsonApiAsync(this HttpResponseMessage response)
     {
         Assert.InRange((int)response.StatusCode, 200, 299);
-        Assert.Equal(JsonApiMediaType, response.Content.Headers.ContentType?.ToString());
+        Assert.Equal(MoniPayMediaTypes.JsonApi, response.Content.Headers.ContentType?.ToString());
 
         JsonElement document = await response.Content.ReadFromJsonAsync<JsonElement>(
             TestContext.Current.CancellationToken);
         JsonElement jsonApi = document.GetProperty("jsonapi");
-        Assert.Equal("1.1", jsonApi.GetProperty("version").GetString());
+        Assert.Equal(JsonApiVersion.Current, jsonApi.GetProperty("version").GetString());
 
         JsonElement data = document.GetProperty("data");
         Assert.Equal(JsonValueKind.String, data.GetProperty("type").ValueKind);

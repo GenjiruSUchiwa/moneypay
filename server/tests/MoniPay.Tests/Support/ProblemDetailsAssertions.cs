@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using MoniPay.Kernel.Http;
 using Xunit;
 
 namespace MoniPay.Tests.Support;
@@ -9,11 +10,9 @@ namespace MoniPay.Tests.Support;
 /// <summary>Shared assertions for RFC 9457 Problem Details responses.</summary>
 public static class ProblemDetailsAssertions
 {
-    private const string ProblemJsonMediaType = "application/problem+json";
-
     public static async Task<ProblemDetails> ReadProblemAsync(this HttpResponseMessage response)
     {
-        Assert.Equal(ProblemJsonMediaType, response.Content.Headers.ContentType?.ToString());
+        Assert.Equal(MoniPayMediaTypes.ProblemJson, response.Content.Headers.ContentType?.ToString());
         Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
