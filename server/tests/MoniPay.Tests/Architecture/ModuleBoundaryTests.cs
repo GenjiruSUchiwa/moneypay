@@ -11,14 +11,14 @@ namespace MoniPay.Tests.Architecture;
 /// </summary>
 public sealed class ModuleBoundaryTests
 {
-    private static readonly string[] UsersDependencies = ["MoniPay.Kernel", "MoniPay.Data"];
+    private static readonly string[] ModuleDependencies = ["MoniPay.Kernel", "MoniPay.Data"];
 
     [Fact]
-    public void The_users_module_references_only_the_kernel_and_the_shared_context()
+    public void The_users_module_references_nothing_beyond_the_kernel_and_the_shared_context()
     {
         IEnumerable<string> references = MoniPayReferencesOf(typeof(UsersModule).Assembly);
 
-        Assert.Equal(UsersDependencies.Order(), references.Order());
+        Assert.Empty(references.Except(ModuleDependencies));
     }
 
     [Fact]

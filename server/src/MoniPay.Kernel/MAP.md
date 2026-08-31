@@ -19,6 +19,9 @@ knows what a top-up is, it belongs in `MoniPay.TopUps`, not in the kernel.
 - `Errors/` — `ProblemType`, `MoniPayErrorTypes`, `RefusalException` and
   `ProviderUnavailableException` for expected failures shared with the host. A `ProblemType` binds a
   stable code to its HTTP status once; a refusal carries one and no user-facing message.
+- `UserId.cs`, `SignUpId.cs` — typed identifiers, so a user id and a sign-up id cannot be
+  swapped at a call site. `Locale.cs` — the closed list of BCP-47 tags the product speaks;
+  the host's request localization reads it, so the API and the stored value agree.
 - `MoniPayPolicies.cs` and `MoniPayClaimTypes.cs` — shared authorization names and JWT claim names.
 
 References nothing.

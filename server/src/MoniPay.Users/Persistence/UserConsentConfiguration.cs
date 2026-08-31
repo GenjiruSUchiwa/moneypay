@@ -12,9 +12,10 @@ internal sealed class UserConsentConfiguration : IEntityTypeConfiguration<UserCo
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.ToTable(UsersConstraints.UserConsentsTable);
+        builder.ToTable(UsersSchema.UserConsentsTable);
 
-        builder.HasKey(consent => new { consent.UserId, consent.DocumentKind });
+        builder.HasKey(consent => new { consent.UserId, consent.DocumentKind })
+            .HasName(UsersSchema.UserConsentsPrimaryKey);
 
         builder.Property(consent => consent.UserId)
             .HasColumnName("user_id")
@@ -29,11 +30,5 @@ internal sealed class UserConsentConfiguration : IEntityTypeConfiguration<UserCo
             .HasMaxLength(64)
             .IsRequired();
         builder.Property(consent => consent.AcceptedAt).HasColumnName("accepted_at").IsRequired();
-
-        builder.HasOne<User>()
-            .WithMany()
-            .HasForeignKey(consent => consent.UserId)
-            .HasConstraintName(UsersConstraints.UserConsentsUserForeignKey)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

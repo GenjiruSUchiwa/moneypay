@@ -26,7 +26,7 @@ public sealed class WalletLocalizationTests(MoniPayApi api) : MoniPayApiTest(api
     [Fact]
     public async Task A_refusal_is_written_in_French_when_the_client_asks_for_French()
     {
-        HttpResponseMessage response = await Refusal(acceptLanguage: Localization.French);
+        HttpResponseMessage response = await Refusal(acceptLanguage: Locale.FrenchTag);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("Seul le portefeuille en FCFA est disponible.", await TitleOf(response));
@@ -35,7 +35,7 @@ public sealed class WalletLocalizationTests(MoniPayApi api) : MoniPayApiTest(api
     [Fact]
     public async Task The_neutral_resource_answers_an_English_client()
     {
-        HttpResponseMessage response = await Refusal(acceptLanguage: Localization.English);
+        HttpResponseMessage response = await Refusal(acceptLanguage: Locale.EnglishTag);
 
         Assert.Equal("Only the XAF wallet is available.", await TitleOf(response));
     }
@@ -53,7 +53,7 @@ public sealed class WalletLocalizationTests(MoniPayApi api) : MoniPayApiTest(api
     public async Task A_regional_culture_falls_back_to_its_parent_resource()
     {
         // fr-CM is supported and has no .resx of its own: it must resolve to WalletMessages.fr.
-        HttpResponseMessage response = await Refusal(acceptLanguage: Localization.FrenchCameroon);
+        HttpResponseMessage response = await Refusal(acceptLanguage: Locale.FrenchCameroonTag);
 
         Assert.Equal("Seul le portefeuille en FCFA est disponible.", await TitleOf(response));
     }
@@ -62,7 +62,7 @@ public sealed class WalletLocalizationTests(MoniPayApi api) : MoniPayApiTest(api
     public async Task The_success_path_carries_no_localized_text()
     {
         HttpClient client = Client;
-        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(Localization.French);
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(Locale.FrenchTag);
 
         HttpResponseMessage response = await client.GetAsync(Wallet, Cancellation);
 
