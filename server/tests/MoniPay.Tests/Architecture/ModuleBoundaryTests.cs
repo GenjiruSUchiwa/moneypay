@@ -9,7 +9,7 @@ namespace MoniPay.Tests.Architecture;
 /// Asserts the layering the projects claim: a module talks to the kernel and to the shared
 /// context, never to a sibling module, and the kernel talks to nobody.
 /// </summary>
-public class ModuleBoundaryTests
+public sealed class ModuleBoundaryTests
 {
     private static readonly string[] UsersDependencies = ["MoniPay.Kernel", "MoniPay.Data"];
 
