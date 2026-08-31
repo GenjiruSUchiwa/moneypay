@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="../MoniPay.Data/MoniPay.Data.csproj" />
     <ProjectReference Include="../MoniPay.Kernel/MoniPay.Kernel.csproj" />
+    <ProjectReference Include="../MoniPay.Users/MoniPay.Users.csproj" />
     <ProjectReference Include="../MoniPay.Wallet/MoniPay.Wallet.csproj" />
   </ItemGroup>
 
