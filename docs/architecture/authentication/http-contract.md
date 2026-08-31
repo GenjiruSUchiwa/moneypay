@@ -410,6 +410,7 @@ The French title and detail live in `SessionMessages.fr.resx`. C# source contain
 | `session-invalid` | `401` | The access or refresh credential is invalid. |
 | `refresh-token-reused` | `401` | A consumed refresh token was used again. |
 | `verification-delivery-unavailable` | `503` | Delivery could not be queued. The sign-up transaction was rolled back. |
+| `internal` | `500` | An unexpected server failure occurred. |
 
 Every `429` response includes `Retry-After` when the backend knows the remaining delay.
 
