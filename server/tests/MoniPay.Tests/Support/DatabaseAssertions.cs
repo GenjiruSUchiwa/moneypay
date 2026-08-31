@@ -1,5 +1,4 @@
 using Npgsql;
-using Xunit;
 
 namespace MoniPay.Tests.Support;
 
@@ -25,19 +24,9 @@ public static class DatabaseAssertions
         ArgumentNullException.ThrowIfNull(api);
         ArgumentException.ThrowIfNullOrWhiteSpace(plaintext);
 
-        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
-        await using NpgsqlConnection connection = new(api.ConnectionString);
-        await connection.OpenAsync(cancellationToken);
-
-        List<(string Table, string Column)> columns = [];
-        await using (NpgsqlCommand columnsCommand = new(ColumnsQuery, connection))
-        await using (NpgsqlDataReader reader = await columnsCommand.ExecuteReaderAsync(cancellationToken))
-        {
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                columns.Add((reader.GetString(0), reader.GetString(1)));
-            }
-        }
+        IReadOnlyList<(string Table, string Column)> columns = await api.QueryAsync(
+            ColumnsQuery,
+            reader => (reader.GetString(0), reader.GetString(1)));
 
         using NpgsqlCommandBuilder commandBuilder = new();
         List<string> matches = [];
@@ -45,13 +34,12 @@ public static class DatabaseAssertions
         {
             string tableIdentifier = commandBuilder.QuoteIdentifier(table);
             string columnIdentifier = commandBuilder.QuoteIdentifier(column);
-            string query = $"SELECT EXISTS (SELECT 1 FROM {tableIdentifier} "
-                + $"WHERE CAST({columnIdentifier} AS text) = @plaintext);";
+            IReadOnlyList<bool> found = await api.QueryAsync(
+                $"SELECT EXISTS (SELECT 1 FROM {tableIdentifier} WHERE CAST({columnIdentifier} AS text) = @plaintext);",
+                reader => reader.GetBoolean(0),
+                ("plaintext", plaintext));
 
-            await using NpgsqlCommand command = new(query, connection);
-            command.Parameters.AddWithValue("plaintext", plaintext);
-
-            if (await command.ExecuteScalarAsync(cancellationToken) is true)
+            if (found is [true])
             {
                 matches.Add($"{table}.{column}");
             }
