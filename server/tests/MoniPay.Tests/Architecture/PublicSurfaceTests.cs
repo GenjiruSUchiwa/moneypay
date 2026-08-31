@@ -1,4 +1,5 @@
 using MoniPay.Users;
+using MoniPay.Users.Features.Registration;
 using Xunit;
 
 namespace MoniPay.Tests.Architecture;
@@ -10,11 +11,19 @@ namespace MoniPay.Tests.Architecture;
 public sealed class PublicSurfaceTests
 {
     [Fact]
-    public void The_users_module_exposes_its_composition_entry_point_only()
+    public void The_users_module_exposes_its_registration_slice_and_composition_entry_point_only()
     {
         IEnumerable<string?> exported = typeof(UsersModule).Assembly.GetExportedTypes()
-            .Select(type => type.FullName);
+            .Select(type => type.FullName)
+            .Order();
 
-        Assert.Equal([typeof(UsersModule).FullName], exported);
+        string?[] expected =
+        [
+            typeof(RegisteredUser).FullName,
+            typeof(RegisterUserCommand).FullName,
+            typeof(RegisterUserHandler).FullName,
+            typeof(UsersModule).FullName,
+        ];
+        Assert.Equal(expected.Order(), exported);
     }
 }

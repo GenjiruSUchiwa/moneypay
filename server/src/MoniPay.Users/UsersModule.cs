@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MoniPay.Persistence;
+using MoniPay.Users.Features.Registration;
 using MoniPay.Users.Security;
 
 namespace MoniPay.Users;
@@ -27,6 +29,13 @@ public static class UsersModule
         // Both hold key material only; neither holds request state.
         services.AddSingleton<UserPersonalDataProtector>();
         services.AddSingleton<UserLookupDigest>();
+
+        // The handler's dependencies are internal, so DI needs the factory: the container only
+        // activates public constructors.
+        services.AddScoped(provider => new RegisterUserHandler(
+            provider.GetRequiredService<MoniPayDbContext>(),
+            provider.GetRequiredService<UserPersonalDataProtector>(),
+            provider.GetRequiredService<UserLookupDigest>()));
 
         return services;
     }

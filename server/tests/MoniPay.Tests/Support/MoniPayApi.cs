@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MoniPay.Api;
 using MoniPay.Kernel.Http;
 using MoniPay.Users;
+using Serilog.Core;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -28,6 +29,9 @@ public sealed class MoniPayApi : IAsyncLifetime
 
     public TestTimeProvider Time { get; } = new();
 
+    /// <summary>Everything the host logged, for tests asserting what must never be logged.</summary>
+    public CapturedLogs Logs { get; } = new();
+
     internal string ConnectionString { get; private set; } = string.Empty;
 
     public async ValueTask InitializeAsync()
@@ -46,6 +50,7 @@ public sealed class MoniPayApi : IAsyncLifetime
             {
                 services.RemoveAll<TimeProvider>();
                 services.AddSingleton<TimeProvider>(Time);
+                services.AddSingleton<ILogEventSink>(Logs);
             });
         });
     }

@@ -1,7 +1,7 @@
 # MoniPay.Users
 
 The user profile: the normalized contact data, the locale, and the legal consent a sign-up
-recorded. The module holds no route yet — this is the schema and the composition entry point.
+recorded. The module holds no route yet.
 
 - `UsersModule.cs` — `AddUsersModule(services, configuration)`. The only public type of the
   module.
@@ -14,6 +14,11 @@ recorded. The module holds no route yet — this is the schema and the compositi
 - `Security/UserLookupDigest.cs` — HMAC-SHA256 over the normalized contact value, keyed by an
   HKDF derivation of the personal-data key: lookup and encryption never share key material
   directly.
+- `Features/Registration/RegisterUserHandler.cs`, `RegisterUserCommand.cs`, `RegisteredUser.cs` —
+  the slice sign-up completion calls: protect the contact data, insert the user and its two
+  consents, idempotent on `sign_up_id`. It saves inside the caller's ambient transaction and
+  maps a unique violation by constraint name — `sign_up_id` back to the existing user, the
+  lookup hashes to `phone-already-registered` / `email-already-registered`.
 - `Domain/User.cs` — a registered user. `User.Register` takes values the caller already
   normalized and already encrypted or hashed, and records the two legal consents itself: a user
   cannot exist without them, and a consent cannot exist without its user.
