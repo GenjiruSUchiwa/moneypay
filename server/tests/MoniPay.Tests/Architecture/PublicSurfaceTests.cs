@@ -6,6 +6,7 @@ using MoniPay.Sessions.Ports;
 using MoniPay.Sessions.Providers;
 using MoniPay.Sessions.Security;
 using MoniPay.Users;
+using MoniPay.Users.Features.Registration;
 using Xunit;
 
 namespace MoniPay.Tests.Architecture;
@@ -35,7 +36,15 @@ public sealed class PublicSurfaceTests
                 typeof(SessionRateLimitPolicies),
             ]
         },
-        { typeof(UsersModule), [typeof(UsersModule)] },
+        {
+            typeof(UsersModule),
+            [
+                typeof(UsersModule),
+                typeof(RegisterUserHandler),
+                typeof(RegisterUserCommand),
+                typeof(RegisteredUser),
+            ]
+        },
         {
             typeof(NotificationsModule),
             [
