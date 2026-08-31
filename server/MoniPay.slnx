@@ -3,6 +3,7 @@
     <Project Path="src/MoniPay.Api/MoniPay.Api.csproj" />
     <Project Path="src/MoniPay.Data/MoniPay.Data.csproj" />
     <Project Path="src/MoniPay.Kernel/MoniPay.Kernel.csproj" />
+    <Project Path="src/MoniPay.Users/MoniPay.Users.csproj" />
     <Project Path="src/MoniPay.Wallet/MoniPay.Wallet.csproj" />
   </Folder>
   <Folder Name="/tests/">
