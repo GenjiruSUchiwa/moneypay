@@ -250,7 +250,9 @@ The Users registration handler catches `DbUpdateException`, reads the PostgreSQL
 | `ArgumentException`, `InvalidOperationException` | A programming error | Guards on public methods | `500 internal` |
 | Any other exception | Unknown failure | Anywhere | `500 internal` |
 
-`RefusalException` carries `Code`, `Status`, an optional `RetryAfter`, and optional pointers. It carries no message for the user. The message is resolved from the code in the host.
+`RefusalException` carries a `ProblemType` (the stable code bound to its HTTP status, declared once in `MoniPayErrorTypes`), an optional `RetryAfter`, and optional pointers. It carries no message for the user. The message is resolved from the code in the host.
+
+`ProviderUnavailableException` carries the provider name and the provider's result code, so the host can log them.
 
 `RefusalException` is the only exception a test asserts by type. Everything else is asserted through the HTTP response.
 
