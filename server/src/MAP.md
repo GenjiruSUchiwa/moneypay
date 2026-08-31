@@ -8,10 +8,11 @@ writes, the domain that decides, the contracts it speaks, and the HTTP routes th
 |---|---|---|
 | `MoniPay.Kernel` | Primitives: `Money`, `Currency`, the clock, shared error types. No business logic. | nothing |
 | `MoniPay.Data` | `MoniPayDbContext`, the connection, `Migrations/`. Applies the modules' entity configurations; references no module. | `Kernel` |
+| `MoniPay.Users` | The user profile: normalized contact data, locale, legal consent. | `Kernel`, `Data` |
 | `MoniPay.Wallet` | The FCFA ledger: balance, holds, authorization. | `Kernel`, `Data` |
 | `MoniPay.Api` | The host: `Program.cs`, middleware, the OpenAPI document, health. No business logic. | every module |
 
-Planned, not yet created: `Users`, `Sessions`, `TopUps`, `Cards`, `Transactions`, `Fx`, `Kyc`,
+Planned, not yet created: `Sessions`, `TopUps`, `Cards`, `Transactions`, `Fx`, `Kyc`,
 `Notifications`, `Outbox`.
 
 ## Rules

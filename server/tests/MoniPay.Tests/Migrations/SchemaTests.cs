@@ -9,7 +9,7 @@ namespace MoniPay.Tests.Migrations;
 /// Asserts the shape PostgreSQL ended up with, not the shape the model asked for: the host
 /// applies the migrations on start, so this reads <c>information_schema</c> after the fact.
 /// </summary>
-public class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
+public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Theory]
     [InlineData(UsersConstraints.UsersTable, "id", "uuid", false)]
