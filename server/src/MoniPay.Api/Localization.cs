@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
+using MoniPay.Kernel;
 
 namespace MoniPay.Api;
 
@@ -10,19 +11,11 @@ namespace MoniPay.Api;
 /// </summary>
 public static class Localization
 {
-    public const string French = "fr";
-    public const string FrenchCameroon = "fr-CM";
-    public const string English = "en";
-
     /// <summary>The default when a request states no preference.</summary>
-    public const string DefaultCulture = French;
+    public static string DefaultCulture => Locale.Default.Value;
 
     public static CultureInfo[] SupportedCultures() =>
-    [
-        new CultureInfo(FrenchCameroon),
-        new CultureInfo(French),
-        new CultureInfo(English),
-    ];
+        [.. Locale.SupportedTags.Select(tag => new CultureInfo(tag))];
 }
 
 /// <summary>Conventions every module follows when it ships translated strings.</summary>

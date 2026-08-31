@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MoniPay.Persistence.Migrations
 {
     [DbContext(typeof(MoniPayDbContext))]
-    [Migration("20260831094310_AddUsers")]
+    [Migration("20260831110639_AddUsers")]
     partial class AddUsers
     {
         /// <inheritdoc />
@@ -40,17 +40,17 @@ namespace MoniPay.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email_ciphertext");
 
-                    b.Property<byte[]>("EmailLookupHash")
+                    b.Property<byte[]>("EmailHash")
                         .IsRequired()
                         .HasColumnType("bytea")
                         .HasColumnName("email_lookup_hash");
 
-                    b.Property<string>("FirstNameCiphertext")
+                    b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("first_name_ciphertext");
 
-                    b.Property<string>("LastNameCiphertext")
+                    b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("last_name_ciphertext");
@@ -66,7 +66,7 @@ namespace MoniPay.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("phone_ciphertext");
 
-                    b.Property<byte[]>("PhoneLookupHash")
+                    b.Property<byte[]>("PhoneHash")
                         .IsRequired()
                         .HasColumnType("bytea")
                         .HasColumnName("phone_lookup_hash");
@@ -75,13 +75,14 @@ namespace MoniPay.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("sign_up_id");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_users");
 
-                    b.HasIndex("EmailLookupHash")
+                    b.HasIndex("EmailHash")
                         .IsUnique()
                         .HasDatabaseName("ix_users_email_lookup_hash");
 
-                    b.HasIndex("PhoneLookupHash")
+                    b.HasIndex("PhoneHash")
                         .IsUnique()
                         .HasDatabaseName("ix_users_phone_lookup_hash");
 
@@ -113,7 +114,8 @@ namespace MoniPay.Persistence.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("document_version");
 
-                    b.HasKey("UserId", "DocumentKind");
+                    b.HasKey("UserId", "DocumentKind")
+                        .HasName("pk_user_consents");
 
                     b.ToTable("user_consents", (string)null);
                 });
@@ -121,11 +123,16 @@ namespace MoniPay.Persistence.Migrations
             modelBuilder.Entity("MoniPay.Users.Domain.UserConsent", b =>
                 {
                     b.HasOne("MoniPay.Users.Domain.User", null)
-                        .WithMany()
+                        .WithMany("Consents")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_user_consents_users_user_id");
+                });
+
+            modelBuilder.Entity("MoniPay.Users.Domain.User", b =>
+                {
+                    b.Navigation("Consents");
                 });
 #pragma warning restore 612, 618
         }

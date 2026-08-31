@@ -1,14 +1,17 @@
 namespace MoniPay.Users.Persistence;
 
 /// <summary>
-/// The names PostgreSQL knows this module's tables and constraints by. A unique-violation is
-/// mapped back to a domain refusal by name, so the name is a constant here rather than a
-/// literal at the mapping site: renaming an index then breaks the build instead of a client.
+/// The names PostgreSQL knows this module's tables, keys and indexes by. A unique violation is
+/// mapped back to a refusal by name, so each name is a constant here rather than a literal at
+/// the mapping site: a renamed index breaks the build instead of a running client.
 /// </summary>
-internal static class UsersConstraints
+internal static class UsersSchema
 {
     public const string UsersTable = "users";
     public const string UserConsentsTable = "user_consents";
+
+    public const string UsersPrimaryKey = "pk_users";
+    public const string UserConsentsPrimaryKey = "pk_user_consents";
 
     public const string SignUpIdUnique = "ix_users_sign_up_id";
     public const string PhoneLookupHashUnique = "ix_users_phone_lookup_hash";

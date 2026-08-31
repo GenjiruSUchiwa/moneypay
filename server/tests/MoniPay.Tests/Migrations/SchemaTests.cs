@@ -11,127 +11,51 @@ namespace MoniPay.Tests.Migrations;
 /// </summary>
 public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
 {
+    private sealed record Column(string Name, string DataType, bool Nullable, int? MaximumLength);
+
+    [Fact]
+    public async Task The_users_table_has_exactly_the_documented_columns()
+    {
+        Column[] expected =
+        [
+            new("id", "uuid", false, null),
+            new("sign_up_id", "uuid", false, null),
+            new("first_name_ciphertext", "text", false, null),
+            new("last_name_ciphertext", "text", false, null),
+            new("phone_ciphertext", "text", false, null),
+            new("phone_lookup_hash", "bytea", false, null),
+            new("email_ciphertext", "text", false, null),
+            new("email_lookup_hash", "bytea", false, null),
+            new("locale", "character varying", false, 16),
+            new("created_at", "timestamp with time zone", false, null),
+        ];
+
+        Assert.Equal(expected.OrderBy(column => column.Name), await ColumnsOfAsync(UsersSchema.UsersTable));
+    }
+
+    [Fact]
+    public async Task The_user_consents_table_has_exactly_the_documented_columns()
+    {
+        Column[] expected =
+        [
+            new("user_id", "uuid", false, null),
+            new("document_kind", "character varying", false, 24),
+            new("document_version", "character varying", false, 64),
+            new("accepted_at", "timestamp with time zone", false, null),
+        ];
+
+        Assert.Equal(expected.OrderBy(column => column.Name), await ColumnsOfAsync(UsersSchema.UserConsentsTable));
+    }
+
     [Theory]
-    [InlineData(UsersConstraints.UsersTable, "id", "uuid", false)]
-    [InlineData(UsersConstraints.UsersTable, "sign_up_id", "uuid", false)]
-    [InlineData(UsersConstraints.UsersTable, "first_name_ciphertext", "text", false)]
-    [InlineData(UsersConstraints.UsersTable, "last_name_ciphertext", "text", false)]
-    [InlineData(UsersConstraints.UsersTable, "phone_ciphertext", "text", false)]
-    [InlineData(UsersConstraints.UsersTable, "phone_lookup_hash", "bytea", false)]
-    [InlineData(UsersConstraints.UsersTable, "email_ciphertext", "text", false)]
-    [InlineData(UsersConstraints.UsersTable, "email_lookup_hash", "bytea", false)]
-    [InlineData(UsersConstraints.UsersTable, "locale", "character varying", false)]
-    [InlineData(UsersConstraints.UsersTable, "created_at", "timestamp with time zone", false)]
-    [InlineData(UsersConstraints.UserConsentsTable, "user_id", "uuid", false)]
-    [InlineData(UsersConstraints.UserConsentsTable, "document_kind", "character varying", false)]
-    [InlineData(UsersConstraints.UserConsentsTable, "document_version", "character varying", false)]
-    [InlineData(UsersConstraints.UserConsentsTable, "accepted_at", "timestamp with time zone", false)]
-    public async Task The_column_exists_with_its_documented_type(
+    [InlineData(UsersSchema.UsersTable, UsersSchema.UsersPrimaryKey, "id")]
+    [InlineData(UsersSchema.UserConsentsTable, UsersSchema.UserConsentsPrimaryKey, "user_id", "document_kind")]
+    public async Task The_primary_key_is_named_by_the_module_and_spans_the_documented_columns(
         string table,
-        string column,
-        string dataType,
-        bool nullable)
+        string constraintName,
+        params string[] columns)
     {
-        (string DataType, bool Nullable)? actual = await ReadColumnAsync(table, column);
-
-        Assert.NotNull(actual);
-        Assert.Equal(dataType, actual.Value.DataType);
-        Assert.Equal(nullable, actual.Value.Nullable);
-    }
-
-    [Fact]
-    public async Task The_users_table_carries_no_kyc_flag()
-    {
-        Assert.Null(await ReadColumnAsync(UsersConstraints.UsersTable, "kyc_verified"));
-    }
-
-    [Theory]
-    [InlineData(UsersConstraints.UsersTable, "locale", 16)]
-    [InlineData(UsersConstraints.UserConsentsTable, "document_kind", 24)]
-    [InlineData(UsersConstraints.UserConsentsTable, "document_version", 64)]
-    public async Task The_string_column_is_bounded(string table, string column, int maximumLength)
-    {
-        object? actual = await ScalarAsync(
-            """
-            SELECT character_maximum_length FROM information_schema.columns
-            WHERE table_schema = 'public' AND table_name = @table AND column_name = @column;
-            """,
-            ("table", table),
-            ("column", column));
-
-        Assert.Equal(maximumLength, Assert.IsType<int>(actual));
-    }
-
-    [Theory]
-    [InlineData(UsersConstraints.SignUpIdUnique)]
-    [InlineData(UsersConstraints.PhoneLookupHashUnique)]
-    [InlineData(UsersConstraints.EmailLookupHashUnique)]
-    public async Task The_unique_index_exists_under_the_name_the_module_declares(string indexName)
-    {
-        object? definition = await ScalarAsync(
-            "SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND indexname = @index;",
-            ("index", indexName));
-
-        Assert.Contains("CREATE UNIQUE INDEX", Assert.IsType<string>(definition), StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public async Task The_user_consents_table_is_keyed_by_user_and_document()
-    {
-        IReadOnlyList<string> keyColumns = await PrimaryKeyColumnsAsync(UsersConstraints.UserConsentsTable);
-
-        Assert.Equal(["user_id", "document_kind"], keyColumns);
-    }
-
-    [Fact]
-    public async Task No_column_uses_a_floating_point_type()
-    {
-        await using NpgsqlConnection connection = new(Api.ConnectionString);
-        await connection.OpenAsync(Cancellation);
-        await using NpgsqlCommand command = new(
-            """
-            SELECT table_name || '.' || column_name FROM information_schema.columns
-            WHERE table_schema = 'public' AND data_type IN ('real', 'double precision');
-            """,
-            connection);
-
-        List<string> offenders = [];
-        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(Cancellation);
-        while (await reader.ReadAsync(Cancellation))
-        {
-            offenders.Add(reader.GetString(0));
-        }
-
-        Assert.Empty(offenders);
-    }
-
-    private async Task<(string DataType, bool Nullable)?> ReadColumnAsync(string table, string column)
-    {
-        await using NpgsqlConnection connection = new(Api.ConnectionString);
-        await connection.OpenAsync(Cancellation);
-        await using NpgsqlCommand command = new(
-            """
-            SELECT data_type, is_nullable FROM information_schema.columns
-            WHERE table_schema = 'public' AND table_name = @table AND column_name = @column;
-            """,
-            connection);
-        command.Parameters.AddWithValue("table", table);
-        command.Parameters.AddWithValue("column", column);
-
-        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(Cancellation);
-        if (!await reader.ReadAsync(Cancellation))
-        {
-            return null;
-        }
-
-        return (reader.GetString(0), reader.GetString(1) == "YES");
-    }
-
-    private async Task<IReadOnlyList<string>> PrimaryKeyColumnsAsync(string table)
-    {
-        await using NpgsqlConnection connection = new(Api.ConnectionString);
-        await connection.OpenAsync(Cancellation);
-        await using NpgsqlCommand command = new(
+        IReadOnlyList<string> actual = await QueryAsync(
             """
             SELECT key_column.column_name
             FROM information_schema.table_constraints AS constraint_metadata
@@ -140,23 +64,78 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
                 AND key_column.table_schema = constraint_metadata.table_schema
             WHERE constraint_metadata.table_schema = 'public'
                 AND constraint_metadata.table_name = @table
+                AND constraint_metadata.constraint_name = @constraint
                 AND constraint_metadata.constraint_type = 'PRIMARY KEY'
             ORDER BY key_column.ordinal_position;
             """,
-            connection);
-        command.Parameters.AddWithValue("table", table);
+            reader => reader.GetString(0),
+            ("table", table),
+            ("constraint", constraintName));
 
-        List<string> columns = [];
-        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(Cancellation);
-        while (await reader.ReadAsync(Cancellation))
-        {
-            columns.Add(reader.GetString(0));
-        }
-
-        return columns;
+        Assert.Equal(columns, actual);
     }
 
-    private async Task<object?> ScalarAsync(string sql, params (string Name, string Value)[] parameters)
+    [Theory]
+    [InlineData(UsersSchema.SignUpIdUnique, "sign_up_id")]
+    [InlineData(UsersSchema.PhoneLookupHashUnique, "phone_lookup_hash")]
+    [InlineData(UsersSchema.EmailLookupHashUnique, "email_lookup_hash")]
+    public async Task The_unique_index_exists_under_the_name_the_module_declares(string indexName, string column)
+    {
+        IReadOnlyList<string> definitions = await QueryAsync(
+            "SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND indexname = @index;",
+            reader => reader.GetString(0),
+            ("index", indexName));
+
+        string definition = Assert.Single(definitions);
+        Assert.Equal($"CREATE UNIQUE INDEX {indexName} ON public.users USING btree ({column})", definition);
+    }
+
+    [Fact]
+    public async Task Deleting_a_user_is_refused_while_its_consents_exist()
+    {
+        IReadOnlyList<string> rules = await QueryAsync(
+            """
+            SELECT delete_rule FROM information_schema.referential_constraints
+            WHERE constraint_schema = 'public' AND constraint_name = @constraint;
+            """,
+            reader => reader.GetString(0),
+            ("constraint", UsersSchema.UserConsentsUserForeignKey));
+
+        Assert.Equal("RESTRICT", Assert.Single(rules));
+    }
+
+    [Fact]
+    public async Task No_column_uses_a_floating_point_type()
+    {
+        IReadOnlyList<string> offenders = await QueryAsync(
+            """
+            SELECT table_name || '.' || column_name FROM information_schema.columns
+            WHERE table_schema = 'public' AND data_type IN ('real', 'double precision');
+            """,
+            reader => reader.GetString(0));
+
+        Assert.Empty(offenders);
+    }
+
+    private Task<IReadOnlyList<Column>> ColumnsOfAsync(string table) =>
+        QueryAsync(
+            """
+            SELECT column_name, data_type, is_nullable, character_maximum_length
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = @table
+            ORDER BY column_name;
+            """,
+            reader => new Column(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2) == "YES",
+                reader.IsDBNull(3) ? null : reader.GetInt32(3)),
+            ("table", table));
+
+    private async Task<IReadOnlyList<T>> QueryAsync<T>(
+        string sql,
+        Func<NpgsqlDataReader, T> read,
+        params (string Name, string Value)[] parameters)
     {
         await using NpgsqlConnection connection = new(Api.ConnectionString);
         await connection.OpenAsync(Cancellation);
@@ -166,6 +145,13 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
             command.Parameters.AddWithValue(name, value);
         }
 
-        return await command.ExecuteScalarAsync(Cancellation);
+        List<T> rows = [];
+        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(Cancellation);
+        while (await reader.ReadAsync(Cancellation))
+        {
+            rows.Add(read(reader));
+        }
+
+        return rows;
     }
 }

@@ -19,16 +19,16 @@ public partial class AddUsers : Migration
                 sign_up_id = table.Column<Guid>(type: "uuid", nullable: false),
                 first_name_ciphertext = table.Column<string>(type: "text", nullable: false),
                 last_name_ciphertext = table.Column<string>(type: "text", nullable: false),
+                locale = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                 phone_ciphertext = table.Column<string>(type: "text", nullable: false),
                 phone_lookup_hash = table.Column<byte[]>(type: "bytea", nullable: false),
                 email_ciphertext = table.Column<string>(type: "text", nullable: false),
-                email_lookup_hash = table.Column<byte[]>(type: "bytea", nullable: false),
-                locale = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                email_lookup_hash = table.Column<byte[]>(type: "bytea", nullable: false)
             },
             constraints: table =>
             {
-                table.PrimaryKey("PK_users", x => x.id);
+                table.PrimaryKey("pk_users", x => x.id);
             });
 
         migrationBuilder.CreateTable(
@@ -42,13 +42,13 @@ public partial class AddUsers : Migration
             },
             constraints: table =>
             {
-                table.PrimaryKey("PK_user_consents", x => new { x.user_id, x.document_kind });
+                table.PrimaryKey("pk_user_consents", x => new { x.user_id, x.document_kind });
                 table.ForeignKey(
                     name: "fk_user_consents_users_user_id",
                     column: x => x.user_id,
                     principalTable: "users",
                     principalColumn: "id",
-                    onDelete: ReferentialAction.Cascade);
+                    onDelete: ReferentialAction.Restrict);
             });
 
         migrationBuilder.CreateIndex(
