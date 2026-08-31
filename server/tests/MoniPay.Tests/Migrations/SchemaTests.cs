@@ -1,6 +1,5 @@
 using MoniPay.Tests.Support;
 using MoniPay.Users.Persistence;
-using Npgsql;
 using Xunit;
 
 namespace MoniPay.Tests.Migrations;
@@ -55,7 +54,7 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
         string constraintName,
         params string[] columns)
     {
-        IReadOnlyList<string> actual = await QueryAsync(
+        IReadOnlyList<string> actual = await Api.QueryAsync(
             """
             SELECT key_column.column_name
             FROM information_schema.table_constraints AS constraint_metadata
@@ -81,7 +80,7 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
     [InlineData(UsersSchema.EmailLookupHashUnique, "email_lookup_hash")]
     public async Task The_unique_index_exists_under_the_name_the_module_declares(string indexName, string column)
     {
-        IReadOnlyList<string> definitions = await QueryAsync(
+        IReadOnlyList<string> definitions = await Api.QueryAsync(
             "SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND indexname = @index;",
             reader => reader.GetString(0),
             ("index", indexName));
@@ -93,7 +92,7 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task Deleting_a_user_is_refused_while_its_consents_exist()
     {
-        IReadOnlyList<string> rules = await QueryAsync(
+        IReadOnlyList<string> rules = await Api.QueryAsync(
             """
             SELECT delete_rule FROM information_schema.referential_constraints
             WHERE constraint_schema = 'public' AND constraint_name = @constraint;
@@ -107,7 +106,7 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task No_column_uses_a_floating_point_type()
     {
-        IReadOnlyList<string> offenders = await QueryAsync(
+        IReadOnlyList<string> offenders = await Api.QueryAsync(
             """
             SELECT table_name || '.' || column_name FROM information_schema.columns
             WHERE table_schema = 'public' AND data_type IN ('real', 'double precision');
@@ -118,7 +117,7 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
     }
 
     private Task<IReadOnlyList<Column>> ColumnsOfAsync(string table) =>
-        QueryAsync(
+        Api.QueryAsync(
             """
             SELECT column_name, data_type, is_nullable, character_maximum_length
             FROM information_schema.columns
@@ -132,26 +131,4 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
                 reader.IsDBNull(3) ? null : reader.GetInt32(3)),
             ("table", table));
 
-    private async Task<IReadOnlyList<T>> QueryAsync<T>(
-        string sql,
-        Func<NpgsqlDataReader, T> read,
-        params (string Name, string Value)[] parameters)
-    {
-        await using NpgsqlConnection connection = new(Api.ConnectionString);
-        await connection.OpenAsync(Cancellation);
-        await using NpgsqlCommand command = new(sql, connection);
-        foreach ((string name, string value) in parameters)
-        {
-            command.Parameters.AddWithValue(name, value);
-        }
-
-        List<T> rows = [];
-        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(Cancellation);
-        while (await reader.ReadAsync(Cancellation))
-        {
-            rows.Add(read(reader));
-        }
-
-        return rows;
-    }
 }

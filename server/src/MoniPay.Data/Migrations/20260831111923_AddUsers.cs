@@ -19,12 +19,12 @@ public partial class AddUsers : Migration
                 sign_up_id = table.Column<Guid>(type: "uuid", nullable: false),
                 first_name_ciphertext = table.Column<string>(type: "text", nullable: false),
                 last_name_ciphertext = table.Column<string>(type: "text", nullable: false),
-                locale = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
-                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                 phone_ciphertext = table.Column<string>(type: "text", nullable: false),
                 phone_lookup_hash = table.Column<byte[]>(type: "bytea", nullable: false),
                 email_ciphertext = table.Column<string>(type: "text", nullable: false),
-                email_lookup_hash = table.Column<byte[]>(type: "bytea", nullable: false)
+                email_lookup_hash = table.Column<byte[]>(type: "bytea", nullable: false),
+                locale = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
             },
             constraints: table =>
             {

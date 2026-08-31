@@ -5,6 +5,9 @@ The database: one `DbContext`, one connection, one migration history.
 - `MoniPayDbContext.cs` — owns no entity of its own. `OnModelCreating` applies the
   `IEntityTypeConfiguration` types found in the module assemblies it is given, so a module maps
   its own tables and no module maps another's.
+- `KernelConversions.cs` — how the kernel's primitives are stored (`UserId` and `SignUpId` as
+  `uuid`, `Locale` as its tag), declared once in `ConfigureConventions` so a module maps a column
+  name and nothing else.
 - `DataModule.cs` — `AddDataModule(configuration, moduleAssemblies)`. The host passes the module
   list; this project references no module, which is what keeps the dependency arrow pointing one
   way.

@@ -24,23 +24,15 @@ internal sealed class User
 
     public Ciphertext LastName { get; private set; }
 
-    public ProtectedContact Phone => new(PhoneCiphertext, PhoneHash);
+    public required ProtectedContact Phone { get; init; }
 
-    public ProtectedContact Email => new(EmailCiphertext, EmailHash);
+    public required ProtectedContact Email { get; init; }
 
     public Locale Locale { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
 
     public IReadOnlyCollection<UserConsent> Consents => consents;
-
-    private Ciphertext PhoneCiphertext { get; set; }
-
-    private LookupHash PhoneHash { get; set; }
-
-    private Ciphertext EmailCiphertext { get; set; }
-
-    private LookupHash EmailHash { get; set; }
 
     /// <summary>
     /// Registers a user who accepted the terms and the privacy policy at the versions the
@@ -65,10 +57,8 @@ internal sealed class User
             SignUpId = signUpId,
             FirstName = firstName,
             LastName = lastName,
-            PhoneCiphertext = phone.Ciphertext,
-            PhoneHash = phone.Hash,
-            EmailCiphertext = email.Ciphertext,
-            EmailHash = email.Hash,
+            Phone = phone,
+            Email = email,
             Locale = locale,
             CreatedAt = registeredAt,
         };

@@ -32,16 +32,6 @@ namespace MoniPay.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("EmailCiphertext")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("email_ciphertext");
-
-                    b.Property<byte[]>("EmailHash")
-                        .IsRequired()
-                        .HasColumnType("bytea")
-                        .HasColumnName("email_lookup_hash");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("text")
@@ -58,30 +48,12 @@ namespace MoniPay.Persistence.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("locale");
 
-                    b.Property<string>("PhoneCiphertext")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("phone_ciphertext");
-
-                    b.Property<byte[]>("PhoneHash")
-                        .IsRequired()
-                        .HasColumnType("bytea")
-                        .HasColumnName("phone_lookup_hash");
-
                     b.Property<Guid>("SignUpId")
                         .HasColumnType("uuid")
                         .HasColumnName("sign_up_id");
 
                     b.HasKey("Id")
                         .HasName("pk_users");
-
-                    b.HasIndex("EmailHash")
-                        .IsUnique()
-                        .HasDatabaseName("ix_users_email_lookup_hash");
-
-                    b.HasIndex("PhoneHash")
-                        .IsUnique()
-                        .HasDatabaseName("ix_users_phone_lookup_hash");
 
                     b.HasIndex("SignUpId")
                         .IsUnique()
@@ -115,6 +87,69 @@ namespace MoniPay.Persistence.Migrations
                         .HasName("pk_user_consents");
 
                     b.ToTable("user_consents", (string)null);
+                });
+
+            modelBuilder.Entity("MoniPay.Users.Domain.User", b =>
+                {
+                    b.OwnsOne("MoniPay.Users.Domain.ProtectedContact", "Email", b1 =>
+                        {
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Ciphertext")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("email_ciphertext");
+
+                            b1.Property<byte[]>("Hash")
+                                .IsRequired()
+                                .HasColumnType("bytea")
+                                .HasColumnName("email_lookup_hash");
+
+                            b1.HasKey("UserId");
+
+                            b1.HasIndex("Hash")
+                                .IsUnique()
+                                .HasDatabaseName("ix_users_email_lookup_hash");
+
+                            b1.ToTable("users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId");
+                        });
+
+                    b.OwnsOne("MoniPay.Users.Domain.ProtectedContact", "Phone", b1 =>
+                        {
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Ciphertext")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("phone_ciphertext");
+
+                            b1.Property<byte[]>("Hash")
+                                .IsRequired()
+                                .HasColumnType("bytea")
+                                .HasColumnName("phone_lookup_hash");
+
+                            b1.HasKey("UserId");
+
+                            b1.HasIndex("Hash")
+                                .IsUnique()
+                                .HasDatabaseName("ix_users_phone_lookup_hash");
+
+                            b1.ToTable("users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId");
+                        });
+
+                    b.Navigation("Email")
+                        .IsRequired();
+
+                    b.Navigation("Phone")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MoniPay.Users.Domain.UserConsent", b =>

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using MoniPay.Kernel;
 using MoniPay.Users.Domain;
 
 namespace MoniPay.Users.Persistence;
@@ -17,9 +16,7 @@ internal sealed class UserConsentConfiguration : IEntityTypeConfiguration<UserCo
         builder.HasKey(consent => new { consent.UserId, consent.DocumentKind })
             .HasName(UsersSchema.UserConsentsPrimaryKey);
 
-        builder.Property(consent => consent.UserId)
-            .HasColumnName("user_id")
-            .HasConversion(id => id.Value, value => new UserId(value));
+        builder.Property(consent => consent.UserId).HasColumnName("user_id");
         builder.Property(consent => consent.DocumentKind)
             .HasColumnName("document_kind")
             .HasConversion<string>()
