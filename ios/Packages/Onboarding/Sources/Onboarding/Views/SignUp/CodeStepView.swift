@@ -6,6 +6,10 @@ import SwiftUI
 /// the countdown and the verification both live on the model.
 struct CodeStepView: View {
     let model: SignUpModel
+    var feedback: AuthenticationFeedback?
+    var onRecovery: () -> Void = {}
+
+    private var allowsEntry: Bool { feedback?.allowsCodeEntry ?? true }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -13,7 +17,7 @@ struct CodeStepView: View {
                 .font(.heading1).tight().foregroundStyle(Brand.ink)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Sent to \(model.draft.displayPhone)", bundle: .module)
+            Text("Code for \(model.draft.displayPhone)", bundle: .module)
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted)
                 .monospacedDigit()
                 .padding(.top, Metric.lede)
@@ -22,20 +26,26 @@ struct CodeStepView: View {
                                    set: { model.setCode($0) }),
                      length: SignUpDraft.codeLength)
                 .padding(.top, Metric.section)
+                .disabled(!allowsEntry)
 
-            resendRow
-                .padding(.top, Metric.large)
+            if let feedback {
+                AuthenticationFeedbackView(feedback: feedback, onRecovery: onRecovery)
+            } else {
+                resendRow.padding(.top, Metric.large)
+            }
 
             Spacer(minLength: Metric.block)
 
             MPButton(title: Text("Verify", bundle: .module),
                      tone: .primary,
-                     loading: model.isVerifying,
-                     enabled: model.draft.isCodeComplete) { model.verify() }
+                     loading: model.isVerifying || feedback?.isLoading == true,
+                     enabled: allowsEntry && model.draft.isCodeComplete) { model.verify() }
         }
         .gutter()
         .padding(.bottom, Metric.small)
-        .task(id: model.resendGeneration) { await model.countdown() }
+        .task(id: model.resendGeneration) {
+            if feedback == nil { await model.countdown() }
+        }
         .onDisappear { model.cancelVerification() }
     }
 

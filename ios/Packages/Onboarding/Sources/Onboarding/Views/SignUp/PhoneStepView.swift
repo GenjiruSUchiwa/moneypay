@@ -6,15 +6,20 @@ import SwiftUI
 struct PhoneStepView: View {
     let model: SignUpModel
     let onContinue: () -> Void
+    var isSigningIn = false
+    var feedback: AuthenticationFeedback?
+    var onRecovery: () -> Void = {}
     @State private var isPickingCountry = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("What is your\nnumber?", bundle: .module)
+            Text(isSigningIn ? "Welcome back" : "What is your\nnumber?", bundle: .module)
                 .font(.heading1).tight().foregroundStyle(Brand.ink)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("A six-digit code goes out to this line. It is also the line your Mobile Money top-ups arrive on.",
+            Text(isSigningIn
+                 ? "Enter your account's phone number. We will send you a six-digit code to sign in."
+                 : "A six-digit code goes out to this line. It is also the line your Mobile Money top-ups arrive on.",
                  bundle: .module)
                 .font(.bodyReg).foregroundStyle(Brand.inkMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -31,15 +36,23 @@ struct PhoneStepView: View {
                 onCountryTap: { isPickingCountry = true }
             )
             .padding(.top, Metric.block)
+            .disabled(feedback?.isLoading == true)
+
+            if let feedback {
+                AuthenticationFeedbackView(feedback: feedback, onRecovery: onRecovery)
+            }
 
             Spacer(minLength: Metric.block)
 
             MPButton(title: Text("Send me the code", bundle: .module),
                      tone: .primary,
+                     loading: feedback?.isLoading == true,
                      enabled: model.draft.isPhoneValid,
                      action: onContinue)
 
-            Text("By continuing you accept MoniPay's terms and privacy policy.", bundle: .module)
+            Text(isSigningIn
+                 ? "On a new device, you will set up a new passcode and Face ID after verification."
+                 : "By continuing you accept MoniPay's terms and privacy policy.", bundle: .module)
                 .font(.micro).foregroundStyle(Brand.inkFaint)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, Metric.small)
