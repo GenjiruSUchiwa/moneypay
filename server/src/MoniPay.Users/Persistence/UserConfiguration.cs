@@ -16,14 +16,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(user => user.Id).HasName(UsersSchema.UsersPrimaryKey);
         builder.Property(user => user.Id).HasColumnName("id");
         builder.Property(user => user.SignUpId).HasColumnName("sign_up_id").IsRequired();
-        builder.Property(user => user.FirstName)
-            .HasColumnName("first_name_ciphertext")
-            .HasConversion(ciphertext => ciphertext.Value, value => new Ciphertext(value))
-            .IsRequired();
-        builder.Property(user => user.LastName)
-            .HasColumnName("last_name_ciphertext")
-            .HasConversion(ciphertext => ciphertext.Value, value => new Ciphertext(value))
-            .IsRequired();
+        builder.Property(user => user.FirstName).HasColumnName("first_name_ciphertext").IsRequired();
+        builder.Property(user => user.LastName).HasColumnName("last_name_ciphertext").IsRequired();
         builder.OwnsOne(user => user.Phone, contact => MapContact(contact, "phone", UsersSchema.PhoneLookupHashUnique));
         builder.OwnsOne(user => user.Email, contact => MapContact(contact, "email", UsersSchema.EmailLookupHashUnique));
         builder.Property(user => user.Locale).HasColumnName("locale").IsRequired();
@@ -50,14 +44,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         string column,
         string uniqueIndex)
     {
-        contact.Property(value => value.Ciphertext)
-            .HasColumnName(column + "_ciphertext")
-            .HasConversion(ciphertext => ciphertext.Value, value => new Ciphertext(value))
-            .IsRequired();
-        contact.Property(value => value.Hash)
-            .HasColumnName(column + "_lookup_hash")
-            .HasConversion(hash => hash.Value, value => new LookupHash(value))
-            .IsRequired();
+        contact.Property(value => value.Ciphertext).HasColumnName(column + "_ciphertext").IsRequired();
+        contact.Property(value => value.Hash).HasColumnName(column + "_lookup_hash").IsRequired();
         contact.HasIndex(value => value.Hash).IsUnique().HasDatabaseName(uniqueIndex);
     }
 }

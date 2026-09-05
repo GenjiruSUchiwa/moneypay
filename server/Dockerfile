@@ -7,6 +7,7 @@ COPY src/Directory.Build.props src/Directory.Build.props
 COPY src/MoniPay.Api/MoniPay.Api.csproj src/MoniPay.Api/MoniPay.Api.csproj
 COPY src/MoniPay.Data/MoniPay.Data.csproj src/MoniPay.Data/MoniPay.Data.csproj
 COPY src/MoniPay.Kernel/MoniPay.Kernel.csproj src/MoniPay.Kernel/MoniPay.Kernel.csproj
+COPY src/MoniPay.Sessions/MoniPay.Sessions.csproj src/MoniPay.Sessions/MoniPay.Sessions.csproj
 COPY src/MoniPay.Users/MoniPay.Users.csproj src/MoniPay.Users/MoniPay.Users.csproj
 COPY src/MoniPay.Wallet/MoniPay.Wallet.csproj src/MoniPay.Wallet/MoniPay.Wallet.csproj
 RUN dotnet restore src/MoniPay.Api/MoniPay.Api.csproj
