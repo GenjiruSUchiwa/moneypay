@@ -10,10 +10,10 @@ writes, the domain that decides, the contracts it speaks, and the HTTP routes th
 | `MoniPay.Data` | `MoniPayDbContext`, the connection, `Migrations/`. Applies the modules' entity configurations; references no module. | `Kernel` |
 | `MoniPay.Users` | The user profile: normalized contact data, locale, legal consent. | `Kernel`, `Data` |
 | `MoniPay.Wallet` | The FCFA ledger: balance, holds, authorization. | `Kernel`, `Data` |
+| `MoniPay.Notifications` | The delivery module: the outbox producers enqueue into, its `notifications` table, recipient protection, the commit signal. No message text, no provider channel yet. | `Kernel`, `Data` |
 | `MoniPay.Api` | The host: `Program.cs`, middleware, the OpenAPI document, health. No business logic. | every module |
 
-Planned, not yet created: `Sessions`, `TopUps`, `Cards`, `Transactions`, `Fx`, `Kyc`,
-`Notifications`, `Outbox`.
+Planned, not yet created: `Sessions`, `TopUps`, `Cards`, `Transactions`, `Fx`, `Kyc`, `Outbox`.
 
 ## Rules
 

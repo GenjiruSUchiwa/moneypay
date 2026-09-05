@@ -1,3 +1,4 @@
+using MoniPay.Notifications;
 using MoniPay.Sessions;
 using MoniPay.Sessions.Ports;
 using MoniPay.Sessions.Providers;
@@ -27,6 +28,16 @@ public sealed class PublicSurfaceTests
             ]
         },
         { typeof(UsersModule), [typeof(UsersModule)] },
+        {
+            typeof(NotificationsModule),
+            [
+                typeof(NotificationsModule),
+                typeof(NotificationOutbox),
+                typeof(OutboundMessage),
+                typeof(NotificationChannel),
+                typeof(NotificationStatus),
+            ]
+        },
     };
 
     [Theory]

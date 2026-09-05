@@ -1,5 +1,6 @@
 using System.Reflection;
 using MoniPay.Kernel;
+using MoniPay.Notifications;
 using MoniPay.Sessions;
 using MoniPay.Users;
 using MoniPay.Wallet;
@@ -19,6 +20,7 @@ public sealed class ModuleBoundaryTests
     [InlineData(typeof(SessionsModule))]
     [InlineData(typeof(UsersModule))]
     [InlineData(typeof(WalletModule))]
+    [InlineData(typeof(NotificationsModule))]
     public void A_module_references_nothing_beyond_the_kernel_and_the_shared_context(Type module)
     {
         IEnumerable<string> references = MoniPayReferencesOf(module.Assembly);
