@@ -181,17 +181,20 @@ One transition, one method, guard clauses first. A method that needs more than e
 |---|---|---|---|---:|
 | Start | IP rate limit | ASP.NET Core rate limiter | `rate-limited` | `429` |
 | Start | Phone starts per hour | Handler, `sign_ups` count by phone hash | `rate-limited` | `429` |
-| Start | One active sign-up per phone | Handler, then unique partial index | Reuse the active sign-up, return `202` | `202` |
+| Start | One active sign-up per phone | Handler, row locked `FOR UPDATE` under the phone lock, then unique partial index | Reuse the active sign-up, return `202` | `202` |
+| Start | Reopened sign-up not locked | Aggregate | `signup-attempt-limit`, `Retry-After` to its expiry | `429` |
+| Start | Reopened sign-up is `CodePending` | Aggregate | `signup-state-invalid` | `409` |
+| Start | Reopened sign-up: cooldown elapsed, resend count below limit | Aggregate, the resend rules | `signup-resend-too-soon`, `signup-resend-limit` | `429` |
 | Get | Workflow token matches `signUpId` | Authentication handler | `signup-token-invalid` | `401` |
 | Resend | Sign-up not expired | Aggregate | `signup-expired` | `410` |
 | Resend | Status is `CodePending` | Aggregate | `signup-state-invalid` | `409` |
 | Resend | Cooldown elapsed | Aggregate | `signup-resend-too-soon` | `429` |
-| Resend | Resend count below limit | Aggregate | `signup-resend-limit` | `429` |
+| Resend | Resend count below limit | Aggregate | `signup-resend-limit`, `Retry-After` to the sign-up's expiry | `429` |
 | Verify | Sign-up not expired | Aggregate | `signup-expired` | `410` |
 | Verify | Not locked | Aggregate | `signup-attempt-limit` | `429` |
 | Verify | Code not expired | Aggregate | `verification-code-expired` | `410` |
 | Verify | Digest matches | Aggregate, constant time | `verification-code-invalid` | `422` |
-| Verify | Phone not already registered | Handler, `IRegisteredPhoneLookup` port on the normalized phone | `phone-already-registered` | `409` |
+| Verify | Phone not already registered | Handler, `IRegisteredPhoneLookup` port on the normalized phone; the sign-up is closed so the phone is free at once | `phone-already-registered` | `409` |
 | Complete | Registration token valid and bound to `signUpId` | Authentication handler | `registration-token-invalid` | `401` |
 | Complete | Status is `PhoneVerified` or `Completed` | Aggregate | `signup-state-invalid` | `409` |
 | Complete | Email not registered | Users handler, then unique index | `email-already-registered` | `409` |

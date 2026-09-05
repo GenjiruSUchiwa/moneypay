@@ -497,6 +497,8 @@ internal sealed class ExpiredCredentialCleanupService(
 
 The worker deletes expired sign-ups and old consumed refresh tokens in bounded batches. It never deletes active sessions.
 
+A sign-up row is kept until both its `expires_at` and `created_at + MoniPay:Sessions:StartWindow` have passed: the per-phone start limit counts rows by `created_at`, so a row deleted earlier would let a phone escape the limit. The cutoff is `now - max(SignUpLifetime, StartWindow)`, never plain `now`.
+
 ## Aggregate behavior
 
 Handlers load one aggregate and call behavior on it:

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MoniPay.Api;
 using MoniPay.Kernel.Http;
 using MoniPay.Sessions;
+using MoniPay.Tests.Fakes;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -28,6 +29,12 @@ public sealed class MoniPayApi : IAsyncLifetime
 
     public TestTimeProvider Time { get; } = new();
 
+    /// <summary>Stands in for the host's delivery adapter until it lands; tests read codes from here.</summary>
+    public RecordingVerificationCodeSender Sender { get; } = new();
+
+    /// <summary>Stands in for the host's Users adapter until it lands.</summary>
+    public StubRegisteredPhoneLookup RegisteredPhones { get; } = new();
+
     internal string ConnectionString { get; private set; } = string.Empty;
 
     public async ValueTask InitializeAsync()
@@ -41,8 +48,10 @@ public sealed class MoniPayApi : IAsyncLifetime
             builder.UseSetting("ConnectionStrings:MoniPay", ConnectionString);
             builder.UseSetting(MoniPayConfiguration.ApplyMigrationsOnStartup, "true");
             builder.UseTestKeys();
+            builder.UseTestPorts(this);
             builder.UseSetting(SessionsOptions.Keys.MaximumVerificationAttempts, "3");
             builder.UseSetting(SessionsOptions.Keys.VerificationCodeLifetime, "00:02:00");
+            builder.UseSetting(SessionsOptions.Keys.MaximumStartsPerWindow, "3");
 
             builder.ConfigureServices(services =>
             {

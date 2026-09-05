@@ -18,6 +18,8 @@ internal sealed class SessionsOptions
     private const int DefaultMaximumResends = 3;
     private const int DefaultMaximumVerificationAttempts = 5;
     private static readonly TimeSpan DefaultSignUpLifetime = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan DefaultStartWindow = TimeSpan.FromHours(1);
+    private const int DefaultMaximumStartsPerWindow = 5;
 
     /// <summary>The shortest and longest code length a workable configuration allows.</summary>
     public const int MinimumCodeLength = 4;
@@ -46,7 +48,10 @@ internal sealed class SessionsOptions
     /// <summary>The minimum delay between two code deliveries.</summary>
     public TimeSpan ResendCooldown { get; set; } = DefaultResendCooldown;
 
-    /// <summary>How many times a code may be resent before the sign-up must be restarted.</summary>
+    /// <summary>
+    /// How many times a code may be delivered again for one sign-up, by a resend or by a start
+    /// that reopens it: the two share the budget, because both send a message.
+    /// </summary>
     public int MaximumResends { get; set; } = DefaultMaximumResends;
 
     /// <summary>How many code checks a sign-up tolerates before it locks.</summary>
@@ -54,6 +59,19 @@ internal sealed class SessionsOptions
 
     /// <summary>The maximum lifetime of one sign-up, lock included.</summary>
     public TimeSpan SignUpLifetime { get; set; } = DefaultSignUpLifetime;
+
+    /// <summary>
+    /// The sliding window of the persistent per-phone start limit, shared with sign-in. The
+    /// limit counts <c>sign_ups</c> rows by <c>created_at</c>, so cleanup must keep a closed row
+    /// until <c>created_at</c> is older than this window, whatever its <c>expires_at</c>.
+    /// </summary>
+    public TimeSpan StartWindow { get; set; } = DefaultStartWindow;
+
+    /// <summary>
+    /// How many sign-ups one phone may open within <see cref="StartWindow"/>. Reopening the
+    /// active one is not a new sign-up; <see cref="MaximumResends"/> limits that.
+    /// </summary>
+    public int MaximumStartsPerWindow { get; set; } = DefaultMaximumStartsPerWindow;
 
     /// <summary>The 32-byte HMAC key hashing verification codes and workflow tokens, base64-encoded.</summary>
     public string VerificationCodeKeyBase64 { get; set; } = string.Empty;
@@ -75,7 +93,9 @@ internal sealed class SessionsOptions
         && ResendCooldown >= TimeSpan.Zero
         && MaximumResends >= 0
         && MaximumVerificationAttempts >= 1
-        && SignUpLifetime > TimeSpan.Zero;
+        && SignUpLifetime > TimeSpan.Zero
+        && StartWindow > TimeSpan.Zero
+        && MaximumStartsPerWindow >= 1;
 
     /// <summary>The configuration keys, declared so a mistyped key is a compile error.</summary>
     public static class Keys
@@ -87,6 +107,8 @@ internal sealed class SessionsOptions
         public const string MaximumResends = $"{SectionName}:{nameof(MaximumResends)}";
         public const string MaximumVerificationAttempts = $"{SectionName}:{nameof(MaximumVerificationAttempts)}";
         public const string SignUpLifetime = $"{SectionName}:{nameof(SignUpLifetime)}";
+        public const string StartWindow = $"{SectionName}:{nameof(StartWindow)}";
+        public const string MaximumStartsPerWindow = $"{SectionName}:{nameof(MaximumStartsPerWindow)}";
         public const string VerificationCodeKeyBase64 = $"{SectionName}:{nameof(VerificationCodeKeyBase64)}";
         public const string PersonalDataKeyBase64 = $"{SectionName}:{nameof(PersonalDataKeyBase64)}";
     }
