@@ -55,6 +55,12 @@ final class SignUpModel {
 
     func back() {
         guard let previous = SignUpStep(rawValue: step.rawValue - 1) else { return }
+        // A completed confirmation must not be replayed when the keyboard reappears.
+        if previous == .passcode {
+            passcode = PasscodeEntry()
+            draft.passcode = ""
+            lastPasscodeEvent = nil
+        }
         step = previous
     }
 
@@ -105,6 +111,11 @@ final class SignUpModel {
     func resend() { armResend() }
 
     // MARK: - Passcode step
+
+    func setPasscodeEntry(_ raw: String, during phase: PasscodeEntry.Phase) {
+        guard step == .passcode, passcode.phase == phase else { return }
+        setPasscodeEntry(raw)
+    }
 
     func setPasscodeEntry(_ raw: String) {
         lastPasscodeEvent = passcode.setEntry(raw)

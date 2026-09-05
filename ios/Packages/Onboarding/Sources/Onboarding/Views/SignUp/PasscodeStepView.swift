@@ -27,11 +27,7 @@ struct PasscodeStepView: View {
             }
             .padding(.top, Metric.block)
 
-            // A text field hands over its whole current text on every edit; `setPasscodeEntry`
-            // owns the digits, the length and the phase, so this view never sees a keystroke.
-            PasscodeDots(code: Binding(get: { model.passcode.entry },
-                                       set: { model.setPasscodeEntry($0) }),
-                         error: model.passcode.isMismatch)
+            passcodeInput
                 .padding(.top, Metric.section)
 
             Spacer()
@@ -40,6 +36,15 @@ struct PasscodeStepView: View {
         .frame(maxWidth: .infinity)
         .sensoryFeedback(.success, trigger: model.lastPasscodeEvent) { _, new in new == .confirmed }
         .sensoryFeedback(.warning, trigger: model.lastPasscodeEvent) { _, new in new == .mismatch }
+    }
+
+    private var passcodeInput: some View {
+        let phase = model.passcode.phase
+        // UIKit can replay the completed field value before SwiftUI installs the confirmation field.
+        return PasscodeDots(code: Binding(get: { model.passcode.entry },
+                                          set: { model.setPasscodeEntry($0, during: phase) }),
+                            error: model.passcode.isMismatch)
+            .id(phase)
     }
 }
 
