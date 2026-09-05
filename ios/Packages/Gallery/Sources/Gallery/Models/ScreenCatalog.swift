@@ -50,7 +50,7 @@ public enum ScreenCatalog {
         return seen
     }
 
-    public static let all: [CatalogEntry] = [
+    public static let all: [CatalogEntry] = authenticationPreviews + [
         e(.init("splash", "Splash", "Onboarding", "sparkles", Viz.categorical[6])) { _ in
             OnboardingRoot(dependencies: .preview, stage: .splash, onFinish: { _ in })
         },
@@ -183,6 +183,13 @@ public enum ScreenCatalog {
             NavigationStack { GalleryView() }
         }
     ]
+
+    private static let authenticationPreviews: [CatalogEntry] = OnboardingRoot.PreviewScenario.allCases.map { scenario in
+        let title = scenario.rawValue.replacingOccurrences(of: "-", with: " ").capitalized
+        return e(.init(scenario.rawValue, title, "Authentication states", "person.badge.key")) { _ in
+            OnboardingRoot(dependencies: .preview, stage: .preview(scenario), onFinish: { _ in })
+        }
+    }
 
     /// Identity and presentation of one entry, grouped so the builder below
     /// takes a value plus its view instead of six positional parameters.
