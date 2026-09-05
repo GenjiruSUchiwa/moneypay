@@ -1,5 +1,3 @@
-using System.Data.Common;
-using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using MoniPay.Kernel;
@@ -15,15 +13,13 @@ namespace MoniPay.Notifications.Persistence;
 /// <remarks>
 /// <c>MoniPay.Data</c> builds the shared options from every registered
 /// <see cref="IDbContextOptionsContributor"/>, so the data project never references this
-/// module. The interceptors are singletons, which is why the "this save carried a
-/// notification" fact lives in a table keyed by context rather than in a field.
+/// module. The interceptors are singletons, so the "this save carried a notification" fact
+/// lives in <see cref="CarryingContexts"/> rather than in a field.
 /// </remarks>
 internal sealed class NotificationCommitInterceptor(DeliverySignal signal)
     : SaveChangesInterceptor, IDbContextOptionsContributor
 {
-    private static readonly object CarriedNotification = new();
-
-    private readonly ConditionalWeakTable<DbContext, object> carryingContexts = new();
+    private readonly CarryingContexts carryingContexts = new();
 
     void IDbContextOptionsContributor.Contribute(DbContextOptionsBuilder options) =>
         options.AddInterceptors(this, new TransactionCommitSignal(signal, carryingContexts));
@@ -32,7 +28,7 @@ internal sealed class NotificationCommitInterceptor(DeliverySignal signal)
         DbContextEventData eventData,
         InterceptionResult<int> result)
     {
-        Remember(eventData.Context);
+        carryingContexts.Mark(eventData.Context);
         return base.SavingChanges(eventData, result);
     }
 
@@ -41,7 +37,7 @@ internal sealed class NotificationCommitInterceptor(DeliverySignal signal)
         InterceptionResult<int> result,
         CancellationToken cancellationToken = default)
     {
-        Remember(eventData.Context);
+        carryingContexts.Mark(eventData.Context);
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
@@ -60,48 +56,25 @@ internal sealed class NotificationCommitInterceptor(DeliverySignal signal)
         return base.SavedChangesAsync(eventData, result, cancellationToken);
     }
 
-    public override void SaveChangesFailed(DbContextErrorEventData eventData) => Forget(eventData.Context);
+    public override void SaveChangesFailed(DbContextErrorEventData eventData) =>
+        carryingContexts.Forget(eventData.Context);
 
     public override Task SaveChangesFailedAsync(
         DbContextErrorEventData eventData,
         CancellationToken cancellationToken = default)
     {
-        Forget(eventData.Context);
+        carryingContexts.Forget(eventData.Context);
         return Task.CompletedTask;
-    }
-
-    private void Remember(DbContext? context)
-    {
-        if (context is null
-            || !context.ChangeTracker.Entries<Domain.Notification>()
-                .Any(entry => entry.State == EntityState.Added))
-        {
-            return;
-        }
-
-        carryingContexts.Remove(context);
-        carryingContexts.Add(context, CarriedNotification);
     }
 
     private void RaiseWhenCommitted(DbContext? context)
     {
-        if (context is null || !carryingContexts.TryGetValue(context, out _))
+        if (context is not null
+            && context.Database.CurrentTransaction is null
+            && carryingContexts.Holds(context))
         {
-            return;
-        }
-
-        if (context.Database.CurrentTransaction is null)
-        {
-            carryingContexts.Remove(context);
+            carryingContexts.Forget(context);
             signal.Raise();
-        }
-    }
-
-    private void Forget(DbContext? context)
-    {
-        if (context is not null)
-        {
-            carryingContexts.Remove(context);
         }
     }
 }

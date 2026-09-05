@@ -42,7 +42,6 @@ public static class NotificationsModule
         services.AddScoped(serviceProvider => new NotificationOutbox(
             serviceProvider.GetRequiredService<MoniPayDbContext>(),
             serviceProvider.GetRequiredService<RecipientProtector>(),
-            serviceProvider.GetRequiredService<DeliverySignal>(),
             serviceProvider.GetRequiredService<TimeProvider>()));
 
         return services;

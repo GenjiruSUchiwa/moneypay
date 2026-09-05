@@ -152,6 +152,21 @@ public sealed class NotificationOutboxTests(MoniPayApi api) : MoniPayApiTest(api
         Assert.Equal("proton.m", welcome.hint);
     }
 
+    [Fact]
+    public void A_message_outside_the_contract_bounds_is_refused_at_the_call_site_not_at_save()
+    {
+        using IServiceScope scope = Api.Services.CreateScope();
+        NotificationOutbox outbox = scope.ServiceProvider.GetRequiredService<NotificationOutbox>();
+
+        OutboundMessage undefinedChannel = Message("bounds-channel") with { Channel = (NotificationChannel)99 };
+        OutboundMessage longKind = Message("bounds-kind") with { Kind = new string('k', NotificationsSchema.KindMaxLength + 1) };
+        OutboundMessage noCorrelation = Message("bounds-correlation") with { CorrelationId = default };
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => outbox.Enqueue(undefinedChannel));
+        Assert.Throws<ArgumentOutOfRangeException>(() => outbox.Enqueue(longKind));
+        Assert.Throws<ArgumentException>(() => outbox.Enqueue(noCorrelation));
+    }
+
     private static OutboundMessage Message(string idempotencyKey, Guid? correlationId = null) => new(
         Channel: NotificationChannel.Sms,
         Recipient: "+237670123456",

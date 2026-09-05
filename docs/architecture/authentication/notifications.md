@@ -153,7 +153,6 @@ Only these types are public:
 public sealed class NotificationOutbox(
     MoniPayDbContext database,
     RecipientProtector recipients,
-    DeliverySignal signal,
     TimeProvider timeProvider)
 {
     public void Enqueue(OutboundMessage message);

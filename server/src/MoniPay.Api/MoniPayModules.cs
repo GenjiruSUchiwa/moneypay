@@ -12,8 +12,8 @@ namespace MoniPay;
 /// <summary>
 /// The composition of the monolith, one call per module. Each module registers its own services
 /// in its <c>&lt;Module&gt;Module.cs</c> and maps its own routes from its <c>Endpoints/</c>
-/// folder, so adding a module means adding a line to each of the three lists below — never an
-/// edit inside another module.
+/// folder, so adding a module means a line in the assembly list and in the composition chain
+/// below — plus a route mapping when it has endpoints — never an edit inside another module.
 /// </summary>
 internal static class MoniPayModules
 {
