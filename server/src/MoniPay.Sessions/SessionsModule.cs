@@ -7,7 +7,10 @@ namespace MoniPay.Sessions;
 
 /// <summary>
 /// The composition of the sign-up and session machinery: the module's own services, registered
-/// by the module itself. It maps no route yet; the handlers arrive with their slices.
+/// by the module itself. It maps no route yet; the endpoints arrive with their slices, and the
+/// sign-up handlers are registered with them, once the host also provides the two ports they
+/// depend on (<c>IVerificationCodeSender</c>, <c>IRegisteredPhoneLookup</c>). Registering the
+/// handlers before their ports would fail a Development host at startup.
 /// </summary>
 public static class SessionsModule
 {

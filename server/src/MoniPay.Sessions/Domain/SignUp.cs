@@ -107,18 +107,15 @@ internal sealed class SignUp
 
     /// <summary>
     /// Replaces the verification code. The failed-attempt count is untouched: resending must
-    /// not reset the attacker's budget.
+    /// not reset the attacker's budget. A resend past the limit names the delay to the sign-up's
+    /// expiry: no resend will ever succeed on this row, but a fresh start will once it is closed.
     /// </summary>
     public void RotateVerificationCode(byte[] newDigest, DateTimeOffset now, SessionsOptions options)
     {
         ArgumentNullException.ThrowIfNull(newDigest);
         ArgumentNullException.ThrowIfNull(options);
 
-        if (ExpiresAt <= now)
-        {
-            throw new RefusalException(MoniPayErrorTypes.SignUpExpired);
-        }
-
+        RefuseUnlessAlive(now);
         if (Status != SignUpStatus.CodePending)
         {
             throw new RefusalException(MoniPayErrorTypes.SignUpStateInvalid);
@@ -131,13 +128,48 @@ internal sealed class SignUp
 
         if (ResendCount >= options.MaximumResends)
         {
-            throw new RefusalException(MoniPayErrorTypes.SignUpResendLimit);
+            throw new RefusalException(MoniPayErrorTypes.SignUpResendLimit, retryAfter: ExpiresAt - now);
         }
 
         CodeDigest = newDigest;
         CodeExpiresAt = now + options.VerificationCodeLifetime;
         ResendCount += 1;
         CanResendAt = now + options.ResendCooldown;
+        Version += 1;
+    }
+
+    /// <summary>
+    /// A start for a phone whose sign-up is in flight: the code is rotated under the resend rules
+    /// and the sign-up token is replaced. A locked sign-up answers with its retry delay, because
+    /// a fresh start will succeed once the lock has expired with the row.
+    /// </summary>
+    public void Restart(byte[] codeDigest, byte[] signUpTokenDigest, DateTimeOffset now, SessionsOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(signUpTokenDigest);
+
+        RefuseUnlessCodePending(now);
+        RotateVerificationCode(codeDigest, now, options);
+        SignUpTokenDigest = signUpTokenDigest;
+    }
+
+    public bool TryExpire(DateTimeOffset now)
+    {
+        if (Status is SignUpStatus.Completed or SignUpStatus.Expired || now < ExpiresAt)
+        {
+            return false;
+        }
+
+        Close();
+        return true;
+    }
+
+    /// <summary>
+    /// Closes a sign-up that can no longer complete, whatever its lifetime, so the phone is free
+    /// for a fresh one at once instead of at expiry.
+    /// </summary>
+    public void Close()
+    {
+        Status = SignUpStatus.Expired;
         Version += 1;
     }
 
@@ -153,7 +185,7 @@ internal sealed class SignUp
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        RefuseUnlessACheckIsPossible(now);
+        RefuseUnlessCodePending(now);
 
         if (CodeDigest is null || CodeExpiresAt is not { } codeExpiry || codeExpiry <= now)
         {
@@ -165,16 +197,31 @@ internal sealed class SignUp
             : RecordFailedAttempt(options.MaximumVerificationAttempts);
     }
 
-    private void RefuseUnlessACheckIsPossible(DateTimeOffset now)
+    /// <summary>
+    /// The refusal a locked sign-up answers with. The handler needs it too, once it has
+    /// persisted the attempt that locked the sign-up.
+    /// </summary>
+    public RefusalException AttemptLimitRefusal(DateTimeOffset now) =>
+        new(MoniPayErrorTypes.SignUpAttemptLimit, retryAfter: (LockedUntil ?? ExpiresAt) - now);
+
+    private void RefuseUnlessAlive(DateTimeOffset now)
     {
         if (Status == SignUpStatus.Expired || ExpiresAt <= now)
         {
             throw new RefusalException(MoniPayErrorTypes.SignUpExpired);
         }
+    }
 
+    /// <summary>
+    /// The guard restart and verify share. A resend answers a locked sign-up with the plain
+    /// state refusal instead: no delay makes a resend succeed on a locked row.
+    /// </summary>
+    private void RefuseUnlessCodePending(DateTimeOffset now)
+    {
+        RefuseUnlessAlive(now);
         if (Status == SignUpStatus.Locked)
         {
-            throw new RefusalException(MoniPayErrorTypes.SignUpAttemptLimit, retryAfter: (LockedUntil ?? ExpiresAt) - now);
+            throw AttemptLimitRefusal(now);
         }
 
         if (Status != SignUpStatus.CodePending)

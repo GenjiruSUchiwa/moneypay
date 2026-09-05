@@ -25,9 +25,13 @@ internal static class SessionsSchema
 
     /// <summary>
     /// The statuses a phone may still own a workflow for; completion or expiry frees the phone.
-    /// Locked stays in the filter so locking cannot be escaped by starting a fresh sign-up
-    /// with a fresh attempt budget on the same phone.
+    /// Locked stays in the list so locking cannot be escaped by starting a fresh sign-up
+    /// with a fresh attempt budget on the same phone. The start slice looks an active sign-up up
+    /// by the same list, so what the index refuses is exactly what the handler reuses.
     /// </summary>
+    public static readonly IReadOnlyList<SignUpStatus> ActiveStatuses =
+        [SignUpStatus.CodePending, SignUpStatus.PhoneVerified, SignUpStatus.Locked];
+
     public static readonly string ActiveStatusFilter =
-        $"status IN ('{SignUpStatus.CodePending}', '{SignUpStatus.PhoneVerified}', '{SignUpStatus.Locked}')";
+        $"status IN ({string.Join(", ", ActiveStatuses.Select(status => $"'{status}'"))})";
 }

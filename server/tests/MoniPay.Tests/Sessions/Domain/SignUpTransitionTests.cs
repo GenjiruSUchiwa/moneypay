@@ -65,7 +65,21 @@ public sealed class SignUpTransitionTests
 
         Assert.Equal(MoniPayErrorTypes.SignUpResendLimit, refusal.Type);
         Assert.Equal(HttpStatusCode.TooManyRequests, refusal.Type.Status);
+        Assert.Equal(signUp.ExpiresAt - (StartedAt + TimeSpan.FromSeconds(90)), refusal.RetryAfter);
         Assert.Equal(2, signUp.ResendCount);
+    }
+
+    [Fact]
+    public void Rotating_a_locked_sign_up_is_refused_as_a_state_conflict_without_a_delay()
+    {
+        SessionsOptions options = Options();
+        SignUp signUp = LockedSignUp(options);
+
+        RefusalException refusal = Assert.Throws<RefusalException>(
+            () => signUp.RotateVerificationCode(ReplacementDigest, StartedAt + TimeSpan.FromSeconds(30), options));
+
+        Assert.Equal(MoniPayErrorTypes.SignUpStateInvalid, refusal.Type);
+        Assert.Null(refusal.RetryAfter);
     }
 
     [Fact]
@@ -108,6 +122,88 @@ public sealed class SignUpTransitionTests
             () => signUp.RotateVerificationCode(ReplacementDigest, StartedAt, options),
             MoniPayErrorTypes.SignUpStateInvalid,
             HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public void Restarting_rotates_the_code_under_the_resend_rules_and_replaces_the_sign_up_token()
+    {
+        byte[] replacementTokenDigest = [0x55, 0x66];
+        SessionsOptions options = Options();
+        SignUp signUp = StartAt(StartedAt, options);
+
+        signUp.Restart(ReplacementDigest, replacementTokenDigest, StartedAt + TimeSpan.FromSeconds(30), options);
+
+        Assert.Equal(ReplacementDigest, signUp.CodeDigest);
+        Assert.Equal(replacementTokenDigest, signUp.SignUpTokenDigest);
+        Assert.Equal(1, signUp.ResendCount);
+        AssertRefused(
+            () => signUp.Restart(CodeDigest, SignUpTokenDigest, StartedAt + TimeSpan.FromSeconds(40), options),
+            MoniPayErrorTypes.SignUpResendTooSoon,
+            HttpStatusCode.TooManyRequests);
+    }
+
+    [Fact]
+    public void Restarting_a_locked_sign_up_publishes_the_retry_delay()
+    {
+        SessionsOptions options = Options();
+        SignUp signUp = LockedSignUp(options);
+
+        RefusalException refusal = Assert.Throws<RefusalException>(
+            () => signUp.Restart(ReplacementDigest, SignUpTokenDigest, StartedAt + TimeSpan.FromSeconds(30), options));
+
+        Assert.Equal(MoniPayErrorTypes.SignUpAttemptLimit, refusal.Type);
+        Assert.Equal(signUp.LockedUntil - (StartedAt + TimeSpan.FromSeconds(30)), refusal.RetryAfter);
+        Assert.Equal(SignUpStatus.Locked, signUp.Status);
+    }
+
+    [Fact]
+    public void Restarting_a_verified_sign_up_is_refused_and_changes_nothing()
+    {
+        SessionsOptions options = Options();
+        SignUp signUp = StartAt(StartedAt, options);
+        Assert.Equal(PhoneVerificationOutcome.Verified, signUp.VerifyPhone(CodeDigest, StartedAt, options));
+
+        AssertRefused(
+            () => signUp.Restart(ReplacementDigest, [0x55, 0x66], StartedAt + TimeSpan.FromSeconds(30), options),
+            MoniPayErrorTypes.SignUpStateInvalid,
+            HttpStatusCode.Conflict);
+        Assert.Equal(SignUpStatus.PhoneVerified, signUp.Status);
+        Assert.Equal(SignUpTokenDigest, signUp.SignUpTokenDigest);
+    }
+
+    [Fact]
+    public void A_sign_up_expires_once_its_lifetime_has_passed_and_not_before()
+    {
+        SignUp signUp = StartAt(StartedAt, Options());
+
+        Assert.False(signUp.TryExpire(signUp.ExpiresAt - TimeSpan.FromSeconds(1)));
+        Assert.Equal(SignUpStatus.CodePending, signUp.Status);
+        Assert.True(signUp.TryExpire(signUp.ExpiresAt));
+        Assert.Equal(SignUpStatus.Expired, signUp.Status);
+        Assert.Equal(2, signUp.Version);
+    }
+
+    [Fact]
+    public void Closing_a_sign_up_frees_the_phone_before_its_lifetime_has_passed()
+    {
+        SignUp signUp = StartAt(StartedAt, Options());
+
+        signUp.Close();
+
+        Assert.Equal(SignUpStatus.Expired, signUp.Status);
+        Assert.Equal(2, signUp.Version);
+    }
+
+    [Fact]
+    public void A_completed_sign_up_never_expires()
+    {
+        SessionsOptions options = Options();
+        SignUp signUp = StartAt(StartedAt, options);
+        Assert.Equal(PhoneVerificationOutcome.Verified, signUp.VerifyPhone(CodeDigest, StartedAt, options));
+        signUp.Complete(UserId.New(), Guid.CreateVersion7(), StartedAt);
+
+        Assert.False(signUp.TryExpire(signUp.ExpiresAt + TimeSpan.FromDays(1)));
+        Assert.Equal(SignUpStatus.Completed, signUp.Status);
     }
 
     [Fact]
