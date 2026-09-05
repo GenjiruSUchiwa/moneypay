@@ -8,12 +8,9 @@ recorded. The module holds no route yet — this is the schema and the compositi
 - `UsersOptions.cs` — the module configuration: `MoniPay:Users:PersonalDataKeyBase64`, refused
   at startup (`ValidateOnStart`) when missing or not a 32-byte key. A host that cannot encrypt
   must not come up.
-- `Security/UserPersonalDataProtector.cs` — AES-GCM over the personal-data key for first name,
-  last name, phone and email. The payload starts with an authenticated one-byte key version so
-  a later re-encryption migration can find rows by key.
-- `Security/UserLookupDigest.cs` — HMAC-SHA256 over the normalized contact value, keyed by an
-  HKDF derivation of the personal-data key: lookup and encryption never share key material
-  directly.
+- `Security/UserPersonalDataProtector.cs`, `UserLookupDigest.cs` — the kernel
+  `PersonalDataProtector` and `LookupDigest` under the Users personal-data key, for first name,
+  last name, phone and email. The module owns only the key and the lookup info string.
 - `Domain/User.cs` — a registered user. `User.Register` takes values the caller already
   normalized and already encrypted or hashed, and records the two legal consents itself: a user
   cannot exist without them, and a consent cannot exist without its user.

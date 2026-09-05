@@ -1,4 +1,5 @@
 using MoniPay.Kernel;
+using MoniPay.Kernel.Security;
 
 namespace MoniPay.Sessions;
 
@@ -28,12 +29,12 @@ internal sealed class SessionsOptions
     /// </summary>
     public IReadOnlyList<CountryPhoneRule> SupportedCountries { get; set; } =
     [
-        new("237", 9),
-        new("225", 10),
-        new("221", 9),
-        new("241", 8),
-        new("243", 9),
-        new("229", 8),
+        CountryPhoneRules.Cameroon,
+        CountryPhoneRules.IvoryCoast,
+        CountryPhoneRules.Senegal,
+        CountryPhoneRules.Gabon,
+        CountryPhoneRules.DrCongo,
+        CountryPhoneRules.Benin,
     ];
 
     /// <summary>The number of ASCII digits a verification code carries.</summary>
@@ -53,6 +54,18 @@ internal sealed class SessionsOptions
 
     /// <summary>The maximum lifetime of one sign-up, lock included.</summary>
     public TimeSpan SignUpLifetime { get; set; } = DefaultSignUpLifetime;
+
+    /// <summary>The 32-byte HMAC key hashing verification codes and workflow tokens, base64-encoded.</summary>
+    public string VerificationCodeKeyBase64 { get; set; } = string.Empty;
+
+    /// <summary>The 32-byte AES key protecting sign-up personal data, base64-encoded.</summary>
+    public string PersonalDataKeyBase64 { get; set; } = string.Empty;
+
+    /// <summary>The decoded verification-code key. Valid only once the options are validated.</summary>
+    public byte[] VerificationCodeKey => Base64Key.Decode(VerificationCodeKeyBase64);
+
+    /// <summary>The decoded personal-data key. Valid only once the options are validated.</summary>
+    public byte[] PersonalDataKey => Base64Key.Decode(PersonalDataKeyBase64);
 
     /// <summary>Reports whether the configured bounds would produce a workable sign-up.</summary>
     public bool IsWithinBounds() =>
@@ -74,5 +87,7 @@ internal sealed class SessionsOptions
         public const string MaximumResends = $"{SectionName}:{nameof(MaximumResends)}";
         public const string MaximumVerificationAttempts = $"{SectionName}:{nameof(MaximumVerificationAttempts)}";
         public const string SignUpLifetime = $"{SectionName}:{nameof(SignUpLifetime)}";
+        public const string VerificationCodeKeyBase64 = $"{SectionName}:{nameof(VerificationCodeKeyBase64)}";
+        public const string PersonalDataKeyBase64 = $"{SectionName}:{nameof(PersonalDataKeyBase64)}";
     }
 }

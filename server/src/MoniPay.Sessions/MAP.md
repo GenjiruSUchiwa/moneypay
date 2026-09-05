@@ -2,14 +2,24 @@
 
 Phone verification and sign-up state: one workflow from the delivered code to the provisioned
 user and its bootstrap session. The module holds no route yet — this is the aggregate and the
-schema. Handlers, tokens and sessions arrive with the next slices.
+schema. Handlers and sessions arrive with the next slices.
 
 - `SessionsModule.cs` — `AddSessionsModule(services, configuration)`. The only public type of
   the module.
 - `SessionsOptions.cs` — the module configuration, bound from `MoniPay:Sessions` and validated
   at startup: the six supported country phone rules, the code length and lifetime, the resend
-  cooldown and limit, the verification-attempt limit and the sign-up lifetime. The lock has no
-  setting of its own: a sign-up stays locked for the remainder of its lifetime.
+  cooldown and limit, the verification-attempt limit, the sign-up lifetime, and the two
+  32-byte keys (`VerificationCodeKeyBase64`, `PersonalDataKeyBase64`) the host refuses to
+  start without. The lock has no setting of its own: a sign-up stays locked for the remainder
+  of its lifetime.
+- `CountryPhoneRules.cs` — the six supported markets by name (CEMAC and UEMOA), the default of `SupportedCountries`.
+- `Security/` — the sign-up credentials, all singletons holding key material only.
+  `VerificationCodeGenerator` draws digits from `RandomNumberGenerator`; `VerificationCodeDigest`
+  is `HMAC-SHA256(verificationCodeKey, signUpId || phoneLookupHash || code)`; `SignUpTokens`
+  issues a 32-byte base64url `WorkflowToken` and digests it with a purpose prefix (`signup` /
+  `registration`) so one raw value cannot serve both schemes. `SignUpPersonalDataProtector` and
+  `PhoneLookupDigest` are the kernel primitives under the Sessions personal-data key: a phone
+  is never matched across modules by hash.
 - `Domain/SignUp.cs` — the aggregate root, built on the kernel's typed values (`SignUpId`,
   `Ciphertext`, `LookupHash`, `Locale`). `Start` stores the code digest before delivery;
   `RotateVerificationCode` refuses before the cooldown and past the resend limit and never

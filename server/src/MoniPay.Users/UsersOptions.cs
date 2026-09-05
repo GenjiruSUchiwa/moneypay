@@ -1,3 +1,5 @@
+using MoniPay.Kernel.Security;
+
 namespace MoniPay.Users;
 
 /// <summary>
@@ -12,14 +14,7 @@ internal sealed class UsersOptions
     public string PersonalDataKeyBase64 { get; set; } = string.Empty;
 
     /// <summary>The decoded personal-data key. Valid only once the options are validated.</summary>
-    public byte[] PersonalDataKey => Convert.FromBase64String(PersonalDataKeyBase64);
-
-    /// <summary>Reports whether the configured key decodes to exactly 32 bytes.</summary>
-    public bool HasValidPersonalDataKey()
-    {
-        Span<byte> key = stackalloc byte[32];
-        return Convert.TryFromBase64String(PersonalDataKeyBase64, key, out int written) && written == key.Length;
-    }
+    public byte[] PersonalDataKey => Base64Key.Decode(PersonalDataKeyBase64);
 
     /// <summary>The configuration keys, declared so a mistyped key is a compile error.</summary>
     public static class Keys
