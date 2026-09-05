@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MoniPay.Kernel;
 
 namespace MoniPay.Persistence;
 
@@ -25,8 +26,16 @@ public static class DataModule
         ArgumentNullException.ThrowIfNull(moduleAssemblies);
 
         services.TryAddSingleton(new ModelAssemblies(moduleAssemblies));
-        services.AddDbContext<MoniPayDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString(ConnectionStringName)));
+        services.AddDbContext<MoniPayDbContext>((serviceProvider, options) =>
+        {
+            options.UseNpgsql(configuration.GetConnectionString(ConnectionStringName));
+
+            foreach (IDbContextOptionsContributor contributor
+                in serviceProvider.GetServices<IDbContextOptionsContributor>())
+            {
+                contributor.Contribute(options);
+            }
+        });
 
         return services;
     }

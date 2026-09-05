@@ -1,3 +1,4 @@
+using MoniPay.Notifications.Persistence;
 using MoniPay.Sessions.Persistence;
 using MoniPay.Tests.Support;
 using MoniPay.Users.Persistence;
@@ -79,10 +80,40 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(expected.OrderBy(column => column.Name), await ColumnsOfAsync(UsersSchema.UserConsentsTable));
     }
 
+    [Fact]
+    public async Task The_notifications_table_has_exactly_the_documented_columns()
+    {
+        Column[] expected =
+        [
+            new("attempts", "integer", false, null),
+            new("body_ciphertext", "text", true, null),
+            new("channel", "character varying", false, 16),
+            new("correlation_id", "uuid", false, null),
+            new("created_at", "timestamp with time zone", false, null),
+            new("expires_at", "timestamp with time zone", true, null),
+            new("id", "uuid", false, null),
+            new("idempotency_key", "character varying", false, 128),
+            new("kind", "character varying", false, 48),
+            new("last_error_code", "character varying", true, 64),
+            new("lease_until", "timestamp with time zone", true, null),
+            new("next_attempt_at", "timestamp with time zone", false, null),
+            new("provider_reference", "character varying", true, 128),
+            new("recipient_ciphertext", "text", false, null),
+            new("recipient_hint", "character varying", false, 8),
+            new("required", "boolean", false, null),
+            new("sent_at", "timestamp with time zone", true, null),
+            new("status", "character varying", false, 16),
+            new("subject_ciphertext", "text", true, null),
+        ];
+
+        Assert.Equal(expected.OrderBy(column => column.Name), await ColumnsOfAsync(NotificationsSchema.NotificationsTable));
+    }
+
     [Theory]
     [InlineData(UsersSchema.UsersTable, UsersSchema.UsersPrimaryKey, "id")]
     [InlineData(UsersSchema.UserConsentsTable, UsersSchema.UserConsentsPrimaryKey, "user_id", "document_kind")]
     [InlineData(SessionsSchema.SignUpsTable, SessionsSchema.SignUpsPrimaryKey, "id")]
+    [InlineData(NotificationsSchema.NotificationsTable, NotificationsSchema.NotificationsPrimaryKey, "id")]
     public async Task The_primary_key_is_named_by_the_module_and_spans_the_documented_columns(
         string table,
         string constraintName,
@@ -129,6 +160,35 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
             definition);
     }
 
+    [Fact]
+    public async Task The_notification_claim_index_spans_the_status_and_the_next_attempt()
+    {
+        string definition = await IndexDefinitionAsync(NotificationsSchema.ClaimIndex);
+
+        Assert.Equal(
+            $"CREATE INDEX {NotificationsSchema.ClaimIndex} ON public.notifications USING btree (status, next_attempt_at)",
+            definition);
+    }
+
+    [Fact]
+    public async Task The_notification_idempotency_key_is_unique_under_the_name_the_module_declares()
+    {
+        string definition = await IndexDefinitionAsync(NotificationsSchema.IdempotencyKeyUnique);
+
+        Assert.Equal(
+            $"CREATE UNIQUE INDEX {NotificationsSchema.IdempotencyKeyUnique} ON public.notifications USING btree (idempotency_key)",
+            definition);
+    }
+
+    [Fact]
+    public async Task The_notification_correlation_index_supports_the_status_lookup()
+    {
+        string definition = await IndexDefinitionAsync(NotificationsSchema.CorrelationIdIndex);
+
+        Assert.Equal(
+            $"CREATE INDEX {NotificationsSchema.CorrelationIdIndex} ON public.notifications USING btree (correlation_id)",
+            definition);
+    }
     [Fact]
     public async Task The_active_workflow_index_is_unique_per_phone_over_the_nonterminal_statuses()
     {

@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
+using MoniPay.Notifications;
 using MoniPay.Sessions;
 using MoniPay.Users;
 
@@ -27,6 +28,7 @@ public static class TestKeys
         builder.UseSetting(UsersOptions.Keys.PersonalDataKeyBase64, UsersPersonalData);
         builder.UseSetting(SessionsOptions.Keys.VerificationCodeKeyBase64, VerificationCode);
         builder.UseSetting(SessionsOptions.Keys.PersonalDataKeyBase64, SessionsPersonalData);
+        builder.UseSetting(NotificationsOptions.Keys.DataKeyBase64, NotificationsData);
         return builder;
     }
 
