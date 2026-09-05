@@ -26,9 +26,7 @@ public struct VirtualCardView: View {
         ZStack(alignment: .topLeading) {
             card.theme.fill
 
-            // A single sheen at very low opacity: material, not decoration.
-            LinearGradient(colors: [ink.opacity(0.07), .clear],
-                           startPoint: .topTrailing, endPoint: .center)
+            CardArtwork(theme: card.theme)
 
             content.padding(pad)
         }
