@@ -1,6 +1,454 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Checking your code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérification du code"
+          }
+        }
+      }
+    },
+    "Please wait while we check your code.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Patientez pendant la vérification de votre code."
+          }
+        }
+      }
+    },
+    "Sending your code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoi du code"
+          }
+        }
+      }
+    },
+    "Your code could not be delivered": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le code n’a pas pu être envoyé"
+          }
+        }
+      }
+    },
+    "Incorrect code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code incorrect"
+          }
+        }
+      }
+    },
+    "Too many attempts": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trop de tentatives"
+          }
+        }
+      }
+    },
+    "This code has expired": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce code a expiré"
+          }
+        }
+      }
+    },
+    "Please wait before requesting another code": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Patientez avant de demander un autre code"
+          }
+        }
+      }
+    },
+    "Code request limit reached": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limite d’envoi atteinte"
+          }
+        }
+      }
+    },
+    "Your verification has expired": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre vérification a expiré"
+          }
+        }
+      }
+    },
+    "This phone already has an account": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce numéro possède déjà un compte"
+          }
+        }
+      }
+    },
+    "This phone has no account yet": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce numéro n’a pas encore de compte"
+          }
+        }
+      }
+    },
+    "Creating your account": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Création de votre compte"
+          }
+        }
+      }
+    },
+    "Unable to connect": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion impossible"
+          }
+        }
+      }
+    },
+    "Your account could not be created": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre compte n’a pas pu être créé"
+          }
+        }
+      }
+    },
+    "This email is already in use": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette adresse e-mail est déjà utilisée"
+          }
+        }
+      }
+    },
+    "Your SMS is on its way. This may take a moment.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre SMS est en cours d’envoi. Cela peut prendre un instant."
+          }
+        }
+      }
+    },
+    "Check your number or request a new code.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez votre numéro ou demandez un nouveau code."
+          }
+        }
+      }
+    },
+    "For your security, verification is temporarily unavailable. Try again later.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour votre sécurité, la vérification est temporairement indisponible. Réessayez plus tard."
+          }
+        }
+      }
+    },
+    "Request a new code to continue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demandez un nouveau code pour continuer."
+          }
+        }
+      }
+    },
+    "You can request another code in %lld s.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pourrez demander un autre code dans %lld s."
+          }
+        }
+      }
+    },
+    "You have requested too many codes. Try again later.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez demandé trop de codes. Réessayez plus tard."
+          }
+        }
+      }
+    },
+    "Enter your phone number again to start a new verification.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez à nouveau votre numéro pour recommencer la vérification."
+          }
+        }
+      }
+    },
+    "Sign in with this number to access your account.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez-vous avec ce numéro pour accéder à votre compte."
+          }
+        }
+      }
+    },
+    "Create an account with this number to get started.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créez un compte avec ce numéro pour commencer."
+          }
+        }
+      }
+    },
+    "Please wait while we save your details.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Patientez pendant l’enregistrement de vos informations."
+          }
+        }
+      }
+    },
+    "Check your connection and try again. Your details are still here.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez votre connexion et réessayez. Vos informations sont conservées."
+          }
+        }
+      }
+    },
+    "Enter another email address to continue.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez une autre adresse e-mail pour continuer."
+          }
+        }
+      }
+    },
+    "Start again": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommencer"
+          }
+        }
+      }
+    },
+    "Sign in instead": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter"
+          }
+        }
+      }
+    },
+    "Create an account": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer un compte"
+          }
+        }
+      }
+    },
+    "Try again": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réessayer"
+          }
+        }
+      }
+    },
+    "Change email address": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier l’adresse e-mail"
+          }
+        }
+      }
+    },
+    "Welcome back": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heureux de vous revoir"
+          }
+        }
+      }
+    },
+    "Enter your account's phone number. We will send you a six-digit code to sign in.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez le numéro de votre compte. Nous vous enverrons un code à six chiffres pour vous connecter."
+          }
+        }
+      }
+    },
+    "On a new device, you will set up a new passcode and Face ID after verification.": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur un nouvel appareil, vous configurerez un nouveau code secret et Face ID après la vérification."
+          }
+        }
+      }
+    },
+    "Code for %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code pour %@"
+          }
+        }
+      }
+    },
+    "You have %lld attempts remaining.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "You have %lld attempt remaining."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "You have %lld attempts remaining."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Il vous reste %lld tentative."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Il vous reste %lld tentatives."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "A six-digit code goes out to this line. It is also the line your Mobile Money top-ups arrive on.": {
       "extractionState": "manual",
       "localizations": {

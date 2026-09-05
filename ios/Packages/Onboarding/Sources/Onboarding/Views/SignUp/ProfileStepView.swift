@@ -8,6 +8,8 @@ import SwiftUI
 struct ProfileStepView: View {
     @Bindable var model: SignUpModel
     let onFinish: (User) -> Void
+    var feedback: AuthenticationFeedback?
+    var onRecovery: () -> Void = {}
 
     /// `Toast` dismisses itself after two seconds; the hand-off waits that long so the
     /// warning is actually readable before KYC replaces this screen.
@@ -18,6 +20,24 @@ struct ProfileStepView: View {
     @State private var toast: Toast?
 
     var body: some View {
+        ScrollView { form }
+            .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                MPButton(title: Text("Continue", bundle: .module),
+                         tone: .primary,
+                         loading: model.isSubmitting || feedback?.isLoading == true,
+                         enabled: model.draft.isProfileValid,
+                         action: submit)
+                    .gutter()
+                    .padding(.vertical, Metric.small)
+                    .background(Brand.bg)
+            }
+            .toast($toast)
+            .sensoryFeedback(.warning, trigger: model.submissionFailed) { _, failed in failed }
+            .onAppear { focus = .firstName }
+    }
+
+    private var form: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Your details", bundle: .module)
                 .font(.heading1).tight().foregroundStyle(Brand.ink)
@@ -32,20 +52,17 @@ struct ProfileStepView: View {
             fields
                 .padding(.top, Metric.block)
                 .onSubmit(advanceFocus)
+                .disabled(feedback?.isLoading == true)
 
-            Spacer(minLength: Metric.block)
-
-            MPButton(title: Text("Continue", bundle: .module),
-                     tone: .primary,
-                     loading: model.isSubmitting,
-                     enabled: model.draft.isProfileValid,
-                     action: submit)
+            if let feedback {
+                AuthenticationFeedbackView(feedback: feedback) {
+                    onRecovery()
+                    if feedback == .emailExists { focus = .email }
+                }
+            }
         }
         .gutter()
         .padding(.bottom, Metric.small)
-        .toast($toast)
-        .sensoryFeedback(.warning, trigger: model.submissionFailed) { _, failed in failed }
-        .onAppear { focus = .firstName }
     }
 
     private var fields: some View {
@@ -76,6 +93,7 @@ struct ProfileStepView: View {
     }
 
     private func submit() {
+        guard feedback == nil else { onRecovery(); return }
         guard model.draft.isProfileValid else { return }
         focus = nil
         // The package infers main-actor isolation by default, so this task stays on the main
