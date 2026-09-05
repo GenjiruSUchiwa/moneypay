@@ -149,6 +149,50 @@ struct SignUpModelTests {
         #expect(model.lastPasscodeEvent == .confirmed)
     }
 
+    @Test("Stale keyboard updates cannot confirm a passcode or skip biometrics")
+    func staleCreationEditCannotConfirmPasscode() {
+        let model = Self.model()
+        for _ in 0..<2 { model.advance() }
+
+        model.setPasscodeEntry("1234", during: .creating)
+        model.setPasscodeEntry("1234", during: .creating)
+
+        #expect(model.step == .passcode)
+        #expect(model.passcode.phase == .confirming)
+        #expect(model.passcode.entry.isEmpty)
+        #expect(model.lastPasscodeEvent == nil)
+
+        model.setPasscodeEntry("1234", during: .confirming)
+        model.setPasscodeEntry("1234", during: .confirming)
+        #expect(model.step == .biometrics)
+    }
+
+    @Test("Back from biometrics allows a new passcode without replaying the old confirmation")
+    func backFromBiometricsRestartsPasscodeEntry() {
+        let model = Self.model()
+        for _ in 0..<2 { model.advance() }
+        model.setPasscodeEntry("1234", during: .creating)
+        model.setPasscodeEntry("1234", during: .confirming)
+
+        model.back()
+        model.setPasscodeEntry("1234", during: .confirming)
+
+        #expect(model.step == .passcode)
+        #expect(model.passcode == PasscodeEntry())
+        #expect(model.draft.passcode.isEmpty)
+        #expect(model.lastPasscodeEvent == nil)
+
+        model.setPasscodeEntry("5678", during: .creating)
+        #expect(model.step == .passcode)
+        model.setPasscodeEntry("5678", during: .confirming)
+        #expect(model.step == .biometrics)
+        #expect(model.draft.passcode == "5678")
+
+        model.back()
+        model.back()
+        #expect(model.step == .code)
+    }
+
     @Test("A mismatch is reported once per attempt")
     func mismatchIsReportedOncePerAttempt() {
         let model = Self.model()
