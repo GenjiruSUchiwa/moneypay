@@ -28,7 +28,7 @@ struct WelcomeSlide: Identifiable, Sendable {
             title: "Topped up with\nMobile Money",
             body: "MTN MoMo, Orange Money or an agent deposit. Your FCFA balance funds every dollar payment.",
             cardLabel: "Shopping",
-            theme: .cobalt,
+            theme: .ndop,
             network: .visa
         ),
         WelcomeSlide(

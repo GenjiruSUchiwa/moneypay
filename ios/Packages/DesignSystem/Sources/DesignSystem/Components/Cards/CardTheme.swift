@@ -1,11 +1,11 @@
 import SwiftUI
 
 public enum CardTheme: String, CaseIterable, Identifiable, Codable, Sendable {
-    case ink, bone, pine, clay, slate, cobalt
+    case ink, bone, pine, clay, slate, cobalt, ndop
     public var id: String { rawValue }
 
     /// Fills and inks are the prototype's `CARD_THEMES` (`sapin`, `encre`, `ivoire`,
-    /// `terre`, `ardoise`, `cobalt`).
+    /// `terre`, `ardoise`, `cobalt`, `ndop`).
     public var fill: Color {
         switch self {
         case .ink:    Color(rgb: 0x15181B)
@@ -14,6 +14,7 @@ public enum CardTheme: String, CaseIterable, Identifiable, Codable, Sendable {
         case .clay:   Color(rgb: 0x9E4A2E)
         case .slate:  Color(rgb: 0x44525A)
         case .cobalt: Color(rgb: 0x1E3C72)
+        case .ndop:   CardArtworkTokens.ndopFill
         }
     }
 
@@ -26,6 +27,7 @@ public enum CardTheme: String, CaseIterable, Identifiable, Codable, Sendable {
         case .clay:   Color(rgb: 0xF7EDE4)
         case .slate:  Color(rgb: 0xEEF2F1)
         case .cobalt: Color(rgb: 0xEAEFF8)
+        case .ndop:   CardArtworkTokens.ndopInk
         }
     }
 
@@ -40,6 +42,7 @@ public enum CardTheme: String, CaseIterable, Identifiable, Codable, Sendable {
         switch self {
         case .ink: "Ink"; case .bone: "Bone"; case .pine: "Pine"
         case .clay: "Clay"; case .slate: "Slate"; case .cobalt: "Cobalt"
+        case .ndop: "Ndop"
         }
     }
 }

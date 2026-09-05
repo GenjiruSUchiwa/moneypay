@@ -767,9 +767,8 @@ Les textes combinent fondu, `Motion.blur` (5 pt), `Motion.rise` (8 pt) et `Motio
 (0,35 s). L'entrée en cascade réutilise `Motion.screen`, décalé de `Motion.stagger`
 (0,07 s) par élément.
 Les actions utilisent `MPButton` avec les tons `.primary` et `.quiet`, empilés par
-`Metric.stack` (10 pt). La ligne légale utilise `Font.micro` et `Brand.inkFaint`. Les thèmes
-d'exemple du prototype `sapin` / `ndop` / `encre` deviennent `CardTheme` `.pine` / `.cobalt` /
-`.ink`.
+`Metric.stack` (10 pt). The legal line uses `Font.micro` and `Brand.inkFaint`.
+The prototype's `sapin` / `ndop` / `encre` themes map to `CardTheme.pine`, `.ndop`, and `.ink`.
 Avec le mouvement réduit, il n'y a ni cascade ni flottement ; le ré-empilement est sans
 animation, les textes passent en fondu avec `Motion.quick` sans flou, le remplissage du segment
 reste actif, et VoiceOver désactive l'auto-avance ; le deck devient un élément ajustable.
@@ -889,9 +888,8 @@ creux = `{colors.well}` · capsule = 999px · gutter = 20px.
 - **Deux systèmes coexistent** : l'app SwiftUI (`MoneyPay/`) porte un langage antérieur
   (« Registre », monochrome) — obsolète, ne fait pas foi, à l'exception du splash, désormais
   porté par les jetons partagés.
-- **Art des cartes de bienvenue** : les motifs héritage (`ndop`, `bogolan`, `wax`) et le thème
-  `sapin` sont propres au prototype ; iOS mappe `sapin` / `ndop` / `encre` vers `CardTheme`
-  `.pine` / `.cobalt` / `.ink`, les équivalents les plus proches.
+- **Welcome card artwork**: iOS reproduces the prototype's pine rosette and Ndop diamonds;
+  the ink card remains solid. Bogolan and Wax are not yet implemented.
 - Google Sans Flex est servie par Google Fonts ; hors ligne, le fallback système change
   sensiblement la voix typographique.
 - `rounded: 20px` (`.method-card`, `.fx-card`) est hors barème — assumé, non tokenisé.
