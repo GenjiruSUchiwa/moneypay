@@ -12,7 +12,7 @@ public struct SegmentedProgress: View {
         /// Segments before `current` are full; `current` fills linearly from `since` over `dwell`.
         /// The fill is computed from the clock, so it stays in step with whatever timer the
         /// caller arms at `since`.
-        case story(dwell: Duration, since: Date)
+        case story(dwell: Duration, since: Date, pausedAt: Date? = nil)
     }
 
     private let count: Int
@@ -37,6 +37,8 @@ public struct SegmentedProgress: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Step \(current + 1) of \(count)", bundle: .module))
         .accessibilityAddTraits(style.isStory ? .updatesFrequently : [])
+        // The timeline already supplies each frame. A parent's spring would make the fill chase it.
+        .transaction { if style.isStory { $0.animation = nil } }
     }
 
     @ViewBuilder
@@ -44,10 +46,14 @@ public struct SegmentedProgress: View {
         switch style {
         case .steps:
             ink(scale: index <= current ? 1 : 0)
-        case let .story(dwell, since):
+        case let .story(dwell, since, pausedAt):
             if index == current {
-                TimelineView(.animation) { context in
-                    ink(scale: min(1, context.date.timeIntervalSince(since) / Self.seconds(from: dwell)))
+                if let pausedAt {
+                    ink(scale: Self.fraction(at: pausedAt, since: since, dwell: dwell))
+                } else {
+                    TimelineView(.animation) { context in
+                        ink(scale: Self.fraction(at: context.date, since: since, dwell: dwell))
+                    }
                 }
             } else {
                 ink(scale: index < current ? 1 : 0)
@@ -65,6 +71,11 @@ public struct SegmentedProgress: View {
         let parts = dwell.components
         return TimeInterval(parts.seconds) + TimeInterval(parts.attoseconds) / 1e18
     }
+
+    static func fraction(at date: Date, since start: Date, dwell: Duration) -> Double {
+        guard dwell > .zero else { return 1 }
+        return min(1, max(0, date.timeIntervalSince(start) / seconds(from: dwell)))
+    }
 }
 
 private extension SegmentedProgress.Style {
@@ -81,6 +92,11 @@ private extension SegmentedProgress.Style {
         SegmentedProgress(count: 5, current: 2)
         SegmentedProgress(count: 5, current: 4)
         SegmentedProgress(count: 3, current: 1, style: .story(dwell: .seconds(4), since: since))
+        SegmentedProgress(
+            count: 3,
+            current: 1,
+            style: .story(dwell: .seconds(4), since: since, pausedAt: since.addingTimeInterval(2))
+        )
     }
     .padding()
     .page()

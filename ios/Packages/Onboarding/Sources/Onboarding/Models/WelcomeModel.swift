@@ -15,18 +15,19 @@ final class WelcomeModel {
     private(set) var index = 0
     let count: Int
     let dwell: Duration
-    private var paused = false
+    private(set) var pausedAt: Date?
     /// Bumped by every change that re-arms the dwell — an advance, a retreat, a
     /// resume. The view runs one `autoAdvanceAfterDwell()` task per generation, so a
     /// user action always restarts a full dwell, as the prototype's `clearTimeout` does.
     private(set) var generation = 0
-    /// When the running dwell started sleeping; the story bar fills from here.
-    private(set) var cycleStart = Date.now
+    /// Shared by the progress bar and the timer; reset synchronously with every slide change.
+    private(set) var cycleStart: Date
 
-    init(count: Int, dwell: Duration = .milliseconds(4200)) {
+    init(count: Int, dwell: Duration = .milliseconds(4200), startedAt: Date = .now) {
         precondition(count >= 1, "A welcome deck needs at least one slide.")
         self.count = count
         self.dwell = dwell
+        self.cycleStart = startedAt
     }
 
     /// Slide `i`'s depth in the deck: 0 = front, 1 = the card behind it, …
@@ -34,25 +35,25 @@ final class WelcomeModel {
         (i - index + count) % count
     }
 
-    func advance() {
+    func advance(at date: Date = .now) {
         index = (index + 1) % count
-        generation += 1
+        restart(at: date)
     }
 
-    func retreat() {
+    func retreat(at date: Date = .now) {
         index = (index - 1 + count) % count
-        generation += 1
+        restart(at: date)
     }
 
     /// Finger down: the auto-advance stops counting until `resume`.
-    func hold() {
-        paused = true
+    func hold(at date: Date = .now) {
+        pausedAt = date
     }
 
     /// Finger up or gesture cancelled: re-arms a full dwell, whether or not the deck paged.
-    func resume() {
-        paused = false
-        generation += 1
+    func resume(at date: Date = .now) {
+        pausedAt = nil
+        restart(at: date)
     }
 
     /// Finger up after a horizontal travel of `dx` points. Past the swipe
@@ -73,10 +74,21 @@ final class WelcomeModel {
     /// generation check covers the gap between the sleep expiring and SwiftUI cancelling
     /// the stale task, which would otherwise page twice.
     func autoAdvanceAfterDwell() async {
+        guard pausedAt == nil else { return }
         let armed = generation
-        cycleStart = .now
-        try? await Task.sleep(for: dwell)
-        guard !Task.isCancelled, !paused, generation == armed else { return }
+        // Task scheduling may lag behind the rendered frame; never add that delay to the dwell.
+        // Default timer coalescing can leave the completed bar waiting before the card changes.
+        try? await Task.sleep(for: remainingDwell(at: .now), tolerance: .zero)
+        guard !Task.isCancelled, pausedAt == nil, generation == armed else { return }
         advance()
+    }
+
+    func remainingDwell(at date: Date) -> Duration {
+        max(.zero, dwell - .seconds(max(0, date.timeIntervalSince(cycleStart))))
+    }
+
+    private func restart(at date: Date) {
+        cycleStart = date
+        generation += 1
     }
 }

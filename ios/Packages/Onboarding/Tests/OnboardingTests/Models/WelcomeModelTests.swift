@@ -1,8 +1,45 @@
+import Foundation
 import Testing
 @testable import Onboarding
 
 @Suite("WelcomeModel")
 struct WelcomeModelTests {
+    @Test("Slide changes reset progress before the next task is scheduled")
+    func slideAndProgressRestartTogether() {
+        let start = Date(timeIntervalSince1970: 0)
+        let model = WelcomeModel(count: 3, dwell: .seconds(4), startedAt: start)
+
+        model.advance(at: start.addingTimeInterval(4))
+        #expect(model.index == 1)
+        #expect(model.cycleStart == start.addingTimeInterval(4))
+        #expect(model.remainingDwell(at: start.addingTimeInterval(5)) == .seconds(3))
+
+        model.retreat(at: start.addingTimeInterval(5))
+        #expect(model.index == 0)
+        #expect(model.cycleStart == start.addingTimeInterval(5))
+    }
+
+    @Test("A delayed timer uses the remaining dwell instead of restarting the progress clock")
+    func lateTimerDoesNotAddAnotherDwell() async {
+        let model = WelcomeModel(count: 3, startedAt: .now.addingTimeInterval(-10))
+        #expect(model.remainingDwell(at: .now) == .zero)
+        await model.autoAdvanceAfterDwell()
+        #expect(model.index == 1)
+    }
+
+    @Test("Holding freezes the progress date and release restarts one shared cycle")
+    func pauseAndResumeShareTheProgressClock() {
+        let start = Date(timeIntervalSince1970: 0)
+        let model = WelcomeModel(count: 3, startedAt: start)
+        model.hold(at: start.addingTimeInterval(2))
+        #expect(model.pausedAt == start.addingTimeInterval(2))
+
+        model.resume(at: start.addingTimeInterval(8))
+        #expect(model.pausedAt == nil)
+        #expect(model.cycleStart == start.addingTimeInterval(8))
+        #expect(model.remainingDwell(at: start.addingTimeInterval(8)) == model.dwell)
+    }
+
     @Test("advance wraps from the last slide to the first, retreat from the first to the last")
     func advanceAndRetreatWrap() {
         let model = WelcomeModel(count: 3)
