@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MoniPay.Api;
 using MoniPay.Kernel.Http;
 using MoniPay.Sessions;
-using MoniPay.Users;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -41,7 +40,7 @@ public sealed class MoniPayApi : IAsyncLifetime
             builder.UseEnvironment(MoniPayEnvironments.Testing);
             builder.UseSetting("ConnectionStrings:MoniPay", ConnectionString);
             builder.UseSetting(MoniPayConfiguration.ApplyMigrationsOnStartup, "true");
-            builder.UseSetting(UsersOptions.Keys.PersonalDataKeyBase64, TestKeys.UsersPersonalData);
+            builder.UseTestKeys();
             builder.UseSetting(SessionsOptions.Keys.MaximumVerificationAttempts, "3");
             builder.UseSetting(SessionsOptions.Keys.VerificationCodeLifetime, "00:02:00");
 

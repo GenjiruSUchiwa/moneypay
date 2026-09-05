@@ -21,6 +21,7 @@ public sealed class UsersStartupTests(MoniPayApi api)
             {
                 builder.UseEnvironment(MoniPayEnvironments.Testing);
                 builder.UseSetting("ConnectionStrings:MoniPay", api.ConnectionString);
+                builder.UseTestKeys();
                 builder.UseSetting(UsersOptions.Keys.PersonalDataKeyBase64, keyBase64);
             });
 

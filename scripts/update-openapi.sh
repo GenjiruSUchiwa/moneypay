@@ -16,6 +16,9 @@ mkdir -p docs/api "$(dirname "$client_copy")"
 HUSKY=0 \
 ConnectionStrings__MoniPay="Host=localhost;Database=monipay;Username=monipay;Password=monipay" \
 MoniPay__ApplyMigrationsOnStartup=false \
+MoniPay__Users__PersonalDataKeyBase64="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
+MoniPay__Sessions__VerificationCodeKeyBase64="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
+MoniPay__Sessions__PersonalDataKeyBase64="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
 dotnet build server/src/MoniPay.Api/MoniPay.Api.csproj -c Release -p:GenerateOpenApiDocs=true
 
 cp server/src/MoniPay.Api/obj/openapi/openapi.json docs/api/openapi.json

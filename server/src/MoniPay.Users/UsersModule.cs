@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MoniPay.Kernel.Security;
 using MoniPay.Users.Security;
 
 namespace MoniPay.Users;
@@ -19,9 +20,7 @@ public static class UsersModule
 
         services.AddOptions<UsersOptions>()
             .Bind(configuration.GetSection(UsersOptions.SectionName))
-            .Validate(
-                options => options.HasValidPersonalDataKey(),
-                $"{UsersOptions.Keys.PersonalDataKeyBase64} must hold a base64-encoded 32-byte key.")
+            .RequireKey(options => options.PersonalDataKeyBase64, UsersOptions.Keys.PersonalDataKeyBase64)
             .ValidateOnStart();
 
         // Both hold key material only; neither holds request state.

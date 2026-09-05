@@ -9,6 +9,12 @@ knows what a top-up is, it belongs in `MoniPay.TopUps`, not in the kernel.
 - `KernelModule.cs` — registers `TimeProvider`, so no module reads the clock directly and a
   test can substitute `FakeTimeProvider`.
 
+- `Security/` — the key-material primitives every module configures rather than re-implements.
+  `Base64Key` validates and decodes a base64 32-byte secret, and `RequireKey` on an
+  `OptionsBuilder` refuses a host whose secret is missing or short. `PersonalDataProtector` is
+  AES-GCM with an authenticated one-byte key version; `LookupDigest` is HMAC-SHA256 under an
+  HKDF derivation of the personal-data key with a module-specific info string. A module
+  derives its own instance from its own key: the layout is shared, the key never is.
 - `Http/` — JSON:API 1.1 envelope records (`JsonApiRequest`, `JsonApiResponse` and the
   resource, relationship, version and link types), plus `MoniPayMediaTypes`, `MoniPayHeaders`
   and `MoniPayConventions`. Transport names only: no domain rule and no ASP.NET Core
