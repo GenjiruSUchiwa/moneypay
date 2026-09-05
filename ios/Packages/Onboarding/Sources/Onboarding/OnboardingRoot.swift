@@ -25,6 +25,7 @@ public struct OnboardingRoot: View {
         case splash
         case welcome
         case signUp(SignUpStep)
+        case preview(PreviewScenario)
     }
 
     /// Creates onboarding with the supplied account creator and completion handler.
@@ -55,8 +56,10 @@ public struct OnboardingRoot: View {
         case .welcome:
             WelcomeView(
                 onStart: { stage = .signUp(.phone) },
-                onSignIn: { onFinish(.signedIn) }
+                onSignIn: { stage = .preview(.signInPhone) }
             )
+        case .preview(let scenario):
+            AuthenticationPreviewFlow(scenario: scenario, onClose: { stage = .welcome })
         case .signUp(let step):
             SignUpFlow(
                 accounts: dependencies.accounts,
