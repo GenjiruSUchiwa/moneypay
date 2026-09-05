@@ -1,6 +1,8 @@
 using System.Reflection;
 using MoniPay.Kernel;
+using MoniPay.Sessions;
 using MoniPay.Users;
+using MoniPay.Wallet;
 using Xunit;
 
 namespace MoniPay.Tests.Architecture;
@@ -13,10 +15,13 @@ public sealed class ModuleBoundaryTests
 {
     private static readonly string[] ModuleDependencies = ["MoniPay.Kernel", "MoniPay.Data"];
 
-    [Fact]
-    public void The_users_module_references_nothing_beyond_the_kernel_and_the_shared_context()
+    [Theory]
+    [InlineData(typeof(SessionsModule))]
+    [InlineData(typeof(UsersModule))]
+    [InlineData(typeof(WalletModule))]
+    public void A_module_references_nothing_beyond_the_kernel_and_the_shared_context(Type module)
     {
-        IEnumerable<string> references = MoniPayReferencesOf(typeof(UsersModule).Assembly);
+        IEnumerable<string> references = MoniPayReferencesOf(module.Assembly);
 
         Assert.Empty(references.Except(ModuleDependencies));
     }

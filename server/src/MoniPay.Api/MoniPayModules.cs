@@ -1,6 +1,7 @@
 using System.Reflection;
 using MoniPay.Kernel;
 using MoniPay.Persistence;
+using MoniPay.Sessions;
 using MoniPay.Users;
 using MoniPay.Wallet;
 using MoniPay.Wallet.Endpoints;
@@ -22,6 +23,7 @@ internal static class MoniPayModules
     /// </summary>
     internal static readonly Assembly[] ModuleAssemblies =
     [
+        typeof(SessionsModule).Assembly,
         typeof(UsersModule).Assembly,
         typeof(WalletModule).Assembly,
     ];
@@ -33,9 +35,9 @@ internal static class MoniPayModules
         services
             .AddKernelModule(configuration)
             .AddDataModule(configuration, ModuleAssemblies)
+            .AddSessionsModule(configuration)
             .AddUsersModule(configuration)
             .AddWalletModule(configuration);
-
     /// <summary>The routes. Health belongs to the host; everything else to its module.</summary>
     public static WebApplication MapMoniPayModules(this WebApplication app)
     {

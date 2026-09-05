@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
-using MoniPay.Users.Domain;
+using MoniPay.Kernel;
 
 namespace MoniPay.Users.Security;
 

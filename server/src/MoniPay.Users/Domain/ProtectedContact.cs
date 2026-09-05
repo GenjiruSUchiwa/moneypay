@@ -1,3 +1,5 @@
+using MoniPay.Kernel;
+
 namespace MoniPay.Users.Domain;
 
 /// <summary>

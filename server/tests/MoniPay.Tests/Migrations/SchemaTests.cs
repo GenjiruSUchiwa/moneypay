@@ -1,3 +1,4 @@
+using MoniPay.Sessions.Persistence;
 using MoniPay.Tests.Support;
 using MoniPay.Users.Persistence;
 using Xunit;
@@ -33,6 +34,38 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
     }
 
     [Fact]
+    public async Task The_sign_ups_table_has_exactly_the_documented_columns()
+    {
+        Column[] expected =
+        [
+            new("id", "uuid", false, null),
+            new("phone_ciphertext", "text", false, null),
+            new("phone_lookup_hash", "bytea", false, null),
+            new("locale", "character varying", false, 16),
+            new("code_digest", "bytea", true, null),
+            new("code_expires_at", "timestamp with time zone", true, null),
+            new("signup_token_digest", "bytea", true, null),
+            new("registration_token_digest", "bytea", true, null),
+            new("status", "character varying", false, 24),
+            new("failed_attempts", "integer", false, null),
+            new("resend_count", "integer", false, null),
+            new("can_resend_at", "timestamp with time zone", false, null),
+            new("locked_until", "timestamp with time zone", true, null),
+            new("expires_at", "timestamp with time zone", false, null),
+            new("terms_version", "character varying", false, 64),
+            new("privacy_version", "character varying", false, 64),
+            new("user_id", "uuid", true, null),
+            new("bootstrap_session_id", "uuid", true, null),
+            new("version", "bigint", false, null),
+            new("created_at", "timestamp with time zone", false, null),
+            new("verified_at", "timestamp with time zone", true, null),
+            new("completed_at", "timestamp with time zone", true, null),
+        ];
+
+        Assert.Equal(expected.OrderBy(column => column.Name), await ColumnsOfAsync(SessionsSchema.SignUpsTable));
+    }
+
+    [Fact]
     public async Task The_user_consents_table_has_exactly_the_documented_columns()
     {
         Column[] expected =
@@ -49,6 +82,7 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
     [Theory]
     [InlineData(UsersSchema.UsersTable, UsersSchema.UsersPrimaryKey, "id")]
     [InlineData(UsersSchema.UserConsentsTable, UsersSchema.UserConsentsPrimaryKey, "user_id", "document_kind")]
+    [InlineData(SessionsSchema.SignUpsTable, SessionsSchema.SignUpsPrimaryKey, "id")]
     public async Task The_primary_key_is_named_by_the_module_and_spans_the_documented_columns(
         string table,
         string constraintName,
@@ -80,13 +114,47 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
     [InlineData(UsersSchema.EmailLookupHashUnique, "email_lookup_hash")]
     public async Task The_unique_index_exists_under_the_name_the_module_declares(string indexName, string column)
     {
-        IReadOnlyList<string> definitions = await Api.QueryAsync(
-            "SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND indexname = @index;",
-            reader => reader.GetString(0),
-            ("index", indexName));
+        string definition = await IndexDefinitionAsync(indexName);
 
-        string definition = Assert.Single(definitions);
         Assert.Equal($"CREATE UNIQUE INDEX {indexName} ON public.users USING btree ({column})", definition);
+    }
+
+    [Fact]
+    public async Task The_cleanup_scan_index_spans_the_status_and_the_expiry()
+    {
+        string definition = await IndexDefinitionAsync(SessionsSchema.SignUpStatusExpiryIndex);
+
+        Assert.Equal(
+            $"CREATE INDEX {SessionsSchema.SignUpStatusExpiryIndex} ON public.sign_ups USING btree (status, expires_at)",
+            definition);
+    }
+
+    [Fact]
+    public async Task The_active_workflow_index_is_unique_per_phone_over_the_nonterminal_statuses()
+    {
+        string definition = await IndexDefinitionAsync(SessionsSchema.SignUpPhoneActiveWorkflowUnique);
+
+        Assert.StartsWith(
+            $"CREATE UNIQUE INDEX {SessionsSchema.SignUpPhoneActiveWorkflowUnique} ON public.sign_ups USING btree (phone_lookup_hash) WHERE",
+            definition,
+            StringComparison.Ordinal);
+        Assert.Contains("'CodePending'", definition, StringComparison.Ordinal);
+        Assert.Contains("'PhoneVerified'", definition, StringComparison.Ordinal);
+        Assert.Contains("'Locked'", definition, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(SessionsSchema.SignUpTokenDigestUnique, "signup_token_digest")]
+    [InlineData(SessionsSchema.SignUpRegistrationTokenDigestUnique, "registration_token_digest")]
+    public async Task The_token_digest_index_is_unique_while_the_credential_exists(string indexName, string column)
+    {
+        string definition = await IndexDefinitionAsync(indexName);
+
+        Assert.StartsWith(
+            $"CREATE UNIQUE INDEX {indexName} ON public.sign_ups USING btree ({column}) WHERE",
+            definition,
+            StringComparison.Ordinal);
+        Assert.Contains($"{column} IS NOT NULL", definition, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -116,6 +184,16 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Empty(offenders);
     }
 
+    private async Task<string> IndexDefinitionAsync(string indexName)
+    {
+        IReadOnlyList<string> definitions = await Api.QueryAsync(
+            "SELECT indexdef FROM pg_indexes WHERE schemaname = 'public' AND indexname = @index;",
+            reader => reader.GetString(0),
+            ("index", indexName));
+
+        return Assert.Single(definitions);
+    }
+
     private Task<IReadOnlyList<Column>> ColumnsOfAsync(string table) =>
         Api.QueryAsync(
             """
@@ -130,5 +208,4 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
                 reader.GetString(2) == "YES",
                 reader.IsDBNull(3) ? null : reader.GetInt32(3)),
             ("table", table));
-
 }

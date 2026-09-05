@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
+using MoniPay.Kernel;
 using MoniPay.Tests.Support;
 using MoniPay.Users;
-using MoniPay.Users.Domain;
 using MoniPay.Users.Security;
 using Xunit;
 
