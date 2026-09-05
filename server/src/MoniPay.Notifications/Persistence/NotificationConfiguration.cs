@@ -22,7 +22,10 @@ internal sealed class NotificationConfiguration : IEntityTypeConfiguration<Notif
             .HasConversion<string>()
             .HasMaxLength(16)
             .IsRequired();
-        builder.Property(notification => notification.Kind).HasColumnName("kind").HasMaxLength(48).IsRequired();
+        builder.Property(notification => notification.Kind)
+            .HasColumnName("kind")
+            .HasMaxLength(NotificationsSchema.KindMaxLength)
+            .IsRequired();
         builder.Property(notification => notification.RecipientCiphertext)
             .HasColumnName("recipient_ciphertext")
             .IsRequired();
@@ -35,7 +38,7 @@ internal sealed class NotificationConfiguration : IEntityTypeConfiguration<Notif
         builder.Property(notification => notification.Required).HasColumnName("required").IsRequired();
         builder.Property(notification => notification.IdempotencyKey)
             .HasColumnName("idempotency_key")
-            .HasMaxLength(128)
+            .HasMaxLength(NotificationsSchema.IdempotencyKeyMaxLength)
             .IsRequired();
         builder.Property(notification => notification.CorrelationId).HasColumnName("correlation_id").IsRequired();
         builder.Property(notification => notification.Status)

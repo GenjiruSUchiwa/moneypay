@@ -21,18 +21,14 @@ public sealed class NotificationOutbox
     /// <summary>
     /// Internal because its parameters are the module's internals: the host resolves this
     /// class, it never constructs one, and the public surface stays the five documented types.
-    /// The signal is the commit nudge the module's interceptors raise; it is part of this
-    /// composition so the outbox and its worker share one wake-up path.
     /// </summary>
     internal NotificationOutbox(
         MoniPayDbContext database,
         RecipientProtector protector,
-        DeliverySignal signal,
         TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(database);
         ArgumentNullException.ThrowIfNull(protector);
-        ArgumentNullException.ThrowIfNull(signal);
         ArgumentNullException.ThrowIfNull(timeProvider);
 
         this.database = database;
@@ -42,16 +38,34 @@ public sealed class NotificationOutbox
 
     /// <summary>
     /// Adds a <see cref="NotificationStatus.Pending"/> row for <paramref name="message"/>,
-    /// encrypting the recipient, the subject and the body with the module's data key. Does not
-    /// save: the producer's <c>SaveChangesAsync</c> commits the notification alongside its
-    /// domain change.
+    /// validating the whole contract first — so a producer error is an argument exception at
+    /// the call site, never a database error at its save — and encrypting the recipient, the
+    /// subject and the body with the module's data key. Does not save: the producer's
+    /// <c>SaveChangesAsync</c> commits the notification alongside its domain change.
     /// </summary>
     public void Enqueue(OutboundMessage message)
     {
         ArgumentNullException.ThrowIfNull(message);
         ArgumentException.ThrowIfNullOrWhiteSpace(message.Recipient);
+        ArgumentException.ThrowIfNullOrWhiteSpace(message.Body);
         ArgumentException.ThrowIfNullOrWhiteSpace(message.Kind);
         ArgumentException.ThrowIfNullOrWhiteSpace(message.IdempotencyKey);
+
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(message.Kind.Length, NotificationsSchema.KindMaxLength);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(
+            message.IdempotencyKey.Length, NotificationsSchema.IdempotencyKeyMaxLength);
+
+        if (!Enum.IsDefined(message.Channel))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(message), message.Channel, "The notification channel is not defined.");
+        }
+
+        if (message.CorrelationId == default)
+        {
+            throw new ArgumentException(
+                "The correlation identifier must be set.", nameof(message));
+        }
 
         database.Notifications.Add(Notification.Pending(
             message,

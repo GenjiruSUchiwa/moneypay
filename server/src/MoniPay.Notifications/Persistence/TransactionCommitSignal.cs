@@ -1,5 +1,5 @@
 using System.Data.Common;
-using System.Runtime.CompilerServices;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using MoniPay.Kernel;
@@ -14,7 +14,7 @@ namespace MoniPay.Notifications.Persistence;
 /// </summary>
 internal sealed class TransactionCommitSignal(
     DeliverySignal signal,
-    ConditionalWeakTable<DbContext, object> carryingContexts) : DbTransactionInterceptor
+    CarryingContexts carryingContexts) : DbTransactionInterceptor
 {
     public override void TransactionCommitted(DbTransaction transaction, TransactionEndEventData eventData) =>
         Raise(eventData.Context);
@@ -29,31 +29,23 @@ internal sealed class TransactionCommitSignal(
     }
 
     public override void TransactionRolledBack(DbTransaction transaction, TransactionEndEventData eventData) =>
-        Forget(eventData.Context);
+        carryingContexts.Forget(eventData.Context);
 
     public override Task TransactionRolledBackAsync(
         DbTransaction transaction,
         TransactionEndEventData eventData,
         CancellationToken cancellationToken = default)
     {
-        Forget(eventData.Context);
+        carryingContexts.Forget(eventData.Context);
         return Task.CompletedTask;
     }
 
     private void Raise(DbContext? context)
     {
-        if (context is not null && carryingContexts.TryGetValue(context, out _))
+        if (carryingContexts.Holds(context))
         {
-            carryingContexts.Remove(context);
+            carryingContexts.Forget(context);
             signal.Raise();
-        }
-    }
-
-    private void Forget(DbContext? context)
-    {
-        if (context is not null)
-        {
-            carryingContexts.Remove(context);
         }
     }
 }
