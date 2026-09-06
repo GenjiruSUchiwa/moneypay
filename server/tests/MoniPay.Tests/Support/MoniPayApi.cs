@@ -10,6 +10,7 @@ using MoniPay.Notifications.Channels;
 using MoniPay.Notifications.Features.Deliver;
 using MoniPay.Notifications.Features.Purge;
 using MoniPay.Sessions;
+using MoniPay.Sessions.Persistence;
 using MoniPay.Tests.Fakes;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -64,6 +65,8 @@ public sealed class MoniPayApi : IAsyncLifetime
             builder.UseSetting(SessionsOptions.Keys.MaximumVerificationAttempts, "3");
             builder.UseSetting(SessionsOptions.Keys.VerificationCodeLifetime, "00:02:00");
             builder.UseSetting(SessionsOptions.Keys.MaximumStartsPerWindow, "3");
+            builder.UseSetting(SessionsOptions.Keys.CleanupEnabled, "false");
+            builder.UseSetting(SessionsOptions.Keys.CleanupBatchSize, "5");
             UseNotificationTestSettings(builder);
 
             builder.ConfigureServices(services =>
@@ -110,6 +113,10 @@ public sealed class MoniPayApi : IAsyncLifetime
         await using AsyncServiceScope scope = Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<NotificationPurger>().RunAsync(cancellationToken);
     }
+
+    /// <summary>One expired-credential sweep, exactly as the worker runs it; returns how many rows it deleted.</summary>
+    public Task<int> RunCleanupCycleAsync(CancellationToken cancellationToken = default) =>
+        Services.GetRequiredService<ExpiredCredentialCleanupService>().RunCycleAsync(cancellationToken);
 
     public IServiceProvider Services =>
         (factory ?? throw new InvalidOperationException(

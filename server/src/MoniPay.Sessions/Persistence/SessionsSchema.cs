@@ -23,6 +23,32 @@ internal static class SessionsSchema
 
     public const string SignUpRegistrationTokenDigestUnique = "ix_sign_ups_registration_token_digest";
 
+    public const string SessionsTable = "sessions";
+
+    public const string SessionsPrimaryKey = "pk_sessions";
+
+    /// <summary>The active-sessions listing and the family revocation scan.</summary>
+    public const string SessionUserRevokedIndex = "ix_sessions_user_id_revoked_at";
+
+    public const string SessionFamilyDeviceUnique = "ix_sessions_token_family_id_device_id";
+
+    public const string RefreshTokensTable = "refresh_tokens";
+
+    public const string RefreshTokensPrimaryKey = "pk_refresh_tokens";
+
+    public const string RefreshTokenDigestUnique = "ix_refresh_tokens_token_digest";
+
+    /// <summary>
+    /// One unconsumed token per session. An expired token that was never used still holds the
+    /// slot: rotation consumes the old link before it issues the next one.
+    /// </summary>
+    public const string RefreshTokenActivePerSessionUnique = "ix_refresh_tokens_session_id_active";
+
+    /// <summary>The cleanup worker's scan.</summary>
+    public const string RefreshTokenExpiryIndex = "ix_refresh_tokens_expires_at";
+
+    public const string ActiveRefreshTokenFilter = "used_at IS NULL";
+
     /// <summary>
     /// The statuses a phone may still own a workflow for; completion or expiry frees the phone.
     /// Locked stays in the list so locking cannot be escaped by starting a fresh sign-up

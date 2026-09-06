@@ -67,6 +67,42 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
     }
 
     [Fact]
+    public async Task The_sessions_table_has_exactly_the_documented_columns()
+    {
+        Column[] expected =
+        [
+            new("id", "uuid", false, null),
+            new("user_id", "uuid", false, null),
+            new("device_id", "uuid", false, null),
+            new("token_family_id", "uuid", false, null),
+            new("version", "bigint", false, null),
+            new("created_at", "timestamp with time zone", false, null),
+            new("last_seen_at", "timestamp with time zone", false, null),
+            new("revoked_at", "timestamp with time zone", true, null),
+            new("revoke_reason", "character varying", true, 32),
+        ];
+
+        Assert.Equal(expected.OrderBy(column => column.Name), await ColumnsOfAsync(SessionsSchema.SessionsTable));
+    }
+
+    [Fact]
+    public async Task The_refresh_tokens_table_has_exactly_the_documented_columns()
+    {
+        Column[] expected =
+        [
+            new("id", "uuid", false, null),
+            new("session_id", "uuid", false, null),
+            new("token_digest", "bytea", false, null),
+            new("created_at", "timestamp with time zone", false, null),
+            new("expires_at", "timestamp with time zone", false, null),
+            new("used_at", "timestamp with time zone", true, null),
+            new("replaced_by_id", "uuid", true, null),
+        ];
+
+        Assert.Equal(expected.OrderBy(column => column.Name), await ColumnsOfAsync(SessionsSchema.RefreshTokensTable));
+    }
+
+    [Fact]
     public async Task The_user_consents_table_has_exactly_the_documented_columns()
     {
         Column[] expected =
@@ -113,6 +149,8 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
     [InlineData(UsersSchema.UsersTable, UsersSchema.UsersPrimaryKey, "id")]
     [InlineData(UsersSchema.UserConsentsTable, UsersSchema.UserConsentsPrimaryKey, "user_id", "document_kind")]
     [InlineData(SessionsSchema.SignUpsTable, SessionsSchema.SignUpsPrimaryKey, "id")]
+    [InlineData(SessionsSchema.SessionsTable, SessionsSchema.SessionsPrimaryKey, "id")]
+    [InlineData(SessionsSchema.RefreshTokensTable, SessionsSchema.RefreshTokensPrimaryKey, "id")]
     [InlineData(NotificationsSchema.NotificationsTable, NotificationsSchema.NotificationsPrimaryKey, "id")]
     public async Task The_primary_key_is_named_by_the_module_and_spans_the_documented_columns(
         string table,
@@ -215,6 +253,48 @@ public sealed class SchemaTests(MoniPayApi api) : MoniPayApiTest(api)
             definition,
             StringComparison.Ordinal);
         Assert.Contains($"{column} IS NOT NULL", definition, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(SessionsSchema.SessionUserRevokedIndex, "sessions", "(user_id, revoked_at)", false)]
+    [InlineData(SessionsSchema.SessionFamilyDeviceUnique, "sessions", "(token_family_id, device_id)", true)]
+    [InlineData(SessionsSchema.RefreshTokenDigestUnique, "refresh_tokens", "(token_digest)", true)]
+    [InlineData(SessionsSchema.RefreshTokenExpiryIndex, "refresh_tokens", "(expires_at)", false)]
+    public async Task The_session_index_exists_under_the_name_the_module_declares(
+        string indexName,
+        string table,
+        string columns,
+        bool unique)
+    {
+        string definition = await IndexDefinitionAsync(indexName);
+
+        Assert.Equal(
+            $"CREATE {(unique ? "UNIQUE " : string.Empty)}INDEX {indexName} ON public.{table} USING btree {columns}",
+            definition);
+    }
+
+    [Fact]
+    public async Task The_active_refresh_token_index_is_unique_per_session_while_unconsumed()
+    {
+        string definition = await IndexDefinitionAsync(SessionsSchema.RefreshTokenActivePerSessionUnique);
+
+        Assert.Equal(
+            $"CREATE UNIQUE INDEX {SessionsSchema.RefreshTokenActivePerSessionUnique} ON public.refresh_tokens USING btree (session_id) WHERE (used_at IS NULL)",
+            definition);
+    }
+
+    [Fact]
+    public async Task The_sessions_table_has_no_foreign_key()
+    {
+        IReadOnlyList<string> constraints = await Api.QueryAsync(
+            """
+            SELECT constraint_name FROM information_schema.table_constraints
+            WHERE table_schema = 'public' AND table_name = @table AND constraint_type = 'FOREIGN KEY';
+            """,
+            reader => reader.GetString(0),
+            ("table", SessionsSchema.SessionsTable));
+
+        Assert.Empty(constraints);
     }
 
     [Fact]
