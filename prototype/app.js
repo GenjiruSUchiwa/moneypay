@@ -809,7 +809,7 @@ function welcomeScreen() {
         <div class="we-body">${s.body}</div>
       </div>`).join("")}
     </div>
-    <div class="we-deck we-rise" id="we-deck" style="animation-delay:.18s">
+    <div class="we-deck we-rise" id="we-deck" style="animation-delay:.18s" tabindex="0" role="group" aria-label="Présentation des cartes">
       <div class="we-stage we-float">
         ${WELCOME_SLIDES.map(s => `<div class="we-card">${vcardHTML({ ...s.card, pan: "5399471028834412", frozen: false }, {})}</div>`).join("")}
       </div>
@@ -823,13 +823,13 @@ function welcomeScreen() {
   </div>`;
 }
 
-/* Contrôleur du deck : cycle auto + drag/tap, sans re-rendu (transitions CSS). */
+/* Deck controller: auto cycle + drag/tap, no re-render (CSS transitions). */
 function initWelcomeDeck(root) {
   const n = WELCOME_SLIDES.length;
   const cards = [...root.querySelectorAll(".we-card")];
   const texts = [...phone.querySelectorAll(".we-t")];
   const segs = [...phone.querySelectorAll(".we-segs .ws")];
-  let timer = null, x0 = null, front = null;
+  let timer = null, x0 = null, front = null, pid = null;
   const apply = () => {
     const i = F.slide || 0;
     cards.forEach((c, j) => { c.style.transform = ""; c.dataset.depth = String((j - i + n) % n); });
@@ -846,30 +846,43 @@ function initWelcomeDeck(root) {
     F.slide = ((F.slide || 0) + d + n) % n;
     apply(); arm();
   };
+  const settle = () => {
+    x0 = null; pid = null;
+    if (front) { front.classList.remove("drag"); front.style.transform = ""; front = null; }
+  };
   root.addEventListener("pointerdown", e => {
+    if (x0 != null) return;   // a second concurrent pointer must not reset the drag baseline
+    e.preventDefault();       // no text selection / native drag on desktop
+    pid = e.pointerId;
     x0 = e.clientX;
     front = cards.find(c => c.dataset.depth === "0");
     clearTimeout(timer);
     root.setPointerCapture(e.pointerId);
   });
   root.addEventListener("pointermove", e => {
-    if (x0 == null || !front) return;
+    if (x0 == null || !front || e.pointerId !== pid) return;
     const dx = e.clientX - x0;
     front.classList.add("drag");
     front.style.transform = `translateX(${dx}px) rotate(${dx / 18}deg)`;
   });
-  const release = e => {
-    if (x0 == null) return;
+  root.addEventListener("pointerup", e => {
+    if (x0 == null || e.pointerId !== pid) return;
     const dx = e.clientX - x0;
-    x0 = null;
-    if (front) { front.classList.remove("drag"); front.style.transform = ""; front = null; }
+    settle();
     if (dx < -55) go(1);
     else if (dx > 55) go(-1);
     else if (Math.abs(dx) < 6) go(1);
     else { apply(); arm(); }
-  };
-  root.addEventListener("pointerup", release);
-  root.addEventListener("pointercancel", release);
+  });
+  root.addEventListener("pointercancel", e => {
+    // A cancelled gesture (vertical scroll, OS gesture) snaps back — never advances.
+    if (e.pointerId !== pid) return;
+    settle(); apply(); arm();
+  });
+  root.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
+  });
   apply(); arm();
 }
 
@@ -2688,7 +2701,7 @@ function renderPhone(mode) {
     if (under) under.style.display = "none";
   }
 
-  /* deck de bienvenue */
+  /* welcome deck */
   const weDeck = phone.querySelector("#we-deck");
   if (weDeck) initWelcomeDeck(weDeck);
 

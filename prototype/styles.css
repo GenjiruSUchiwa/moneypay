@@ -818,7 +818,7 @@ input:focus-visible{outline:none}
 .we-t{grid-area:1/1;opacity:0;transform:translateY(10px);filter:blur(5px);transition:opacity .5s ease,transform .5s ease,filter .5s ease;pointer-events:none}
 .we-t.on{opacity:1;transform:none;filter:none}
 .we-body{font-size:15px;line-height:1.5;color:var(--ink-2);margin-top:10px;max-width:320px;text-wrap:pretty}
-.we-deck{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;touch-action:pan-y;cursor:grab}
+.we-deck{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
 .we-deck:active{cursor:grabbing}
 .we-stage{position:relative;width:296px;aspect-ratio:1.586}
 .we-card{position:absolute;inset:0;transition:transform .55s cubic-bezier(.3,1.25,.4,1)}
