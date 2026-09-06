@@ -20,9 +20,6 @@ internal sealed class SessionsOptions
     private static readonly TimeSpan DefaultSignUpLifetime = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan DefaultStartWindow = TimeSpan.FromHours(1);
     private const int DefaultMaximumStartsPerWindow = 5;
-    private static readonly TimeSpan DefaultAccessTokenLifetime = TimeSpan.FromMinutes(10);
-    private static readonly TimeSpan DefaultRefreshTokenLifetime = TimeSpan.FromDays(30);
-    private static readonly TimeSpan DefaultClockSkew = TimeSpan.FromSeconds(30);
 
     /// <summary>The shortest and longest code length a workable configuration allows.</summary>
     public const int MinimumCodeLength = 4;
@@ -77,13 +74,13 @@ internal sealed class SessionsOptions
     public int MaximumStartsPerWindow { get; set; } = DefaultMaximumStartsPerWindow;
 
     /// <summary>How long an access token is accepted after it is issued.</summary>
-    public TimeSpan AccessTokenLifetime { get; set; } = DefaultAccessTokenLifetime;
+    public TimeSpan AccessTokenLifetime { get; set; } = TimeSpan.FromMinutes(10);
 
     /// <summary>How long an unused refresh token stays exchangeable.</summary>
-    public TimeSpan RefreshTokenLifetime { get; set; } = DefaultRefreshTokenLifetime;
+    public TimeSpan RefreshTokenLifetime { get; set; } = TimeSpan.FromDays(30);
 
     /// <summary>The tolerance token validation grants a drifting clock.</summary>
-    public TimeSpan ClockSkew { get; set; } = DefaultClockSkew;
+    public TimeSpan ClockSkew { get; set; } = TimeSpan.FromSeconds(30);
 
     /// <summary>How the expired-credential sweep runs.</summary>
     public CleanupOptions Cleanup { get; set; } = new();

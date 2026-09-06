@@ -47,8 +47,6 @@ internal static class SessionsSchema
     /// <summary>The cleanup worker's scan.</summary>
     public const string RefreshTokenExpiryIndex = "ix_refresh_tokens_expires_at";
 
-    public const string ActiveRefreshTokenFilter = "used_at IS NULL";
-
     /// <summary>
     /// The statuses a phone may still own a workflow for; completion or expiry frees the phone.
     /// Locked stays in the list so locking cannot be escaped by starting a fresh sign-up

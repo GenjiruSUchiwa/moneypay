@@ -99,8 +99,6 @@ internal sealed class ExpiredCredentialCleanupService(
         DateTimeOffset cutoff,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(database);
-
         int batchSize = options.Value.Cleanup.BatchSize;
         int signUps = await database.Database.ExecuteSqlRawAsync(
             DeleteSignUpsSql,

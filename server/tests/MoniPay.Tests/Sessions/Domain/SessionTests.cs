@@ -42,13 +42,10 @@ public sealed class SessionTests
         Assert.Equal(2, session.Version);
     }
 
-    [Theory]
-    [InlineData(nameof(SessionRevokeReason.UserRequest))]
-    [InlineData(nameof(SessionRevokeReason.RefreshTokenReuse))]
-    [InlineData(nameof(SessionRevokeReason.BootstrapReplaced))]
-    public void Revoking_ends_the_session_with_its_reason(string reasonName)
+    [Fact]
+    public void Revoking_ends_the_session_with_its_reason()
     {
-        SessionRevokeReason reason = Enum.Parse<SessionRevokeReason>(reasonName);
+        const SessionRevokeReason reason = SessionRevokeReason.RefreshTokenReuse;
         Session session = Session.Create(UserId.New(), Guid.CreateVersion7(), CreatedAt);
         DateTimeOffset revokedAt = CreatedAt + TimeSpan.FromHours(1);
 

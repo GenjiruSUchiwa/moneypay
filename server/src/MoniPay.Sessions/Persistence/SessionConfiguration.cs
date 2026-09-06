@@ -15,11 +15,11 @@ internal sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
 
         builder.HasKey(session => session.Id).HasName(SessionsSchema.SessionsPrimaryKey);
         builder.Property(session => session.Id).HasColumnName("id");
-        builder.Property(session => session.UserId).HasColumnName("user_id").IsRequired();
-        builder.Property(session => session.DeviceId).HasColumnName("device_id").IsRequired();
-        builder.Property(session => session.TokenFamilyId).HasColumnName("token_family_id").IsRequired();
-        builder.Property(session => session.CreatedAt).HasColumnName("created_at").IsRequired();
-        builder.Property(session => session.LastSeenAt).HasColumnName("last_seen_at").IsRequired();
+        builder.Property(session => session.UserId).HasColumnName("user_id");
+        builder.Property(session => session.DeviceId).HasColumnName("device_id");
+        builder.Property(session => session.TokenFamilyId).HasColumnName("token_family_id");
+        builder.Property(session => session.CreatedAt).HasColumnName("created_at");
+        builder.Property(session => session.LastSeenAt).HasColumnName("last_seen_at");
         builder.Property(session => session.RevokedAt).HasColumnName("revoked_at");
         builder.Property(session => session.RevokeReason)
             .HasColumnName("revoke_reason")
