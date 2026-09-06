@@ -32,6 +32,20 @@ public sealed class SessionsStartupTests(MoniPayApi api)
         Assert.Contains(SessionsOptions.Keys.PersonalDataKeyBase64, exception.Message, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(SessionsOptions.Keys.AccessTokenLifetime, "00:00:00")]
+    [InlineData(SessionsOptions.Keys.AccessTokenLifetime, "-00:01:00")]
+    [InlineData(SessionsOptions.Keys.RefreshTokenLifetime, "00:00:00")]
+    [InlineData(SessionsOptions.Keys.ClockSkew, "00:00:00")]
+    [InlineData(SessionsOptions.Keys.CleanupInterval, "00:00:00")]
+    [InlineData(SessionsOptions.Keys.CleanupBatchSize, "0")]
+    public void The_host_refuses_to_start_with_a_non_positive_lifetime(string keyName, string value)
+    {
+        OptionsValidationException exception = StartWithKey(keyName, value);
+
+        Assert.Contains("MoniPay:Sessions bounds", exception.Message, StringComparison.Ordinal);
+    }
+
     private OptionsValidationException StartWithKey(string keyName, string keyBase64)
     {
         using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>()

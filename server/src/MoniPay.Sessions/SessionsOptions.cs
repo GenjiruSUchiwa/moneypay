@@ -20,6 +20,9 @@ internal sealed class SessionsOptions
     private static readonly TimeSpan DefaultSignUpLifetime = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan DefaultStartWindow = TimeSpan.FromHours(1);
     private const int DefaultMaximumStartsPerWindow = 5;
+    private static readonly TimeSpan DefaultAccessTokenLifetime = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan DefaultRefreshTokenLifetime = TimeSpan.FromDays(30);
+    private static readonly TimeSpan DefaultClockSkew = TimeSpan.FromSeconds(30);
 
     /// <summary>The shortest and longest code length a workable configuration allows.</summary>
     public const int MinimumCodeLength = 4;
@@ -73,6 +76,18 @@ internal sealed class SessionsOptions
     /// </summary>
     public int MaximumStartsPerWindow { get; set; } = DefaultMaximumStartsPerWindow;
 
+    /// <summary>How long an access token is accepted after it is issued.</summary>
+    public TimeSpan AccessTokenLifetime { get; set; } = DefaultAccessTokenLifetime;
+
+    /// <summary>How long an unused refresh token stays exchangeable.</summary>
+    public TimeSpan RefreshTokenLifetime { get; set; } = DefaultRefreshTokenLifetime;
+
+    /// <summary>The tolerance token validation grants a drifting clock.</summary>
+    public TimeSpan ClockSkew { get; set; } = DefaultClockSkew;
+
+    /// <summary>How the expired-credential sweep runs.</summary>
+    public CleanupOptions Cleanup { get; set; } = new();
+
     /// <summary>The 32-byte HMAC key hashing verification codes and workflow tokens, base64-encoded.</summary>
     public string VerificationCodeKeyBase64 { get; set; } = string.Empty;
 
@@ -87,19 +102,35 @@ internal sealed class SessionsOptions
 
     /// <summary>Reports whether the configured bounds would produce a workable sign-up.</summary>
     public bool IsWithinBounds() =>
+        HasWorkableVerificationBounds()
+        && HasWorkableSignUpBounds()
+        && HasWorkableTokenLifetimes()
+        && Cleanup.IsWithinBounds();
+
+    private bool HasWorkableVerificationBounds() =>
         SupportedCountries.Count > 0
         && VerificationCodeLength is >= MinimumCodeLength and <= MaximumCodeLength
         && VerificationCodeLifetime > TimeSpan.Zero
         && ResendCooldown >= TimeSpan.Zero
         && MaximumResends >= 0
-        && MaximumVerificationAttempts >= 1
-        && SignUpLifetime > TimeSpan.Zero
+        && MaximumVerificationAttempts >= 1;
+
+    private bool HasWorkableSignUpBounds() =>
+        SignUpLifetime > TimeSpan.Zero
         && StartWindow > TimeSpan.Zero
         && MaximumStartsPerWindow >= 1;
+
+    /// <summary>Every token lifetime must be positive; a zero skew is refused too, as the issue asks.</summary>
+    private bool HasWorkableTokenLifetimes() =>
+        AccessTokenLifetime > TimeSpan.Zero
+        && RefreshTokenLifetime > TimeSpan.Zero
+        && ClockSkew > TimeSpan.Zero;
 
     /// <summary>The configuration keys, declared so a mistyped key is a compile error.</summary>
     public static class Keys
     {
+        private const string Cleanup = $"{SectionName}:{nameof(SessionsOptions.Cleanup)}";
+
         public const string SupportedCountries = $"{SectionName}:{nameof(SupportedCountries)}";
         public const string VerificationCodeLength = $"{SectionName}:{nameof(VerificationCodeLength)}";
         public const string VerificationCodeLifetime = $"{SectionName}:{nameof(VerificationCodeLifetime)}";
@@ -111,5 +142,11 @@ internal sealed class SessionsOptions
         public const string MaximumStartsPerWindow = $"{SectionName}:{nameof(MaximumStartsPerWindow)}";
         public const string VerificationCodeKeyBase64 = $"{SectionName}:{nameof(VerificationCodeKeyBase64)}";
         public const string PersonalDataKeyBase64 = $"{SectionName}:{nameof(PersonalDataKeyBase64)}";
+        public const string AccessTokenLifetime = $"{SectionName}:{nameof(AccessTokenLifetime)}";
+        public const string RefreshTokenLifetime = $"{SectionName}:{nameof(RefreshTokenLifetime)}";
+        public const string ClockSkew = $"{SectionName}:{nameof(ClockSkew)}";
+        public const string CleanupEnabled = $"{Cleanup}:{nameof(CleanupOptions.Enabled)}";
+        public const string CleanupInterval = $"{Cleanup}:{nameof(CleanupOptions.Interval)}";
+        public const string CleanupBatchSize = $"{Cleanup}:{nameof(CleanupOptions.BatchSize)}";
     }
 }

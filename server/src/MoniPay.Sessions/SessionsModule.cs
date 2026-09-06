@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MoniPay.Kernel.Security;
+using MoniPay.Sessions.Persistence;
 using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions;
@@ -26,7 +27,7 @@ public static class SessionsModule
             .Validate(
                 options => options.IsWithinBounds(),
                 "The MoniPay:Sessions bounds are invalid: check the country rules, the code length, "
-                + "the lifetimes and the attempt and resend limits.")
+                + "the lifetimes, the attempt and resend limits and the cleanup bounds.")
             .RequireKey(options => options.VerificationCodeKeyBase64, SessionsOptions.Keys.VerificationCodeKeyBase64)
             .RequireKey(options => options.PersonalDataKeyBase64, SessionsOptions.Keys.PersonalDataKeyBase64)
             .ValidateOnStart();
@@ -37,6 +38,9 @@ public static class SessionsModule
         services.AddSingleton<SignUpTokens>();
         services.AddSingleton<SignUpPersonalDataProtector>();
         services.AddSingleton<PhoneLookupDigest>();
+
+        services.AddSingleton<ExpiredCredentialCleanupService>();
+        services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<ExpiredCredentialCleanupService>());
 
         return services;
     }
