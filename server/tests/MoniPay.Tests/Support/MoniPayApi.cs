@@ -2,8 +2,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using MoniPay.Api;
 using MoniPay.Kernel.Http;
+using MoniPay.Notifications;
+using MoniPay.Notifications.Channels;
+using MoniPay.Notifications.Features.Deliver;
+using MoniPay.Notifications.Features.Purge;
 using MoniPay.Sessions;
 using MoniPay.Tests.Fakes;
 using Testcontainers.PostgreSql;
@@ -35,6 +40,13 @@ public sealed class MoniPayApi : IAsyncLifetime
     /// <summary>Stands in for the host's Users adapter until it lands.</summary>
     public StubRegisteredPhoneLookup RegisteredPhones { get; } = new();
 
+    /// <summary>The channels the delivery worker sends through; tests read what was sent from here.</summary>
+    public RecordingChannel Sms { get; } = new("sms-ref");
+
+    public RecordingChannel Email { get; } = new("email-ref");
+
+    public RecordingLoggerProvider Logs { get; } = new();
+
     internal string ConnectionString { get; private set; } = string.Empty;
 
     public async ValueTask InitializeAsync()
@@ -52,11 +64,15 @@ public sealed class MoniPayApi : IAsyncLifetime
             builder.UseSetting(SessionsOptions.Keys.MaximumVerificationAttempts, "3");
             builder.UseSetting(SessionsOptions.Keys.VerificationCodeLifetime, "00:02:00");
             builder.UseSetting(SessionsOptions.Keys.MaximumStartsPerWindow, "3");
+            UseNotificationTestSettings(builder);
 
             builder.ConfigureServices(services =>
             {
                 services.RemoveAll<TimeProvider>();
                 services.AddSingleton<TimeProvider>(Time);
+                services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Sms, Sms);
+                services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Email, Email);
+                services.AddLogging(logging => logging.AddProvider(Logs));
             });
         });
     }
@@ -68,6 +84,31 @@ public sealed class MoniPayApi : IAsyncLifetime
         HttpClient client = currentFactory.CreateClient();
         client.DefaultRequestHeaders.Accept.ParseAdd(MoniPayMediaTypes.Accept);
         return client;
+    }
+
+    /// <summary>
+    /// The worker and the purge are off in the test host; both are driven one cycle at a time.
+    /// </summary>
+    public static IWebHostBuilder UseNotificationTestSettings(IWebHostBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.UseSetting(NotificationsOptions.Keys.WorkerEnabled, "false");
+        builder.UseSetting(NotificationsOptions.Keys.WorkerBatchSize, "10");
+        return builder;
+    }
+
+    /// <summary>One delivery cycle in a fresh scope, exactly as the worker runs it.</summary>
+    public async Task<int> RunNotificationCycleAsync(CancellationToken cancellationToken = default)
+    {
+        await using AsyncServiceScope scope = Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<NotificationProcessor>().RunCycleAsync(cancellationToken);
+    }
+
+    /// <summary>One purge sweep in a fresh scope, exactly as the worker runs it; returns how many rows it deleted.</summary>
+    public async Task<int> RunNotificationPurgeAsync(CancellationToken cancellationToken = default)
+    {
+        await using AsyncServiceScope scope = Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<NotificationPurger>().RunAsync(cancellationToken);
     }
 
     public IServiceProvider Services =>

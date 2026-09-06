@@ -2,6 +2,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Security;
+using MoniPay.Notifications.Features.Deliver;
+using MoniPay.Notifications.Features.Purge;
 using MoniPay.Notifications.Persistence;
 using MoniPay.Notifications.Security;
 using MoniPay.Persistence;
@@ -43,6 +45,13 @@ public static class NotificationsModule
             serviceProvider.GetRequiredService<MoniPayDbContext>(),
             serviceProvider.GetRequiredService<RecipientProtector>(),
             serviceProvider.GetRequiredService<TimeProvider>()));
+
+        // No INotificationChannel is keyed yet: a placeholder that pretends to send is forbidden.
+        // The processor resolves them with GetKeyedService and leaves the rows waiting until #101 / #102.
+        services.AddScoped<NotificationProcessor>();
+        services.AddHostedService<NotificationWorker>();
+        services.AddScoped<NotificationPurger>();
+        services.AddHostedService<NotificationPurgeWorker>();
 
         return services;
     }

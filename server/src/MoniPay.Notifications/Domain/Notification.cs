@@ -95,4 +95,59 @@ internal sealed class Notification
             CreatedAt = now,
         };
     }
+
+    /// <summary>
+    /// The provider took it: the attempt is counted and the body is cleared at once so a later
+    /// read reveals no code.
+    /// </summary>
+    public void MarkSent(string providerReference, DateTimeOffset now)
+    {
+        Attempts += 1;
+        Status = NotificationStatus.Sent;
+        SentAt = now;
+        ProviderReference = providerReference;
+        BodyCiphertext = null;
+        LeaseUntil = null;
+    }
+
+    /// <summary>
+    /// Counts the attempt and books the next one from the kind's <see cref="RetrySchedule"/>.
+    /// Returns <c>false</c> when the schedule is exhausted and the row has ended Failed.
+    /// </summary>
+    public bool RecordRetry(string code, DateTimeOffset now)
+    {
+        if (RetrySchedule.NextDelay(Kind, Attempts + 1) is not { } delay)
+        {
+            Fail(code);
+            return false;
+        }
+
+        Attempts += 1;
+        LastErrorCode = code;
+        LeaseUntil = null;
+        NextAttemptAt = now + delay;
+        return true;
+    }
+
+    /// <summary>A permanent refusal: the attempt is counted and no further one is booked.</summary>
+    public void Fail(string code)
+    {
+        Attempts += 1;
+        Status = NotificationStatus.Failed;
+        LastErrorCode = code;
+        LeaseUntil = null;
+    }
+
+    public void Expire()
+    {
+        Status = NotificationStatus.Expired;
+        LeaseUntil = null;
+    }
+
+    /// <summary>Leaves the row Pending and eligible: nothing can send it yet, and nothing tried.</summary>
+    public void Skip(string code)
+    {
+        LastErrorCode = code;
+        LeaseUntil = null;
+    }
 }
