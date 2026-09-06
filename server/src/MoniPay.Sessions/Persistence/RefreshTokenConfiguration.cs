@@ -15,10 +15,10 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
 
         builder.HasKey(token => token.Id).HasName(SessionsSchema.RefreshTokensPrimaryKey);
         builder.Property(token => token.Id).HasColumnName("id");
-        builder.Property(token => token.SessionId).HasColumnName("session_id").IsRequired();
+        builder.Property(token => token.SessionId).HasColumnName("session_id");
         builder.Property(token => token.TokenDigest).HasColumnName("token_digest").IsRequired();
-        builder.Property(token => token.CreatedAt).HasColumnName("created_at").IsRequired();
-        builder.Property(token => token.ExpiresAt).HasColumnName("expires_at").IsRequired();
+        builder.Property(token => token.CreatedAt).HasColumnName("created_at");
+        builder.Property(token => token.ExpiresAt).HasColumnName("expires_at");
         builder.Property(token => token.UsedAt).HasColumnName("used_at");
         builder.Property(token => token.ReplacedById).HasColumnName("replaced_by_id");
 
@@ -29,7 +29,7 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.HasIndex(token => token.SessionId)
             .IsUnique()
             .HasDatabaseName(SessionsSchema.RefreshTokenActivePerSessionUnique)
-            .HasFilter(SessionsSchema.ActiveRefreshTokenFilter);
+            .HasFilter("used_at IS NULL");
 
         builder.HasIndex(token => token.ExpiresAt)
             .HasDatabaseName(SessionsSchema.RefreshTokenExpiryIndex);
