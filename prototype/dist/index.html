@@ -815,12 +815,34 @@ input:focus-visible{outline:none}
 .notif-dot{width:8px;height:8px;border-radius:99px;background:var(--debit);flex-shrink:0}
 .bell-badge{position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:99px;background:var(--debit);box-shadow:0 0 0 2px var(--paper)}
 
-/* onboarding */
-.welcome-dots{display:flex;gap:5px;align-items:center}
-.welcome-dots .wd{width:6px;height:3px;border-radius:99px;background:var(--well-2);transition:width .25s ease,background .25s ease}
-.welcome-dots .wd.on{width:18px;background:var(--ink)}
-.slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;flex:1;min-height:0}
-.slides .slide{width:100%;flex-shrink:0;scroll-snap-align:center;display:flex;flex-direction:column;justify-content:center;padding:12px var(--gutter)}
+/* onboarding — deck de bienvenue */
+.we-segs{display:flex;gap:5px;padding:12px var(--gutter) 0}
+.we-segs .ws{flex:1;height:3px;border-radius:99px;background:var(--well-2);overflow:hidden}
+.we-segs .ws i{display:block;height:100%;border-radius:99px;background:var(--ink);transform:scaleX(0);transform-origin:left}
+.we-segs .ws.done i{transform:none}
+.we-segs .ws.run i{animation:weFill 4.2s linear forwards}
+@keyframes weFill{to{transform:none}}
+.we-texts{display:grid;padding:24px var(--gutter) 0}
+.we-t{grid-area:1/1;opacity:0;transform:translateY(10px);filter:blur(5px);transition:opacity .5s ease,transform .5s ease,filter .5s ease;pointer-events:none}
+.we-t.on{opacity:1;transform:none;filter:none}
+.we-body{font-size:15px;line-height:1.5;color:var(--ink-2);margin-top:10px;max-width:320px;text-wrap:pretty}
+.we-deck{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+.we-deck:active{cursor:grabbing}
+.we-stage{position:relative;width:296px;aspect-ratio:1.586}
+.we-card{position:absolute;inset:0;transition:transform .55s cubic-bezier(.3,1.25,.4,1)}
+.we-card.drag{transition:none}
+.we-card[data-depth="0"]{z-index:3}
+.we-card[data-depth="1"]{transform:translate(12px,-32px) scale(.92) rotate(4.5deg);z-index:2}
+.we-card[data-depth="2"]{transform:translate(-13px,-58px) scale(.84) rotate(-4deg);z-index:1}
+.we-float{animation:weBob 3.2s ease-in-out infinite alternate}
+@keyframes weBob{from{transform:translateY(2px)}to{transform:translateY(-7px)}}
+.we-rise{animation:weRise .55s cubic-bezier(.2,.7,.3,1) both}
+@keyframes weRise{from{opacity:0;transform:translateY(14px)}}
+@media (prefers-reduced-motion: reduce){
+  .we-rise,.we-float{animation:none}
+  .we-card{transition:none}
+  .we-t{transition:opacity .2s ease;transform:none;filter:none}
+}
 .viewfinder{position:relative}
 .viewfinder .vf-corners{position:absolute;inset:0;color:var(--ink)}
 .viewfinder .vf-corners.ok{color:var(--credit)}
@@ -2033,32 +2055,98 @@ function splashScreen() {
 
 const WELCOME_SLIDES = [
   { title: "Une carte par usage,<br>créée en 30 secondes", body: "Visa ou Mastercard, son propre plafond, gelée d’un geste. Autant de cartes que de besoins.", card: { label: "Abonnements", theme: "sapin", network: "mastercard" } },
-  { title: "Rechargée en<br>Mobile Money", body: "MTN MoMo, Orange Money ou dépôt agent. Votre solde FCFA finance chaque paiement en dollars.", card: { label: "Shopping", theme: "ivoire", network: "visa" } },
+  { title: "Rechargée en<br>Mobile Money", body: "MTN MoMo, Orange Money ou dépôt agent. Votre solde FCFA finance chaque paiement en dollars.", card: { label: "Shopping", theme: "ndop", network: "visa" } },
   { title: "Acceptée partout<br>en ligne", body: "Netflix, OpenAI, AliExpress. Le taux et la marge sont affichés avant chaque conversion.", card: { label: "Serveurs", theme: "encre", network: "mastercard" } }
 ];
 function welcomeScreen() {
-  const i = F.slide || 0;
   return `<div class="layer">
     ${statusBar()}
-    <div class="navbar" style="padding:0 var(--gutter)">
+    <div class="navbar we-rise" style="padding:0 var(--gutter)">
       <span style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:16px;letter-spacing:-.01em">${logoMark(24, "var(--green)", "#FFFFFF")}MoniPay</span>
       <span class="nb-spacer"></span>
-      <button type="button" class="nb-text" data-act="goLock">Se connecter</button>
     </div>
-    <div class="slides" id="slides" data-act-scroll="slides">
-      ${WELCOME_SLIDES.map(s => `<div class="slide">
-        <div style="max-width:290px">${vcardHTML({ ...s.card, pan: "5399471028834412", frozen: false }, {})}</div>
-        <div class="t-page" style="margin-top:30px">${s.title}</div>
-        <div style="font-size:15px;line-height:1.5;color:var(--ink-2);margin-top:10px;max-width:320px;text-wrap:pretty">${s.body}</div>
+    <div class="we-segs we-rise" style="animation-delay:.05s">${WELCOME_SLIDES.map(() => `<span class="ws"><i></i></span>`).join("")}</div>
+    <div class="we-texts we-rise" style="animation-delay:.1s">
+      ${WELCOME_SLIDES.map(s => `<div class="we-t">
+        <div class="t-page">${s.title}</div>
+        <div class="we-body">${s.body}</div>
       </div>`).join("")}
     </div>
-    <div class="gutter" style="padding-bottom:20px">
-      <div class="welcome-dots" style="margin-bottom:20px">${WELCOME_SLIDES.map((_, j) => `<span class="wd ${j === i ? "on" : ""}"></span>`).join("")}</div>
+    <div class="we-deck we-rise" id="we-deck" style="animation-delay:.18s" tabindex="0" role="group" aria-label="Présentation des cartes">
+      <div class="we-stage we-float">
+        ${WELCOME_SLIDES.map(s => `<div class="we-card">${vcardHTML({ ...s.card, pan: "5399471028834412", frozen: false }, {})}</div>`).join("")}
+      </div>
+    </div>
+    <div class="gutter we-rise" style="padding-bottom:20px;animation-delay:.26s">
       ${btn("Créer mon compte", "goSignup")}
+      <div style="margin-top:10px">${btn("J’ai déjà un compte", "goLock", { style: "quiet" })}</div>
       <div style="text-align:center;font-size:12px;color:var(--ink-3);margin-top:12px">Cartes émises par notre banque partenaire agréée.</div>
     </div>
     <div class="homebar"></div>
   </div>`;
+}
+
+/* Deck controller: auto cycle + drag/tap, no re-render (CSS transitions). */
+function initWelcomeDeck(root) {
+  const n = WELCOME_SLIDES.length;
+  const cards = [...root.querySelectorAll(".we-card")];
+  const texts = [...phone.querySelectorAll(".we-t")];
+  const segs = [...phone.querySelectorAll(".we-segs .ws")];
+  let timer = null, x0 = null, front = null, pid = null;
+  const apply = () => {
+    const i = F.slide || 0;
+    cards.forEach((c, j) => { c.style.transform = ""; c.dataset.depth = String((j - i + n) % n); });
+    texts.forEach((t, j) => t.classList.toggle("on", j === i));
+    segs.forEach((s, j) => {
+      s.classList.toggle("done", j < i);
+      s.classList.remove("run");
+      if (j === i) { void s.offsetWidth; s.classList.add("run"); }
+    });
+  };
+  const arm = () => { clearTimeout(timer); timer = after(4200, () => go(1)); };
+  const go = d => {
+    if (!root.isConnected) return;
+    F.slide = ((F.slide || 0) + d + n) % n;
+    apply(); arm();
+  };
+  const settle = () => {
+    x0 = null; pid = null;
+    if (front) { front.classList.remove("drag"); front.style.transform = ""; front = null; }
+  };
+  root.addEventListener("pointerdown", e => {
+    if (x0 != null) return;   // a second concurrent pointer must not reset the drag baseline
+    e.preventDefault();       // no text selection / native drag on desktop
+    pid = e.pointerId;
+    x0 = e.clientX;
+    front = cards.find(c => c.dataset.depth === "0");
+    clearTimeout(timer);
+    root.setPointerCapture(e.pointerId);
+  });
+  root.addEventListener("pointermove", e => {
+    if (x0 == null || !front || e.pointerId !== pid) return;
+    const dx = e.clientX - x0;
+    front.classList.add("drag");
+    front.style.transform = `translateX(${dx}px) rotate(${dx / 18}deg)`;
+  });
+  root.addEventListener("pointerup", e => {
+    if (x0 == null || e.pointerId !== pid) return;
+    const dx = e.clientX - x0;
+    settle();
+    if (dx < -55) go(1);
+    else if (dx > 55) go(-1);
+    else if (Math.abs(dx) < 6) go(1);
+    else { apply(); arm(); }
+  });
+  root.addEventListener("pointercancel", e => {
+    // A cancelled gesture (vertical scroll, OS gesture) snaps back — never advances.
+    if (e.pointerId !== pid) return;
+    settle(); apply(); arm();
+  });
+  root.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
+  });
+  apply(); arm();
 }
 
 function signupScreen() {
@@ -3876,27 +3964,9 @@ function renderPhone(mode) {
     if (under) under.style.display = "none";
   }
 
-  /* diapositives d'accueil */
-  const slides = phone.querySelector("#slides");
-  if (slides) {
-    if ((F.slide || 0) > 0) slides.scrollLeft = F.slide * slides.offsetWidth;
-    {
-      let ticking = false;
-      slides.addEventListener("scroll", () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(() => {
-          ticking = false;
-          const w = slides.offsetWidth || 1;
-          const i = Math.max(0, Math.min(WELCOME_SLIDES.length - 1, Math.round(slides.scrollLeft / w)));
-          if (i !== F.slide) {
-            F.slide = i;
-            phone.querySelectorAll(".wd").forEach((d, j) => d.classList.toggle("on", j === i));
-          }
-        });
-      }, { passive: true });
-    }
-  }
+  /* welcome deck */
+  const weDeck = phone.querySelector("#we-deck");
+  if (weDeck) initWelcomeDeck(weDeck);
 
   /* compteur du solde (arrivée sur l'accueil) */
   if (mode === "tab" && PHASE === "main" && TAB === "home" && !STACKS.home.length && !S.hidden
