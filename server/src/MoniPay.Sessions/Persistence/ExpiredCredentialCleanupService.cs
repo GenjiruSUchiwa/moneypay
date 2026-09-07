@@ -9,8 +9,8 @@ using MoniPay.Sessions.Domain;
 namespace MoniPay.Sessions.Persistence;
 
 /// <summary>
-/// Removes credentials nobody can present any more: closed sign-ups and refresh tokens that are
-/// consumed or expired, in bounded batches, one sweep per <c>Cleanup:Interval</c>. It never
+/// Removes closed sign-ups and expired refresh tokens in bounded batches, one sweep per
+/// <c>Cleanup:Interval</c>. Consumed digests remain until expiry for replay detection. It never
 /// deletes a <c>sessions</c> row, and never an active session's newest token, however old:
 /// that token is what a replay of the previous one is detected against.
 /// </summary>
@@ -34,7 +34,7 @@ internal sealed class ExpiredCredentialCleanupService(
         DELETE FROM {{SessionsSchema.RefreshTokensTable}}
         WHERE id IN (
             SELECT candidate.id FROM {{SessionsSchema.RefreshTokensTable}} AS candidate
-            WHERE (candidate.used_at < {0} OR candidate.expires_at < {0})
+            WHERE candidate.expires_at < {0}
               AND NOT EXISTS (
                   SELECT 1 FROM {{SessionsSchema.SessionsTable}} AS session
                   WHERE session.id = candidate.session_id
@@ -106,7 +106,7 @@ internal sealed class ExpiredCredentialCleanupService(
             cancellationToken).ConfigureAwait(false);
         int tokens = await database.Database.ExecuteSqlRawAsync(
             DeleteRefreshTokensSql,
-            [cutoff, batchSize],
+            [timeProvider.GetUtcNow(), batchSize],
             cancellationToken).ConfigureAwait(false);
         return signUps + tokens;
     }

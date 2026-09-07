@@ -39,7 +39,7 @@ internal sealed class SessionTokenService(
 
         database.Sessions.Add(session);
         database.RefreshTokens.Add(RefreshToken.Issue(session.Id, digest, now, settings.RefreshTokenLifetime));
-        await PersistAsync(cancellationToken).ConfigureAwait(false);
+        await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Result(session, userId, rawRefresh, now);
     }
@@ -52,12 +52,22 @@ internal sealed class SessionTokenService(
         Guid deviceId,
         CancellationToken cancellationToken)
     {
+        await using IDbContextTransaction? transaction = database.Database.CurrentTransaction is null
+            ? await database.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
+            : null;
         Session prior = await database.Sessions
-            .SingleAsync(session => session.Id == priorSessionId, cancellationToken)
+            .FromSqlRaw(LockSessionSql, priorSessionId)
+            .SingleAsync(session => session.UserId == userId, cancellationToken)
             .ConfigureAwait(false);
         prior.Revoke(SessionRevokeReason.BootstrapReplaced, timeProvider.GetUtcNow());
 
-        return await CreateAsync(userId, deviceId, cancellationToken).ConfigureAwait(false);
+        SessionTokenResult result = await CreateAsync(userId, deviceId, cancellationToken).ConfigureAwait(false);
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return result;
     }
 
     /// <summary>Exchanges a refresh token for a new one, in one transaction: the token row is
@@ -113,8 +123,12 @@ internal sealed class SessionTokenService(
     /// that never existed, changes nothing.</summary>
     public async Task RevokeAsync(Guid sessionId, CancellationToken cancellationToken)
     {
+        await using IDbContextTransaction? transaction = database.Database.CurrentTransaction is null
+            ? await database.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false)
+            : null;
         Session? session = await database.Sessions
-            .SingleOrDefaultAsync(candidate => candidate.Id == sessionId, cancellationToken)
+            .FromSqlRaw(LockSessionSql, sessionId)
+            .SingleOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
         if (session is null)
         {
@@ -123,25 +137,10 @@ internal sealed class SessionTokenService(
 
         session.Revoke(SessionRevokeReason.UserRequest, timeProvider.GetUtcNow());
         await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Saves, joining the ambient transaction the completion opened when one is open — the
-    /// bootstrap session then commits or rolls back with the user row it belongs to.
-    /// </summary>
-    private async Task PersistAsync(CancellationToken cancellationToken)
-    {
-        if (database.Database.CurrentTransaction is not null)
+        if (transaction is not null)
         {
-            await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return;
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         }
-
-        await using IDbContextTransaction transaction = await database.Database
-            .BeginTransactionAsync(cancellationToken)
-            .ConfigureAwait(false);
-        await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Rolls a refused refresh back. The reason goes to the log; the client gets one type.</summary>

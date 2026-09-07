@@ -14,4 +14,8 @@ internal sealed record SessionTokenResult(
     AccessToken AccessToken,
     DateTimeOffset AccessTokenExpiresAt,
     string RefreshToken,
-    DateTimeOffset RefreshTokenExpiresAt);
+    DateTimeOffset RefreshTokenExpiresAt)
+{
+    // The generated record representation would expose the raw refresh token.
+    public override string ToString() => nameof(SessionTokenResult);
+}

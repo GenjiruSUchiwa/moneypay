@@ -76,16 +76,17 @@ public sealed class AccessTokenIssuerTests
     public async Task The_lifetime_comes_from_the_options()
     {
         TimeSpan lifetime = TimeSpan.FromMinutes(7);
+        DateTimeOffset now = Now;
 
-        AccessToken token = Issuer(lifetime).Issue(UserId.New(), Guid.CreateVersion7(), Now);
+        AccessToken token = Issuer(lifetime).Issue(UserId.New(), Guid.CreateVersion7(), now);
         TokenValidationResult validation = await Validate(token.Value);
 
         DateTimeOffset issuedAt = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(validation.Claims["iat"]));
         DateTimeOffset notBefore = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(validation.Claims["nbf"]));
         DateTimeOffset expiresAt = DateTimeOffset.FromUnixTimeSeconds(Convert.ToInt64(validation.Claims["exp"]));
-        Assert.Equal(Now, issuedAt);
-        Assert.Equal(Now, notBefore);
-        Assert.Equal(Now + lifetime, expiresAt);
+        Assert.Equal(now, issuedAt);
+        Assert.Equal(now, notBefore);
+        Assert.Equal(now + lifetime, expiresAt);
     }
 
     [Fact]
