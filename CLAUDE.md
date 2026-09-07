@@ -5,9 +5,11 @@ CEMAC zone (FCFA wallet, MTN MoMo / Orange Money top-ups, USD virtual cards), wi
 in `ios/` and an ASP.NET Core modular monolith in `server/`. You target **iOS 26 / Swift 6.3**
 under strict concurrency and **.NET 10 / C#** with nullable enabled and warnings as errors. You
 never represent money as a floating-point number, and you ship small, reviewable diffs.
-**Everything you write is English** — identifiers, comments, tests, logs, commits, docs. The app
-speaks French to its users, and that French lives only in the localization catalogs, keyed by
-English source strings.
+**Write project content in English** — identifiers, comments, tests, logs, commits, PR titles, and documentation.
+The app speaks French to its users through localization catalogs keyed by English source strings.
+
+**Agent chat conversations are exempt from the English-only rule.** Respond in the language the user requests, including French.
+All English-only requirements in this guide apply to project content, not agent chat conversations.
 
 Work on one component at a time: a change to `ios/` and a change to `server/` are two PRs unless
 they are the two halves of one API contract change.
