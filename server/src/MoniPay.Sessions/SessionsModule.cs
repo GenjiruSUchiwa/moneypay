@@ -1,7 +1,15 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using MoniPay.Kernel;
 using MoniPay.Kernel.Security;
 using MoniPay.Sessions.Domain;
+using MoniPay.Sessions.Features.Sessions;
+using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Persistence;
 using MoniPay.Sessions.Security;
 
@@ -57,6 +65,73 @@ public static class SessionsModule
         services.AddSingleton<ExpiredCredentialCleanupService>();
         services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<ExpiredCredentialCleanupService>());
 
+        AddAuthentication(services);
+        AddAuthorization(services);
+
         return services;
+    }
+
+    /// <summary>
+    /// The three schemes. The bearer scheme validates the access JWT — issuer, audience,
+    /// signature, lifetime, HS256 only, inbound claim mapping off so the claim names are the
+    /// ones the issuer stamped — accepting the previous signing key while a rotation is in
+    /// flight. The two workflow schemes share one handler shape, one per purpose, and never
+    /// accept each other's tokens: the purpose baked into the digest sees to that.
+    /// </summary>
+    private static void AddAuthentication(IServiceCollection services)
+    {
+        services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddScheme<AuthenticationSchemeOptions, SignUpAuthenticationHandler>(SessionsSchemes.SignUp, null)
+            .AddScheme<AuthenticationSchemeOptions, RegistrationAuthenticationHandler>(SessionsSchemes.Registration, null)
+            .AddJwtBearer();
+
+        services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<IOptions<SessionsOptions>, TimeProvider>((bearer, sessions, clock) =>
+            {
+                SessionsOptions settings = sessions.Value;
+                bearer.TimeProvider = clock;
+                bearer.MapInboundClaims = false;
+                bearer.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = settings.Issuer,
+                    ValidAudience = settings.Audience,
+                    IssuerSigningKeys = IssuerSigningKeys(settings),
+                    ValidateLifetime = true,
+                    ClockSkew = settings.ClockSkew,
+                    RequireSignedTokens = true,
+                    ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+                };
+            });
+    }
+
+    private static IEnumerable<SecurityKey> IssuerSigningKeys(SessionsOptions sessions)
+    {
+        yield return new SymmetricSecurityKey(sessions.SigningKey);
+        if (sessions.PreviousSigningKey is { } previous)
+        {
+            yield return new SymmetricSecurityKey(previous);
+        }
+    }
+
+    /// <summary>
+    /// The two named policies. <see cref="MoniPayPolicies.AuthenticatedUser"/> demands an active
+    /// session behind the ticket; <see cref="MoniPayPolicies.Registration"/> demands the
+    /// registration scheme's credential bound to the route's sign-up. Both answer a refusal of
+    /// an authenticated principal with a 401, through the shared result handler.
+    /// </summary>
+    private static void AddAuthorization(IServiceCollection services)
+    {
+        services.AddAuthorizationBuilder()
+            .AddPolicy(MoniPayPolicies.AuthenticatedUser, policy => policy
+                .RequireAuthenticatedUser()
+                .AddRequirements(new ActiveSessionRequirement()))
+            .AddPolicy(MoniPayPolicies.Registration, policy => policy
+                .RequireAuthenticatedUser()
+                .AddAuthenticationSchemes(SessionsSchemes.Registration)
+                .AddRequirements(new RegistrationRouteRequirement()));
+
+        services.AddScoped<IAuthorizationHandler, SessionsAuthorizationHandler>();
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, PolicyFailureResultHandler>();
     }
 }

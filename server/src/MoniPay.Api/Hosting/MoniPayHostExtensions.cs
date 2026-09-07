@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+
 namespace MoniPay.Api.Hosting;
 
 /// <summary>
@@ -19,13 +23,41 @@ public static class MoniPayHostExtensions
         builder.AddMoniPayObservability();
 
         builder.Services
+            .AddTransient<IConfigureOptions<ForwardedHeadersOptions>, ForwardedHeadersOptionsSetup>();
+
+        builder.Services
             .AddMoniPayModules(builder.Configuration)
+            .AddMoniPayRateLimiter(builder.Configuration)
             .AddMoniPayLocalization()
             .AddMoniPayHealthChecks()
             .AddMoniPayOpenApi()
             .AddProblemDetails();
 
         return builder;
+    }
+
+    /// <summary>
+    /// The IP rate limits: the options they are tuned by, and the fixed-window limiters the
+    /// modules' route groups attach by name.
+    /// </summary>
+    private static IServiceCollection AddMoniPayRateLimiter(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        services.AddOptions<RateLimitOptions>()
+            .Bind(configuration.GetSection(RateLimitOptions.SectionName))
+            .Validate(limits => limits.StartPerHour >= 1
+                    && limits.ResendPerHour >= 1
+                    && limits.VerifyPerHour >= 1
+                    && limits.CompletePerHour >= 1
+                    && limits.RefreshPerHour >= 1,
+                "The MoniPay:RateLimits limits are invalid: every limit must be at least one per hour.")
+            .ValidateOnStart();
+        services.AddTransient<IConfigureOptions<RateLimiterOptions>, RateLimiterSetup>();
+        return services.AddRateLimiter();
     }
 
     /// <summary>
@@ -52,5 +84,12 @@ public static class MoniPayHostExtensions
         app.MapMoniPayOpenApi();
         app.MapMoniPayHealthChecks();
         app.MapMoniPayModules();
+
+        // The throwaway probe endpoints the security tests mount their credentials on. They
+        // exist in the Testing environment only, and disappear when the real routes land.
+        if (app.Environment.IsEnvironment(MoniPayEnvironments.Testing))
+        {
+            app.MapTestProbes();
+        }
     }
 }

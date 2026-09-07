@@ -17,6 +17,12 @@ public static class MoniPayConfiguration
 
     /// <summary>Serve the OpenAPI document. Defaults to on in Development only.</summary>
     public const string OpenApiEnabled = $"{SectionName}:OpenApi:Enabled";
+
+    /// <summary>
+    /// The edge proxies whose <c>X-Forwarded-*</c> headers the host believes. An empty value
+    /// trusts nobody, so the client IP is always the connection's own.
+    /// </summary>
+    public const string ForwardedHeadersKnownProxies = $"{SectionName}:ForwardedHeaders:KnownProxies";
 }
 
 /// <summary>Environment names the host branches on, beyond the ones ASP.NET Core defines.</summary>

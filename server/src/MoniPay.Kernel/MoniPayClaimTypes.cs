@@ -11,4 +11,10 @@ public static class MoniPayClaimTypes
 
     /// <summary>The token identifier claim.</summary>
     public const string TokenId = "jti";
+
+    /// <summary>
+    /// The sign-up identifier claim the workflow schemes issue and the routes name as their
+    /// <c>signUpId</c> parameter: a workflow credential is bound to one sign-up.
+    /// </summary>
+    public const string SignUpId = "signUpId";
 }

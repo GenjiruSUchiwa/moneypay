@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using MoniPay.Api;
+using MoniPay.Kernel;
 using MoniPay.Kernel.Http;
 using MoniPay.Notifications;
 using MoniPay.Notifications.Channels;
@@ -41,6 +42,9 @@ public sealed class MoniPayApi : IAsyncLifetime
     /// <summary>Stands in for the host's Users adapter until it lands.</summary>
     public StubRegisteredPhoneLookup RegisteredPhones { get; } = new();
 
+    /// <summary>Counts the sessions-table queries the test host runs, for the active-session check.</summary>
+    public SessionQueryCounter Queries { get; } = new();
+
     /// <summary>The channels the delivery worker sends through; tests read what was sent from here.</summary>
     public RecordingChannel Sms { get; } = new("sms-ref");
 
@@ -49,6 +53,8 @@ public sealed class MoniPayApi : IAsyncLifetime
     public RecordingLoggerProvider Logs { get; } = new();
 
     internal string ConnectionString { get; private set; } = string.Empty;
+
+    private readonly List<WebApplicationFactory<Program>> secondaryFactories = [];
 
     public async ValueTask InitializeAsync()
     {
@@ -67,6 +73,7 @@ public sealed class MoniPayApi : IAsyncLifetime
             builder.UseSetting(SessionsOptions.Keys.MaximumStartsPerWindow, "3");
             builder.UseSetting(SessionsOptions.Keys.CleanupEnabled, "false");
             builder.UseSetting(SessionsOptions.Keys.CleanupBatchSize, "5");
+            builder.UseSetting(MoniPayConfiguration.ForwardedHeadersKnownProxies, "127.0.0.1,::1");
             UseNotificationTestSettings(builder);
 
             builder.ConfigureServices(services =>
@@ -76,8 +83,34 @@ public sealed class MoniPayApi : IAsyncLifetime
                 services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Sms, Sms);
                 services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Email, Email);
                 services.AddLogging(logging => logging.AddProvider(Logs));
+                UseSessionQueryCounter(services);
             });
         });
+    }
+
+    /// <summary>
+    /// A second host over the same database, for a scenario the shared host cannot be
+    /// reconfigured for: a signing-key rotation in flight, or an edge nobody trusts. Disposed
+    /// with the fixture.
+    /// </summary>
+    public WebApplicationFactory<Program> CreateHost(Action<IWebHostBuilder>? customize = null)
+    {
+        WebApplicationFactory<Program> secondary = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment(MoniPayEnvironments.Testing);
+            builder.UseSetting("ConnectionStrings:MoniPay", ConnectionString);
+            builder.UseTestKeys();
+            customize?.Invoke(builder);
+            builder.ConfigureServices(UseSessionQueryCounter);
+        });
+        secondaryFactories.Add(secondary);
+        return secondary;
+    }
+
+    private void UseSessionQueryCounter(IServiceCollection services)
+    {
+        services.AddSingleton(Queries);
+        services.AddSingleton<IDbContextOptionsContributor>(new SessionQueryCountContributor(Queries));
     }
 
     public HttpClient CreateClient()
@@ -124,6 +157,11 @@ public sealed class MoniPayApi : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
+        foreach (WebApplicationFactory<Program> secondary in secondaryFactories)
+        {
+            await secondary.DisposeAsync();
+        }
+
         if (factory is not null)
         {
             await factory.DisposeAsync();
