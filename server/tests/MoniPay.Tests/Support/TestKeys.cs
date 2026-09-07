@@ -9,6 +9,10 @@ namespace MoniPay.Tests.Support;
 /// <summary>Fixed key material for tests that validate required 32-byte secrets.</summary>
 public static class TestKeys
 {
+    public const string Issuer = "https://tests.monipay.example";
+
+    public const string Audience = "monipay-mobile-tests";
+
     public static readonly string Signing = Encode("SigningKeyForMoniPayTests0000000");
 
     public static readonly string VerificationCode = Encode("VerificationCodeKeyForTests00000");
@@ -28,6 +32,9 @@ public static class TestKeys
         builder.UseSetting(UsersOptions.Keys.PersonalDataKeyBase64, UsersPersonalData);
         builder.UseSetting(SessionsOptions.Keys.VerificationCodeKeyBase64, VerificationCode);
         builder.UseSetting(SessionsOptions.Keys.PersonalDataKeyBase64, SessionsPersonalData);
+        builder.UseSetting(SessionsOptions.Keys.SigningKeyBase64, Signing);
+        builder.UseSetting(SessionsOptions.Keys.Issuer, Issuer);
+        builder.UseSetting(SessionsOptions.Keys.Audience, Audience);
         builder.UseSetting(NotificationsOptions.Keys.DataKeyBase64, NotificationsData);
         return builder;
     }

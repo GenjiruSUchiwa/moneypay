@@ -11,4 +11,12 @@ internal static partial class SessionsLog
 
     [LoggerMessage(EventId = 2, Level = LogLevel.Error, Message = "The expired-credential cleanup sweep failed")]
     public static partial void CleanupFailed(ILogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 3, Level = LogLevel.Warning,
+        Message = "The refresh token was refused: {Reason}")]
+    public static partial void RefreshRefused(ILogger logger, string reason);
+
+    [LoggerMessage(EventId = 4, Level = LogLevel.Warning,
+        Message = "Refresh-token reuse revoked the active sessions of family {TokenFamilyId}")]
+    public static partial void FamilyRevoked(ILogger logger, Guid tokenFamilyId);
 }

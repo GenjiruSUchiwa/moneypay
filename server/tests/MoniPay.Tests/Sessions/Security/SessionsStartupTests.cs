@@ -33,6 +33,27 @@ public sealed class SessionsStartupTests(MoniPayApi api)
     }
 
     [Theory]
+    [InlineData("")]
+    [InlineData("not-base64")]
+    [InlineData("dG9vLXNob3J0")]
+    public void The_host_refuses_to_start_without_a_valid_signing_key(string keyBase64)
+    {
+        OptionsValidationException exception = StartWithKey(SessionsOptions.Keys.SigningKeyBase64, keyBase64);
+
+        Assert.Contains(SessionsOptions.Keys.SigningKeyBase64, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(SessionsOptions.Keys.Issuer)]
+    [InlineData(SessionsOptions.Keys.Audience)]
+    public void The_host_refuses_to_start_without_a_token_issuer_and_an_audience(string keyName)
+    {
+        OptionsValidationException exception = StartWithKey(keyName, "");
+
+        Assert.Contains(keyName, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
     [InlineData(SessionsOptions.Keys.AccessTokenLifetime, "00:00:00")]
     [InlineData(SessionsOptions.Keys.AccessTokenLifetime, "-00:01:00")]
     [InlineData(SessionsOptions.Keys.RefreshTokenLifetime, "00:00:00")]
