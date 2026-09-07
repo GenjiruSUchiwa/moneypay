@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MoniPay.Kernel.Security;
+using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Persistence;
 using MoniPay.Sessions.Security;
 
@@ -28,8 +29,17 @@ public static class SessionsModule
                 options => options.IsWithinBounds(),
                 "The MoniPay:Sessions bounds are invalid: check the country rules, the code length, "
                 + "the lifetimes, the attempt and resend limits and the cleanup bounds.")
+            .Validate(
+                options => options.HasWorkableTokenIssuer(),
+                $"The MoniPay:Sessions token issuer is invalid: {SessionsOptions.Keys.Issuer} "
+                + $"and {SessionsOptions.Keys.Audience} are required.")
             .RequireKey(options => options.VerificationCodeKeyBase64, SessionsOptions.Keys.VerificationCodeKeyBase64)
             .RequireKey(options => options.PersonalDataKeyBase64, SessionsOptions.Keys.PersonalDataKeyBase64)
+            .RequireKey(options => options.SigningKeyBase64, SessionsOptions.Keys.SigningKeyBase64)
+            .Validate(
+                options => options.PreviousSigningKeyBase64 is null
+                    || Base64Key.IsValid(options.PreviousSigningKeyBase64),
+                $"{SessionsOptions.Keys.PreviousSigningKeyBase64} must be empty or a base64-encoded 32-byte key.")
             .ValidateOnStart();
 
         // All hold key material only; none holds request state.
@@ -38,6 +48,11 @@ public static class SessionsModule
         services.AddSingleton<SignUpTokens>();
         services.AddSingleton<SignUpPersonalDataProtector>();
         services.AddSingleton<PhoneLookupDigest>();
+        services.AddSingleton<AccessTokenIssuer>();
+        services.AddSingleton<RefreshTokenFactory>();
+
+        // Holds request state: the context it saves through.
+        services.AddScoped<SessionTokenService>();
 
         services.AddSingleton<ExpiredCredentialCleanupService>();
         services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<ExpiredCredentialCleanupService>());

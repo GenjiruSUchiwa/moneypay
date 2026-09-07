@@ -82,6 +82,21 @@ internal sealed class SessionsOptions
     /// <summary>The tolerance token validation grants a drifting clock.</summary>
     public TimeSpan ClockSkew { get; set; } = TimeSpan.FromSeconds(30);
 
+    /// <summary>The issuer stamped on every access token and required on validation.</summary>
+    public string Issuer { get; set; } = string.Empty;
+
+    /// <summary>The mobile API audience an access token is issued for.</summary>
+    public string Audience { get; set; } = string.Empty;
+
+    /// <summary>The 32-byte HS256 signing key, base64-encoded.</summary>
+    public string SigningKeyBase64 { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The signing key an access token issued before a rotation still carries; it validates
+    /// until the token expires and is optional. Base64-encoded, 32 bytes when set.
+    /// </summary>
+    public string? PreviousSigningKeyBase64 { get; set; }
+
     /// <summary>How the expired-credential sweep runs.</summary>
     public CleanupOptions Cleanup { get; set; } = new();
 
@@ -96,6 +111,13 @@ internal sealed class SessionsOptions
 
     /// <summary>The decoded personal-data key. Valid only once the options are validated.</summary>
     public byte[] PersonalDataKey => Base64Key.Decode(PersonalDataKeyBase64);
+
+    /// <summary>The decoded signing key. Valid only once the options are validated.</summary>
+    public byte[] SigningKey => Base64Key.Decode(SigningKeyBase64);
+
+    /// <summary>The decoded previous signing key, or null when rotation has none in flight.</summary>
+    public byte[]? PreviousSigningKey =>
+        PreviousSigningKeyBase64 is null ? null : Base64Key.Decode(PreviousSigningKeyBase64);
 
     /// <summary>Reports whether the configured bounds would produce a workable sign-up.</summary>
     public bool IsWithinBounds() =>
@@ -123,6 +145,10 @@ internal sealed class SessionsOptions
         && RefreshTokenLifetime > TimeSpan.Zero
         && ClockSkew > TimeSpan.Zero;
 
+    /// <summary>Reports whether the token issuer configuration names an issuer and an audience.</summary>
+    public bool HasWorkableTokenIssuer() =>
+        Issuer.Length > 0 && Audience.Length > 0;
+
     /// <summary>The configuration keys, declared so a mistyped key is a compile error.</summary>
     public static class Keys
     {
@@ -137,6 +163,10 @@ internal sealed class SessionsOptions
         public const string SignUpLifetime = $"{SectionName}:{nameof(SignUpLifetime)}";
         public const string StartWindow = $"{SectionName}:{nameof(StartWindow)}";
         public const string MaximumStartsPerWindow = $"{SectionName}:{nameof(MaximumStartsPerWindow)}";
+        public const string Issuer = $"{SectionName}:{nameof(Issuer)}";
+        public const string Audience = $"{SectionName}:{nameof(Audience)}";
+        public const string SigningKeyBase64 = $"{SectionName}:{nameof(SigningKeyBase64)}";
+        public const string PreviousSigningKeyBase64 = $"{SectionName}:{nameof(PreviousSigningKeyBase64)}";
         public const string VerificationCodeKeyBase64 = $"{SectionName}:{nameof(VerificationCodeKeyBase64)}";
         public const string PersonalDataKeyBase64 = $"{SectionName}:{nameof(PersonalDataKeyBase64)}";
         public const string AccessTokenLifetime = $"{SectionName}:{nameof(AccessTokenLifetime)}";
