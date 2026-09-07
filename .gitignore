@@ -25,3 +25,6 @@ obj/
 *.user
 server/**/TestResults/
 secrets/
+
+# Module maps: agent scratch notes, not source
+MAP.md
