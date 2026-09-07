@@ -15,6 +15,9 @@ public static class TestKeys
 
     public static readonly string Signing = Encode("SigningKeyForMoniPayTests0000000");
 
+    /// <summary>A second key, for tokens signed by a key the host no longer names.</summary>
+    public static readonly string OtherSigning = Encode("OtherSigningKeyMoniPayTests00000");
+
     public static readonly string VerificationCode = Encode("VerificationCodeKeyForTests00000");
 
     public static readonly string SessionsPersonalData = Encode("SessionsPersonalDataKeyTests0000");

@@ -19,4 +19,8 @@ internal static partial class SessionsLog
     [LoggerMessage(EventId = 4, Level = LogLevel.Warning,
         Message = "Refresh-token reuse revoked the active sessions of family {TokenFamilyId}")]
     public static partial void FamilyRevoked(ILogger logger, Guid tokenFamilyId);
+
+    [LoggerMessage(EventId = 5, Level = LogLevel.Warning,
+        Message = "The {Scheme} credential was refused: {Reason}")]
+    public static partial void WorkflowCredentialRefused(ILogger logger, string scheme, string reason);
 }
