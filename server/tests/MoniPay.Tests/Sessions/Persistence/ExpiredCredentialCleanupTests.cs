@@ -102,17 +102,17 @@ public sealed class ExpiredCredentialCleanupTests(MoniPayApi api) : MoniPayApiTe
         int batchSize = options.Cleanup.BatchSize;
         DateTimeOffset now = Api.Time.GetUtcNow();
         DateTimeOffset stale = now - options.StartWindow - options.SignUpLifetime - TimeSpan.FromDays(1);
-        TimeSpan longLife = TimeSpan.FromDays(365);
+        TimeSpan expiredLifetime = TimeSpan.FromHours(1);
 
         Session activeSession = Session.Create(UserId.New(), Guid.CreateVersion7(), stale);
         Session revokedSession = Session.Create(UserId.New(), Guid.CreateVersion7(), stale);
         revokedSession.Revoke(SessionRevokeReason.UserRequest, stale);
         List<RefreshToken> staleTokens = [];
-        RefreshToken previous = RefreshToken.Issue(activeSession.Id, Digest(), stale, longLife);
+        RefreshToken previous = RefreshToken.Issue(activeSession.Id, Digest(), stale, expiredLifetime);
         staleTokens.Add(previous);
         for (int i = 1; i < batchSize + 2; i++)
         {
-            RefreshToken next = RefreshToken.Issue(activeSession.Id, Digest(), stale + TimeSpan.FromMinutes(i), longLife);
+            RefreshToken next = RefreshToken.Issue(activeSession.Id, Digest(), stale + TimeSpan.FromMinutes(i), expiredLifetime);
             previous.Consume(next.Id, stale + TimeSpan.FromMinutes(i));
             staleTokens.Add(next);
             previous = next;
@@ -121,9 +121,11 @@ public sealed class ExpiredCredentialCleanupTests(MoniPayApi api) : MoniPayApiTe
         // The newest token of the active session is consumed and old, yet must survive.
         RefreshToken newestOfActive = previous;
         newestOfActive.Consume(Guid.CreateVersion7(), stale + TimeSpan.FromDays(1));
-        RefreshToken newestOfRevoked = RefreshToken.Issue(revokedSession.Id, Digest(), stale, longLife);
+        RefreshToken newestOfRevoked = RefreshToken.Issue(revokedSession.Id, Digest(), stale, expiredLifetime);
         newestOfRevoked.Consume(Guid.CreateVersion7(), stale);
-        RefreshToken recentUnused = RefreshToken.Issue(Session.Create(UserId.New(), Guid.CreateVersion7(), now).Id, Digest(), now, longLife);
+        RefreshToken recentUnused = RefreshToken.Issue(Session.Create(UserId.New(), Guid.CreateVersion7(), now).Id, Digest(), now, expiredLifetime);
+        RefreshToken unexpiredConsumed = RefreshToken.Issue(activeSession.Id, Digest(), stale, TimeSpan.FromDays(365));
+        unexpiredConsumed.Consume(newestOfActive.Id, stale);
 
         SignUp staleOpen = SignUpAt(stale, options);
         SignUp staleCompleted = SignUpAt(stale, options);
@@ -136,7 +138,7 @@ public sealed class ExpiredCredentialCleanupTests(MoniPayApi api) : MoniPayApiTe
             MoniPayDbContext database = seed.ServiceProvider.GetRequiredService<MoniPayDbContext>();
             database.Sessions.AddRange(activeSession, revokedSession);
             database.RefreshTokens.AddRange(staleTokens);
-            database.RefreshTokens.AddRange(newestOfRevoked, recentUnused);
+            database.RefreshTokens.AddRange(newestOfRevoked, recentUnused, unexpiredConsumed);
             database.SignUps.AddRange(staleOpen, staleCompleted, recentOpen);
             await database.SaveChangesAsync(Cancellation);
         }
@@ -163,7 +165,7 @@ public sealed class ExpiredCredentialCleanupTests(MoniPayApi api) : MoniPayApiTe
             .Where(row => row.SessionId == activeSession.Id || row.SessionId == revokedSession.Id || row.Id == recentUnused.Id)
             .Select(row => row.Id)
             .ToArrayAsync(Cancellation);
-        Assert.Equal(new[] { newestOfActive.Id, recentUnused.Id }.Order(), remainingTokens.Order());
+        Assert.Equal(new[] { newestOfActive.Id, recentUnused.Id, unexpiredConsumed.Id }.Order(), remainingTokens.Order());
         SignUpId[] signUpIds = [staleOpen.Id, staleCompleted.Id, recentOpen.Id];
         SignUpId[] remainingSignUps = await reader.SignUps
             .Where(row => signUpIds.Contains(row.Id))

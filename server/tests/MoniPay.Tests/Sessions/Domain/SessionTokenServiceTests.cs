@@ -68,12 +68,20 @@ public sealed class SessionTokenServiceTests(MoniPayApi api) : MoniPayApiTest(ap
         Assert.Null(replacement.UsedAt);
     }
 
-    [Fact]
-    public async Task A_replayed_token_revokes_the_family_and_refuses_the_replacement()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task A_replayed_token_revokes_the_family_and_refuses_the_replacement(bool runCleanup)
     {
         Guid deviceId = Guid.CreateVersion7();
         SessionTokenResult created = await CreateSessionAsync(deviceId: deviceId);
+        Api.Time.Advance(TimeSpan.FromSeconds(1));
         SessionTokenResult refreshed = await RefreshAsync(created.RefreshToken, deviceId);
+        if (runCleanup)
+        {
+            Api.Time.Advance(TimeSpan.FromDays(1));
+            await Api.RunCleanupCycleAsync(Cancellation);
+        }
 
         RefusalException replay = await Assert.ThrowsAsync<RefusalException>(
             () => RefreshAsync(created.RefreshToken, deviceId));
@@ -159,6 +167,22 @@ public sealed class SessionTokenServiceTests(MoniPayApi api) : MoniPayApiTest(ap
     }
 
     [Fact]
+    public async Task A_repeated_completion_cannot_replace_another_users_session()
+    {
+        SessionTokenResult bootstrap = await CreateSessionAsync();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => ReplaceBootstrapAsync(UserId.New(), bootstrap.SessionId, Guid.CreateVersion7()));
+
+        await using AsyncServiceScope scope = Api.Services.CreateAsyncScope();
+        MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
+        Session prior = await database.Sessions.SingleAsync(
+            session => session.Id == bootstrap.SessionId,
+            Cancellation);
+        Assert.True(prior.IsActive);
+    }
+
+    [Fact]
     public async Task Two_parallel_refreshes_of_one_token_produce_one_success_and_one_refusal()
     {
         Guid deviceId = Guid.CreateVersion7();
@@ -205,6 +229,14 @@ public sealed class SessionTokenServiceTests(MoniPayApi api) : MoniPayApiTest(ap
             .Where(session => session.TokenFamilyId == presented.TokenFamilyId)
             .ToListAsync(Cancellation);
         Assert.All(family, session => Assert.Equal(SessionRevokeReason.RefreshTokenReuse, session.RevokeReason));
+    }
+
+    [Fact]
+    public async Task The_credential_result_never_prints_either_token()
+    {
+        SessionTokenResult created = await CreateSessionAsync();
+
+        Assert.Equal(nameof(SessionTokenResult), created.ToString());
     }
 
     [Fact]
