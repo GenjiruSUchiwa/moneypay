@@ -28,6 +28,8 @@ public sealed class PublicSurfaceTests
             typeof(SessionsModule),
             [
                 typeof(SessionsModule),
+                typeof(SessionMessages),
+                typeof(SessionMessageKeys),
                 typeof(IVerificationCodeSender),
                 typeof(VerificationCodeMessage),
                 typeof(CodeDeliveryState),
