@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using MoniPay.Api.Errors;
 
 namespace MoniPay.Api.Hosting;
 
@@ -31,7 +32,7 @@ public static class MoniPayHostExtensions
             .AddMoniPayLocalization()
             .AddMoniPayHealthChecks()
             .AddMoniPayOpenApi()
-            .AddProblemDetails();
+            .AddMoniPayProblemDetails();
 
         return builder;
     }

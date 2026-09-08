@@ -46,6 +46,7 @@ public sealed class PublicSurfaceTests
             typeof(UsersModule),
             [
                 typeof(UsersModule),
+                typeof(UserMessages),
                 typeof(RegisterUserHandler),
                 typeof(RegisterUserCommand),
                 typeof(RegisteredUser),

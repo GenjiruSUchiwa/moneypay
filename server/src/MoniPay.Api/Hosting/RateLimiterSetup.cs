@@ -1,7 +1,7 @@
-using System.Globalization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
+using MoniPay.Api.Errors;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
 
@@ -60,8 +60,7 @@ internal sealed class RateLimiterSetup(IOptions<RateLimitOptions> limits) : ICon
             response.StatusCode = StatusCodes.Status429TooManyRequests;
             if (rejected.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
             {
-                response.Headers.RetryAfter = ((int)Math.Ceiling(retryAfter.TotalSeconds))
-                    .ToString(CultureInfo.InvariantCulture);
+                response.Headers.RetryAfter = RetryAfterHeader.Format(retryAfter);
             }
 
             return ValueTask.CompletedTask;
