@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using MoniPay.Kernel.Security;
 using MoniPay.Persistence;
 using MoniPay.Users.Features.Registration;
-using MoniPay.Users.Ports;
+using MoniPay.Users.Providers;
 using MoniPay.Users.Security;
 
 namespace MoniPay.Users;

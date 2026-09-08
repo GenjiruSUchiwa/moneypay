@@ -1,12 +1,12 @@
 using MoniPay.Notifications;
-using MoniPay.Users.Ports;
+using MoniPay.Users.Providers;
 
 namespace MoniPay.Api.Composition;
 
 /// <summary>
 /// Maps the Users welcome port onto the Notifications outbox. It carries the already rendered
 /// text, forwards the caller's cancellation, and never saves, commits or resolves a provider:
-/// the registration's own save commits the user and its welcome together.
+/// the handler's own save commits the welcome in the caller's ambient transaction.
 /// </summary>
 internal sealed class WelcomeMessageDeliveryAdapter(NotificationOutbox outbox) : IWelcomeMessageSender
 {
@@ -30,11 +30,5 @@ internal sealed class WelcomeMessageDeliveryAdapter(NotificationOutbox outbox) :
             message.UserId.Value));
 
         return Task.CompletedTask;
-    }
-
-    public void Discard(WelcomeMessage message)
-    {
-        ArgumentNullException.ThrowIfNull(message);
-        outbox.Discard(message.IdempotencyKey);
     }
 }

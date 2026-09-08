@@ -1,7 +1,6 @@
-using System.Globalization;
 using Microsoft.Extensions.Localization;
 using MoniPay.Kernel;
-using MoniPay.Users.Ports;
+using MoniPay.Users.Providers;
 
 namespace MoniPay.Users.Features.Registration;
 
@@ -26,24 +25,11 @@ internal sealed class WelcomeMessageRenderer(IStringLocalizer<UserMessages> mess
         ArgumentException.ThrowIfNullOrWhiteSpace(firstName.Value);
         ArgumentException.ThrowIfNullOrWhiteSpace(locale.Value);
 
-        CultureInfo culture = CultureInfo.GetCultureInfo(locale.Value);
-        CultureInfo currentCulture = CultureInfo.CurrentCulture;
-        CultureInfo currentUICulture = CultureInfo.CurrentUICulture;
-        try
-        {
-            CultureInfo.CurrentCulture = culture;
-            CultureInfo.CurrentUICulture = culture;
-            return new WelcomeMessage(
-                userId,
-                recipient,
-                messages[UserMessageKeys.WelcomeEmailSubject].Value,
-                messages[UserMessageKeys.WelcomeEmailBody, firstName.Value].Value,
-                FormattableString.Invariant($"{IdempotencyKeyPrefix}:{userId}"));
-        }
-        finally
-        {
-            CultureInfo.CurrentCulture = currentCulture;
-            CultureInfo.CurrentUICulture = currentUICulture;
-        }
+        return locale.Invoke(() => new WelcomeMessage(
+            userId,
+            recipient,
+            messages[UserMessageKeys.WelcomeEmailSubject].Value,
+            messages[UserMessageKeys.WelcomeEmailBody, firstName.Value].Value,
+            FormattableString.Invariant($"{IdempotencyKeyPrefix}:{userId}")));
     }
 }
