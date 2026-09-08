@@ -97,7 +97,7 @@ public sealed class VerificationCodeDeliveryOutcomeTests(MoniPayApi api) : MoniP
         Api.Time.Advance(ResendCooldown);
         await Api.ResendCodeAsync(started.SignUpId);
 
-        await DrainAsync();
+        await Api.RunNotificationCycleAsync(Cancellation);
         IReadOnlyList<MoniPay.Tests.Fakes.RecordingChannel.ChannelCall> calls = Api.Sms.CallsFor(phone.Value);
 
         Assert.Equal(2, calls.Count);
@@ -112,12 +112,34 @@ public sealed class VerificationCodeDeliveryOutcomeTests(MoniPayApi api) : MoniP
     }
 
     [Fact]
+    public async Task Reading_a_resend_waits_for_its_delivery_beyond_the_first_batch()
+    {
+        PhoneNumber phone = new(TestPhones.Next());
+        StartSignUpResult started = await Api.StartSignUpAsync(phone);
+        string original = await Api.DeliveredCodeAsync(phone);
+        Api.Time.Advance(ResendCooldown);
+
+        for (int index = 0; index < 10; index++)
+        {
+            await Api.StartSignUpAsync(new PhoneNumber(TestPhones.Next()));
+        }
+
+        Api.Time.Advance(TimeSpan.FromSeconds(1));
+        await Api.ResendCodeAsync(started.SignUpId);
+        string resent = await Api.DeliveredCodeAsync(phone);
+
+        Assert.Equal(2, Api.Sms.CallsFor(phone.Value).Count);
+        Assert.NotEqual(original, resent);
+        Assert.NotNull(await Api.VerifyPhoneAsync(started.SignUpId, resent));
+    }
+
+    [Fact]
     public async Task Parallel_starts_enqueue_once()
     {
         PhoneNumber phone = new(TestPhones.Next());
 
         await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => SignUpFlow.RefusalOfAsync(Api.StartSignUpAsync(phone))));
-        await DrainAsync();
+        await Api.RunNotificationCycleAsync(Cancellation);
 
         Assert.Equal(1, await Api.CountSignUpsAsync(phone));
         SignUpId winner = await SingleSignUpIdAsync(phone);
@@ -153,8 +175,6 @@ public sealed class VerificationCodeDeliveryOutcomeTests(MoniPayApi api) : MoniP
         await Api.InScopeAsync<MoniPayDbContext, Notification>(async (database, cancellationToken) =>
             await database.Notifications.SingleAsync(
                 notification => notification.CorrelationId == signUpId.Value, cancellationToken));
-
-    private Task DrainAsync() => Api.DrainNotificationsAsync();
 
     private async Task<SignUpId> SingleSignUpIdAsync(PhoneNumber phone)
     {

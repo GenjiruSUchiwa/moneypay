@@ -101,6 +101,7 @@ public sealed class VerificationCodeProjectionTests(MoniPayApi api) : MoniPayApi
         await using AsyncServiceScope scope = Api.Services.CreateAsyncScope();
         MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
         NotificationOutbox outbox = scope.ServiceProvider.GetRequiredService<NotificationOutbox>();
+        Api.Time.Advance(TimeSpan.FromSeconds(1));
         outbox.Enqueue(new OutboundMessage(
             NotificationChannel.Sms,
             phone.Value,
@@ -111,6 +112,12 @@ public sealed class VerificationCodeProjectionTests(MoniPayApi api) : MoniPayApi
             $"verification-code:{Guid.CreateVersion7()}:0",
             Api.Time.GetUtcNow() + CodeLifetime,
             Guid.CreateVersion7()));
+        database.Notifications.Local.Single().MarkSent("sms-ref", Api.Time.GetUtcNow());
+        await database.SaveChangesAsync(Cancellation);
+
+        Assert.Equal(CodeDeliveryState.Queued, (await Api.GetSignUpAsync(started.SignUpId)).CodeDelivery);
+
+        Api.Time.Advance(TimeSpan.FromSeconds(1));
         outbox.Enqueue(new OutboundMessage(
             NotificationChannel.Email,
             "other@example.com",
@@ -121,17 +128,10 @@ public sealed class VerificationCodeProjectionTests(MoniPayApi api) : MoniPayApi
             $"welcome:{started.SignUpId}:0",
             null,
             started.SignUpId.Value));
+        database.Notifications.Local.Single(notification => notification.Kind == "Welcome").Fail("invalid-recipient");
         await database.SaveChangesAsync(Cancellation);
 
-        try
-        {
-            Assert.Equal(CodeDeliveryState.Queued, (await Api.GetSignUpAsync(started.SignUpId)).CodeDelivery);
-        }
-        finally
-        {
-            await database.Notifications.Where(notification => notification.CorrelationId != started.SignUpId.Value).ExecuteDeleteAsync(Cancellation);
-            await database.Notifications.Where(notification => notification.Kind == "Welcome").ExecuteDeleteAsync(Cancellation);
-        }
+        Assert.Equal(CodeDeliveryState.Queued, (await Api.GetSignUpAsync(started.SignUpId)).CodeDelivery);
     }
 
     [Fact]
@@ -158,7 +158,6 @@ public sealed class VerificationCodeProjectionTests(MoniPayApi api) : MoniPayApi
         await database.SaveChangesAsync(Cancellation);
 
         List<Notification> rows = await database.Notifications
-            .AsNoTracking()
             .Where(notification => notification.CorrelationId == signUpId.Value)
             .OrderBy(notification => notification.CreatedAt)
             .ThenBy(notification => notification.Id)
@@ -167,14 +166,11 @@ public sealed class VerificationCodeProjectionTests(MoniPayApi api) : MoniPayApi
         Assert.Equal(rows[0].CreatedAt, rows[1].CreatedAt);
         Assert.NotEqual(rows[0].Id, rows[1].Id);
 
-        try
-        {
-            NotificationStatus? latest = await outbox.FindLatestStatusAsync(signUpId.Value, RetrySchedule.VerificationCodeKind, Cancellation);
-            Assert.Equal(NotificationStatus.Pending, latest);
-        }
-        finally
-        {
-            await database.Notifications.Where(notification => notification.CorrelationId == signUpId.Value).ExecuteDeleteAsync(Cancellation);
-        }
+        rows[0].Fail("invalid-recipient");
+        rows[1].MarkSent("sms-ref", now);
+        await database.SaveChangesAsync(Cancellation);
+
+        NotificationStatus? latest = await outbox.FindLatestStatusAsync(signUpId.Value, RetrySchedule.VerificationCodeKind, Cancellation);
+        Assert.Equal(NotificationStatus.Sent, latest);
     }
 }

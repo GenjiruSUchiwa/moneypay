@@ -66,7 +66,7 @@ public sealed class VerificationCodeRenderingTests(MoniPayApi api) : MoniPayApiT
 
         string body = renderer.Render(Locale.English, "001234", TimeSpan.FromSeconds(90));
 
-        Assert.Contains("2", body, StringComparison.Ordinal);
+        Assert.Contains("It expires in 2 minutes.", body, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public sealed class VerificationCodeRenderingTests(MoniPayApi api) : MoniPayApiT
 
         Assert.Contains("MoniPay", body, StringComparison.Ordinal);
         Assert.Contains(code, body, StringComparison.Ordinal);
-        Assert.Contains("2", body, StringComparison.Ordinal);
+        Assert.Contains("Il expire dans 2 minutes.", body, StringComparison.Ordinal);
         Assert.DoesNotContain(phone.Value, body, StringComparison.Ordinal);
         Assert.DoesNotContain("@", body, StringComparison.Ordinal);
         Assert.DoesNotContain("http", body, StringComparison.OrdinalIgnoreCase);
@@ -92,9 +92,6 @@ public sealed class VerificationCodeRenderingTests(MoniPayApi api) : MoniPayApiT
         VerificationCodeMessage message = new(
             SignUpId.New(),
             new PhoneNumber(TestPhones.Next()),
-            "001234",
-            TimeSpan.FromMinutes(2),
-            Locale.FrenchCameroon,
             "MoniPay : votre code de vérification est 001234. Il expire dans 2 minutes.",
             DateTimeOffset.UtcNow,
             "verification-code:00000000-0000-0000-0000-000000000000:0");

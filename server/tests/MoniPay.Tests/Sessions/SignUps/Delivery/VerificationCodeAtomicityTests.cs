@@ -51,7 +51,7 @@ public sealed class VerificationCodeAtomicityTests(MoniPayApi api) : MoniPayApiT
                     cancellationToken)));
 
         Assert.Equal(0, await Api.CountSignUpsAsync(phone));
-        await DrainAsync();
+        await Api.RunNotificationCycleAsync(Cancellation);
         Assert.Empty(Api.Sms.CallsFor(phone.Value));
     }
 
@@ -79,7 +79,7 @@ public sealed class VerificationCodeAtomicityTests(MoniPayApi api) : MoniPayApiT
                     cancellationToken)));
 
         Assert.Equal(0, await Api.CountSignUpsAsync(phone));
-        await DrainAsync();
+        await Api.RunNotificationCycleAsync(Cancellation);
         Assert.Empty(Api.Sms.CallsFor(phone.Value));
     }
 
@@ -142,8 +142,6 @@ public sealed class VerificationCodeAtomicityTests(MoniPayApi api) : MoniPayApiT
                 .OrderBy(notification => notification.CreatedAt)
                 .ThenBy(notification => notification.Id)
                 .ToListAsync(cancellationToken));
-
-    private Task DrainAsync() => Api.DrainNotificationsAsync();
 
     private sealed class FailingSender : IVerificationCodeSender
     {
