@@ -11,7 +11,8 @@ using MoniPay.Persistence;
 using MoniPay.Tests.Fakes;
 using MoniPay.Tests.Support;
 using MoniPay.Users.Features.Registration;
-using MoniPay.Users.Ports;
+using MoniPay.Users.Persistence;
+using MoniPay.Users.Providers;
 using Xunit;
 
 namespace MoniPay.Tests.Users.Registration;
@@ -101,6 +102,13 @@ public sealed class WelcomeMessageTests(MoniPayApi api) : MoniPayApiTest(api)
 
             Assert.True(registered.Created);
             Assert.Equal(0, await WelcomeCountAsync(registered.Id));
+
+            await using AsyncServiceScope scope = Api.Services.CreateAsyncScope();
+            MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
+            Assert.Equal(1, await database.Users.CountAsync(user => user.Id == registered.Id, Cancellation));
+            Assert.Equal(2, await database.UserConsents.CountAsync(
+                consent => consent.UserId == registered.Id, Cancellation));
+
             RecordingLoggerProvider.LogEntry warning = Assert.Single(
                 logs.Entries,
                 entry => entry.Level == LogLevel.Warning && entry.Category == typeof(RegisterUserHandler).FullName);
@@ -208,16 +216,6 @@ public sealed class WelcomeMessageTests(MoniPayApi api) : MoniPayApiTest(api)
             new DateTimeOffset(2026, 8, 31, 10, 0, 0, TimeSpan.Zero));
     }
 
-    private sealed class FailingWelcomeSender : IWelcomeMessageSender
-    {
-        public Task EnqueueAsync(WelcomeMessage message, CancellationToken cancellationToken) =>
-            throw new InvalidOperationException($"Failed for {message.Recipient.Value}: {message.Body}");
-
-        public void Discard(WelcomeMessage message)
-        {
-        }
-    }
-
     private sealed class RecordingWelcomeSender : IWelcomeMessageSender
     {
         public WelcomeMessage? Message { get; private set; }
@@ -230,8 +228,6 @@ public sealed class WelcomeMessageTests(MoniPayApi api) : MoniPayApiTest(api)
             Token = cancellationToken;
             return Task.CompletedTask;
         }
-
-        public void Discard(WelcomeMessage message) => Message = null;
     }
 
     private sealed class CancellingWelcomeSender(CancellationTokenSource cancellation) : IWelcomeMessageSender
@@ -240,10 +236,6 @@ public sealed class WelcomeMessageTests(MoniPayApi api) : MoniPayApiTest(api)
         {
             await cancellation.CancelAsync();
             throw new OperationCanceledException(cancellationToken);
-        }
-
-        public void Discard(WelcomeMessage message)
-        {
         }
     }
 }

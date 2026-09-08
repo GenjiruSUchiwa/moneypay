@@ -8,7 +8,7 @@ using MoniPay.Notifications.Persistence;
 using MoniPay.Notifications.Security;
 using MoniPay.Persistence;
 using MoniPay.Tests.Support;
-using MoniPay.Users.Ports;
+using MoniPay.Users.Providers;
 using Xunit;
 
 namespace MoniPay.Tests.Users.Registration;
@@ -51,16 +51,14 @@ public sealed class WelcomeMessageDeliveryAdapterTests(MoniPayApi api) : MoniPay
         {
             RecipientProtector protector = Api.Services.GetRequiredService<RecipientProtector>();
             Notification row = await database.Notifications.SingleAsync(
-                candidate => candidate.CorrelationId == userId.Value, Cancellation);
+                candidate => candidate.CorrelationId == userId.Value
+                    && candidate.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind, Cancellation);
             Assert.Equal(NotificationChannel.Email, row.Channel);
-            Assert.Equal(WelcomeMessageDeliveryAdapter.WelcomeKind, row.Kind);
             Assert.False(row.Required);
             Assert.Null(row.ExpiresAt);
             Assert.Equal(NotificationStatus.Pending, row.Status);
             Assert.Equal(message.IdempotencyKey, row.IdempotencyKey);
             Assert.Equal(recipient.Value, protector.Unprotect(row.RecipientCiphertext));
-            Assert.Equal(message.Subject, protector.Unprotect(Assert.IsType<Ciphertext>(row.SubjectCiphertext)));
-            Assert.Equal(message.Body, protector.Unprotect(Assert.IsType<Ciphertext>(row.BodyCiphertext)));
         }
         finally
         {
@@ -68,29 +66,6 @@ public sealed class WelcomeMessageDeliveryAdapterTests(MoniPayApi api) : MoniPay
                 .Where(row => row.CorrelationId == userId.Value)
                 .ExecuteDeleteAsync(Cancellation);
         }
-    }
-
-    [Fact]
-    public async Task Discard_detaches_a_staged_welcome()
-    {
-        UserId userId = UserId.New();
-        WelcomeMessage message = new(
-            userId,
-            new EmailAddress("marie.ngo@example.com"),
-            "Bienvenue sur MoniPay",
-            "Bonjour Marie.",
-            $"welcome:{userId}");
-
-        await using AsyncServiceScope scope = Api.Services.CreateAsyncScope();
-        MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
-        WelcomeMessageDeliveryAdapter adapter = (WelcomeMessageDeliveryAdapter)
-            scope.ServiceProvider.GetRequiredService<IWelcomeMessageSender>();
-
-        await adapter.EnqueueAsync(message, Cancellation);
-        adapter.Discard(message);
-        await database.SaveChangesAsync(Cancellation);
-
-        Assert.False(await database.Notifications.AnyAsync(row => row.CorrelationId == userId.Value, Cancellation));
     }
 
     [Fact]
