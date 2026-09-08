@@ -129,11 +129,8 @@ public sealed class RegisterUserTests(MoniPayApi api)
     {
         await using AsyncServiceScope scope = api.Services.CreateAsyncScope();
         RegisterUserHandler handler = scope.ServiceProvider.GetRequiredService<RegisterUserHandler>();
-        using CancellationTokenSource canceled = new();
-        await canceled.CancelAsync();
-
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => handler.HandleAsync(Command(), canceled.Token));
+            () => handler.HandleAsync(Command(), new CancellationToken(canceled: true)));
     }
 
     private static RegisterUserCommand Command(string? phone = null, string? email = null)
