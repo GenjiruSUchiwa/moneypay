@@ -1,8 +1,11 @@
 using System.Reflection;
+using MoniPay.Api.Composition;
 using MoniPay.Kernel;
 using MoniPay.Notifications;
 using MoniPay.Persistence;
 using MoniPay.Sessions;
+using MoniPay.Sessions.Features.SignUps.Complete;
+using MoniPay.Sessions.Ports;
 using MoniPay.Users;
 using MoniPay.Wallet;
 using MoniPay.Wallet.Endpoints;
@@ -40,7 +43,10 @@ internal static class MoniPayModules
             .AddSessionsModule(configuration)
             .AddUsersModule(configuration)
             .AddWalletModule(configuration)
-            .AddNotificationsModule(configuration);
+            .AddNotificationsModule(configuration)
+            // The cross-module composition the modules cannot do themselves: the only host code naming two modules.
+            .AddScoped<IUserProvisioning, UserProvisioningAdapter>()
+            .AddScoped<IRegisteredPhoneLookup, RegisteredPhoneLookupAdapter>();
     /// <summary>The routes. Health belongs to the host; everything else to its module.</summary>
     public static WebApplication MapMoniPayModules(this WebApplication app)
     {

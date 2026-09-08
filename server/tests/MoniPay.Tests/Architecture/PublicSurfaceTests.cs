@@ -2,6 +2,7 @@ using MoniPay.Notifications;
 using MoniPay.Sessions;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
+using MoniPay.Sessions.Features.SignUps.Complete;
 using MoniPay.Sessions.Ports;
 using MoniPay.Sessions.Providers;
 using MoniPay.Sessions.Security;
@@ -34,6 +35,9 @@ public sealed class PublicSurfaceTests
                 typeof(SessionsSchemes),
                 typeof(SignUpRateLimitPolicies),
                 typeof(SessionRateLimitPolicies),
+                typeof(IUserProvisioning),
+                typeof(ProvisionUserRequest),
+                typeof(ProvisionedUser),
             ]
         },
         {
@@ -43,6 +47,7 @@ public sealed class PublicSurfaceTests
                 typeof(RegisterUserHandler),
                 typeof(RegisterUserCommand),
                 typeof(RegisteredUser),
+                typeof(PhoneRegistrationLookup),
             ]
         },
         {

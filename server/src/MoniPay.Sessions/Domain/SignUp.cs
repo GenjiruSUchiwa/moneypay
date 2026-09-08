@@ -276,7 +276,8 @@ internal sealed class SignUp
     /// Marks the sign-up completed with its provisioned user and bootstrap session. A retry
     /// from <see cref="SignUpStatus.Completed"/> replaces the bootstrap session only, so a
     /// repeated completion leaves one active session; a retry naming a different user is
-    /// refused, so a replay can never rebind a finished sign-up.
+    /// refused, so a replay can never rebind a finished sign-up. The first completion refuses
+    /// an expired sign-up.
     /// </summary>
     public void Complete(UserId userId, Guid sessionId, DateTimeOffset now)
     {
@@ -288,6 +289,11 @@ internal sealed class SignUp
         if (Status == SignUpStatus.Completed && ProvisionedUserId != userId)
         {
             throw new RefusalException(MoniPayErrorTypes.SignUpStateInvalid);
+        }
+
+        if (Status == SignUpStatus.PhoneVerified)
+        {
+            RefuseUnlessAlive(now);
         }
 
         ProvisionedUserId = userId;

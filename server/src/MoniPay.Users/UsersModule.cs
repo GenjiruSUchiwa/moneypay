@@ -36,6 +36,11 @@ public static class UsersModule
             provider.GetRequiredService<UserPersonalDataProtector>(),
             provider.GetRequiredService<UserLookupDigest>()));
 
+        // The lookup's dependency is internal, so it needs the factory as the handler does.
+        services.AddScoped(provider => new PhoneRegistrationLookup(
+            provider.GetRequiredService<MoniPayDbContext>(),
+            provider.GetRequiredService<UserLookupDigest>()));
+
         return services;
     }
 }
