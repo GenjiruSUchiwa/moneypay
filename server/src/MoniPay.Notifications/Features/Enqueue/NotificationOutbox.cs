@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using MoniPay.Notifications.Domain;
 using MoniPay.Notifications.Persistence;
 using MoniPay.Notifications.Security;
@@ -74,6 +75,25 @@ public sealed class NotificationOutbox
             subjectCiphertext: message.Subject is { } subject ? protector.Protect(subject) : null,
             bodyCiphertext: protector.Protect(message.Body),
             now: timeProvider.GetUtcNow()));
+    }
+
+    /// <summary>
+    /// Detaches a row <see cref="Enqueue"/> staged that the producer will not commit — a
+    /// registration that lost a race after enqueuing. Only the <c>Added</c> row with
+    /// <paramref name="idempotencyKey"/> is removed; the shared change tracker is otherwise
+    /// untouched, and a no-op when the row was never staged or is already saved.
+    /// </summary>
+    public void Discard(string idempotencyKey)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
+
+        foreach (EntityEntry<Notification> staged in database.ChangeTracker.Entries<Notification>().ToArray())
+        {
+            if (staged.State == EntityState.Added && staged.Entity.IdempotencyKey == idempotencyKey)
+            {
+                staged.State = EntityState.Detached;
+            }
+        }
     }
 
     /// <summary>
