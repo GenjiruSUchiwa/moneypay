@@ -3,8 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using MoniPay.Api.Composition;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
+using MoniPay.Notifications;
+using MoniPay.Notifications.Domain;
+using MoniPay.Notifications.Persistence;
+using MoniPay.Notifications.Security;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.SignUps;
@@ -57,11 +62,34 @@ public sealed class CreateSignUpCompletionTests(MoniPayApi api) : MoniPayApiTest
             Assert.Equal(SignUpStatus.Completed, row.Status);
             Assert.Equal(completed.Session.UserId, row.ProvisionedUserId);
             Assert.Equal(completed.Session.SessionId, row.BootstrapSessionId);
+
+            await AssertSingleWelcomeAsync(database, command, completed.Session.UserId);
         }
         finally
         {
             await Api.CleanUsersAsync();
         }
+    }
+
+    private async Task AssertSingleWelcomeAsync(
+        MoniPayDbContext database,
+        CreateSignUpCompletionCommand command,
+        UserId userId)
+    {
+        RecipientProtector protector = Api.Services.GetRequiredService<RecipientProtector>();
+        Notification welcome = await database.Notifications.AsNoTracking().SingleAsync(
+            candidate => candidate.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind
+                && candidate.CorrelationId == userId.Value,
+            Cancellation);
+        Assert.False(welcome.Required);
+        Assert.Null(welcome.ExpiresAt);
+        Assert.Equal(NotificationStatus.Pending, welcome.Status);
+        Assert.Equal($"welcome:{userId}", welcome.IdempotencyKey);
+        Assert.Equal(command.Email.Value, protector.Unprotect(welcome.RecipientCiphertext));
+        Assert.Equal("Bienvenue sur MoniPay", protector.Unprotect(Assert.IsType<Ciphertext>(welcome.SubjectCiphertext)));
+        Assert.Equal(
+            $"Bonjour {command.FirstName.Value}, votre compte MoniPay est prêt.",
+            protector.Unprotect(Assert.IsType<Ciphertext>(welcome.BodyCiphertext)));
     }
 
     [Fact]
@@ -416,6 +444,11 @@ public sealed class CreateSignUpCompletionTests(MoniPayApi api) : MoniPayApiTest
                 .Select(user => user.Id)
                 .SingleAsync(Cancellation);
             Assert.Equal(1, await database.Sessions.CountAsync(session => session.UserId == winner, Cancellation));
+            Assert.Equal(1, await database.Notifications.CountAsync(
+                row => row.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind
+                    && row.CorrelationId == winner.Value, Cancellation));
+            Assert.Equal(1, await database.Notifications.CountAsync(
+                row => row.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind, Cancellation));
         }
         finally
         {
@@ -562,6 +595,8 @@ public sealed class CreateSignUpCompletionTests(MoniPayApi api) : MoniPayApiTest
         Assert.Equal(0, await database.Users.CountAsync(user => user.SignUpId == signUpId, Cancellation));
         Assert.Equal(sessionsBefore, await database.Sessions.CountAsync(Cancellation));
         Assert.Equal(refreshTokensBefore, await database.RefreshTokens.CountAsync(Cancellation));
+        Assert.Equal(0, await database.Notifications.CountAsync(
+            row => row.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind, Cancellation));
         Assert.Equal(
             SignUpStatus.PhoneVerified,
             (await database.SignUps.AsNoTracking().SingleAsync(
