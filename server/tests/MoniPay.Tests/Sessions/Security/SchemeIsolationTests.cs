@@ -36,7 +36,7 @@ public sealed class SchemeIsolationTests(MoniPayApi api) : MoniPayApiTest(api)
 
         Assert.Equal(HttpStatusCode.OK, await SendAsync(client, "SignUp", started.SignUpToken, $"/test/signups/{started.SignUpId.Value}"));
 
-        await Api.VerifyPhoneAsync(started.SignUpId, Api.Sender.CodeFor(phone));
+        await Api.VerifyPhoneAsync(started.SignUpId, await Api.DeliveredCodeAsync(phone));
 
         Assert.Equal(HttpStatusCode.Unauthorized, await SendAsync(client, "SignUp", started.SignUpToken, $"/test/signups/{started.SignUpId.Value}"));
     }
@@ -85,7 +85,7 @@ public sealed class SchemeIsolationTests(MoniPayApi api) : MoniPayApiTest(api)
     {
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
-        CreatePhoneVerificationResult verified = await Api.VerifyPhoneAsync(started.SignUpId, Api.Sender.CodeFor(phone));
+        CreatePhoneVerificationResult verified = await Api.VerifyPhoneAsync(started.SignUpId, await Api.DeliveredCodeAsync(phone));
         return (started.SignUpId, verified.RegistrationToken);
     }
 
