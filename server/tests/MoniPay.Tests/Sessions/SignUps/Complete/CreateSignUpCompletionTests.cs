@@ -90,6 +90,13 @@ public sealed class CreateSignUpCompletionTests(MoniPayApi api) : MoniPayApiTest
         Assert.Equal(
             $"Bonjour {command.FirstName.Value}, votre compte MoniPay est prêt.",
             protector.Unprotect(Assert.IsType<Ciphertext>(welcome.BodyCiphertext)));
+
+        await Api.RunNotificationCycleAsync(Cancellation);
+
+        MoniPay.Tests.Fakes.RecordingChannel.ChannelCall delivered = Assert.Single(Api.Email.CallsFor(command.Email.Value));
+        Assert.Equal("Bienvenue sur MoniPay", delivered.Subject);
+        Assert.Equal($"Bonjour {command.FirstName.Value}, votre compte MoniPay est prêt.", delivered.Body);
+        Assert.Equal($"welcome:{userId}", delivered.IdempotencyKey);
     }
 
     [Fact]
