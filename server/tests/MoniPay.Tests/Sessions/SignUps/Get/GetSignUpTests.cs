@@ -1,5 +1,6 @@
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
+using MoniPay.Notifications.Channels;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.SignUps.Get;
 using MoniPay.Sessions.Features.SignUps.Start;
@@ -14,6 +15,7 @@ public sealed class GetSignUpTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task The_view_reports_the_state_the_timing_and_the_latest_delivery()
     {
+        Api.Sms.Result = new ChannelResult.Accepted("sms-ref");
         StartSignUpResult started = await Api.StartSignUpAsync(new PhoneNumber(TestPhones.Next()));
 
         SignUpView queued = await Api.GetSignUpAsync(started.SignUpId);

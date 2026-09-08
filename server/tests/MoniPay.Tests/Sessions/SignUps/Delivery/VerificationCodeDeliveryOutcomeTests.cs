@@ -156,6 +156,7 @@ public sealed class VerificationCodeDeliveryOutcomeTests(MoniPayApi api) : MoniP
 
     private async Task DrainAsync()
     {
+        Api.Sms.Result = new ChannelResult.Accepted("sms-ref");
         for (int cycle = 0; cycle < 20; cycle++)
         {
             await Api.RunNotificationCycleAsync(Cancellation);
