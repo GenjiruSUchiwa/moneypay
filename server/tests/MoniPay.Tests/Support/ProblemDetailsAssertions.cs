@@ -10,10 +10,19 @@ namespace MoniPay.Tests.Support;
 /// <summary>Shared assertions for RFC 9457 Problem Details responses.</summary>
 public static class ProblemDetailsAssertions
 {
-    public static async Task<ProblemDetails> ReadProblemAsync(this HttpResponseMessage response)
+    public static Task<ProblemDetails> ReadProblemAsync(this HttpResponseMessage response) =>
+        response.ReadProblemAsync(requireNoStore: true);
+
+    public static async Task<ProblemDetails> ReadProblemAsync(
+        this HttpResponseMessage response,
+        bool requireNoStore)
     {
         Assert.Equal(MoniPayMediaTypes.ProblemJson, response.Content.Headers.ContentType?.ToString());
-        Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
+
+        if (requireNoStore)
+        {
+            Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
+        }
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
         {
@@ -64,10 +73,11 @@ public static class ProblemDetailsAssertions
 
     public static async Task<ProblemDetails> ReadProblemAsync(
         this HttpResponseMessage response,
-        HttpStatusCode expectedStatus)
+        HttpStatusCode expectedStatus,
+        bool requireNoStore = true)
     {
         Assert.Equal(expectedStatus, response.StatusCode);
-        return await response.ReadProblemAsync();
+        return await response.ReadProblemAsync(requireNoStore);
     }
 
     private static string RequiredString(JsonElement document, string propertyName)
