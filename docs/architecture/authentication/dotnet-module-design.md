@@ -242,7 +242,8 @@ server/src/MoniPay.Api/
     MoniPayProblemDetailsWriter.cs
     ValidationProblemItem.cs
   Http/
-    JsonApiContentNegotiationFilter.cs
+    JsonApiTransportMiddleware.cs
+    JsonApiTransport.cs
   Hosting/
     PipelineExtensions.cs
     ForwardedHeadersOptionsSetup.cs

@@ -37,9 +37,7 @@ public static class MoniPayErrorTypes
     /// <summary>An unexpected server failure occurred.</summary>
     public static readonly ProblemType Internal = new("internal", HttpStatusCode.InternalServerError);
 
-    // Framework fallbacks. A response the framework produces without a MoniPay code still gets a
-    // stable type, so a client switches on the type and never on a localized reason phrase. The
-    // statuses below are the ones this host can answer without an application exception.
+    // Framework fallbacks.
 
     /// <summary>A bare 400 the framework produced.</summary>
     public static readonly ProblemType BadRequest = new("bad-request", HttpStatusCode.BadRequest);
@@ -129,4 +127,10 @@ public static class MoniPayErrorTypes
     /// when the status has no fallback and the response keeps RFC 9457's <c>about:blank</c> default.
     /// </summary>
     public static ProblemType? ForStatus(HttpStatusCode status) => FrameworkFallbacks.GetValueOrDefault(status);
+
+    /// <summary>The stable code inside a MoniPay type URN, or <c>null</c> for any other type.</summary>
+    public static string? CodeFromUrn(string? type) =>
+        type is not null && type.StartsWith(Prefix, StringComparison.Ordinal)
+            ? type[Prefix.Length..]
+            : null;
 }

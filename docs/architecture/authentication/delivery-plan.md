@@ -243,7 +243,7 @@ Add:
 
 - Every route in [HTTP contract](http-contract.md)
 - Slice resource and attribute records
-- `JsonApiContentNegotiationFilter`
+- `JsonApiTransportMiddleware`
 - `MoniPayExceptionHandler`, `MoniPayProblemDetailsWriter`, `ValidationProblemItem`
 - Route, operation, tag, summary, policy, and rate-limit constants
 - OpenAPI metadata with both media types

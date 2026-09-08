@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MoniPay.Api.Errors;
@@ -21,9 +22,10 @@ internal static class ProblemDetailsExtensions
         services.AddSingleton<IProblemDetailsWriter>(
             provider => provider.GetRequiredService<MoniPayProblemDetailsWriter>());
 
-        // Registered after the custom writer so the default stays second in the writer list.
         services.AddProblemDetails();
         services.AddExceptionHandler<MoniPayExceptionHandler>();
+
+        services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 
         return services;
     }

@@ -50,7 +50,15 @@ The host owns transport validation. No slice repeats it.
 
 Unknown attributes are rejected, not ignored. A misspelled `verificationCode` must not silently pass as an empty value.
 
-The filter lives in `MoniPay.Api/Http/JsonApiContentNegotiationFilter.cs`. Modules apply it through a Kernel-declared group convention name, `MoniPayConventions.JsonApi`, so no module references the host.
+The transport check lives in `MoniPay.Api/Http/JsonApiTransportMiddleware.cs`. Modules mark a group through a Kernel-declared convention name, `MoniPayConventions.JsonApi`, so no module references the host.
+
+It runs after routing and authentication and before minimal-API binding reads the body, so a rejected request never reaches the endpoint. The documented order is: routing, the no-store convention, the IP rate limiter, authentication and authorization, the JSON:API transport check, binding, the endpoint. The limiter and authentication still short-circuit first, which preserves the security behavior from #92.
+
+The check reads the body once, bounded to 8 KiB, so the limit holds for a known and an unknown content length alike. It parses the body to tell invalid JSON syntax (`400 malformed-json`) from a valid JSON body with the wrong JSON:API shape (`400 jsonapi-document-invalid`), and it never matches framework exception text.
+
+A slice supplies the expected `data.type` as `JsonApiResourceType` endpoint metadata, because the generic envelope cannot know which resource a route owns. Unknown members are rejected by `JsonUnmappedMemberHandling.Disallow` on the slice's attribute record, because the envelope's annotation is not recursive. Binding failures throw (`RouteHandlerOptions.ThrowOnBadRequest`) and map to `400 jsonapi-document-invalid`.
+
+`Accept` must allow a JSON:API success representation. A client that accepts only `application/problem+json` is refused with `406 not-acceptable` before the endpoint runs; the error body is still Problem Details, because the error format is not negotiated. An explicit `q=0` on the JSON:API type beats a wildcard. `ext` and `profile` are accepted as parameter names on the request `Content-Type` and ignored; no extension is implemented, and an `Accept` range that names one does not match.
 
 ## Layer 2: request attributes
 

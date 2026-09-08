@@ -1,4 +1,5 @@
-using MoniPay.Kernel.Http;
+using Microsoft.AspNetCore.Http;
+using MoniPay.Api.Http;
 
 namespace MoniPay.Api.Hosting;
 
@@ -9,12 +10,11 @@ internal sealed class NoStoreMiddleware(RequestDelegate next)
 {
     public Task InvokeAsync(HttpContext context)
     {
-        if (context.GetEndpoint()?.Metadata.OfType<string>().Contains(MoniPayConventions.NoStore) == true)
+        if (NoStoreConvention.AppliesTo(context))
         {
             context.Response.OnStarting(() =>
             {
-                context.Response.Headers.CacheControl = "no-store";
-                context.Response.Headers.Pragma = "no-cache";
+                NoStoreConvention.Apply(context.Response);
                 return Task.CompletedTask;
             });
         }
