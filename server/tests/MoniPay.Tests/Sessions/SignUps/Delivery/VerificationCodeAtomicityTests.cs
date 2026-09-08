@@ -143,13 +143,7 @@ public sealed class VerificationCodeAtomicityTests(MoniPayApi api) : MoniPayApiT
                 .ThenBy(notification => notification.Id)
                 .ToListAsync(cancellationToken));
 
-    private async Task DrainAsync()
-    {
-        for (int cycle = 0; cycle < 20; cycle++)
-        {
-            await Api.RunNotificationCycleAsync(Cancellation);
-        }
-    }
+    private Task DrainAsync() => Api.DrainNotificationsAsync();
 
     private sealed class FailingSender : IVerificationCodeSender
     {

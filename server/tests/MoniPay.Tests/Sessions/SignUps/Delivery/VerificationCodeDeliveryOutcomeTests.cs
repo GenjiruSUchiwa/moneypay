@@ -154,14 +154,7 @@ public sealed class VerificationCodeDeliveryOutcomeTests(MoniPayApi api) : MoniP
             await database.Notifications.SingleAsync(
                 notification => notification.CorrelationId == signUpId.Value, cancellationToken));
 
-    private async Task DrainAsync()
-    {
-        Api.Sms.Result = new ChannelResult.Accepted("sms-ref");
-        for (int cycle = 0; cycle < 20; cycle++)
-        {
-            await Api.RunNotificationCycleAsync(Cancellation);
-        }
-    }
+    private Task DrainAsync() => Api.DrainNotificationsAsync();
 
     private async Task<SignUpId> SingleSignUpIdAsync(PhoneNumber phone)
     {

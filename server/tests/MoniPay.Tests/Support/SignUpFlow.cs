@@ -95,6 +95,19 @@ internal static class SignUpFlow
         return api.Sms.CodeFor(phone.Value);
     }
 
+    /// <summary>Drains due notifications so a later cycle never delivers another test's rows first.</summary>
+    public static async Task DrainNotificationsAsync(this MoniPayApi api)
+    {
+        ArgumentNullException.ThrowIfNull(api);
+
+        api.Sms.Result = new ChannelResult.Accepted("sms-ref");
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        for (int cycle = 0; cycle < 20; cycle++)
+        {
+            await api.RunNotificationCycleAsync(cancellationToken);
+        }
+    }
+
     /// <summary>A phone proven by its code, on its own number: the state completion starts from.</summary>
     public static Task<VerifiedSignUp> StartVerifiedAsync(this MoniPayApi api)
     {
