@@ -40,7 +40,22 @@ public sealed class ActiveSessionPolicyTests(MoniPayApi api) : MoniPayApiTest(ap
         using HttpResponseMessage response = await client.SendAsync(request, Cancellation);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("Bearer", response.Headers.WwwAuthenticate.ToString());
         Assert.Equal(1, Api.Queries.SessionQueries);
+    }
+
+    [Fact]
+    public async Task An_unrelated_role_refusal_remains_forbidden()
+    {
+        using HttpClient client = Api.CreateClient();
+        string token = await TestTokensForNewSessionAsync();
+        using HttpRequestMessage request = new(HttpMethod.Get, "/test/role");
+        request.Headers.Authorization = new("Bearer", token);
+
+        using HttpResponseMessage response = await client.SendAsync(request, Cancellation);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Empty(response.Headers.WwwAuthenticate);
     }
 
     [Fact]
