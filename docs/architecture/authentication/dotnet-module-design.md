@@ -546,6 +546,20 @@ Eligibility uses the time after acquiring the row lock. Consent acceptance retai
 
 A completion retry revokes the prior bootstrap session and creates one replacement session. Other sessions remain active.
 
+### Completion decisions
+
+- **Device on retry.** A retry may name a different device: it opens the session the client is asking
+  from. The refresh device-match rule belongs to refresh and is not applied to completion.
+- **Replacing a bootstrap that was already revoked.** A retry replaces it anyway, and opens a new
+  token family. `Session.Revoke` keeps the first reason and time, so a session revoked by logout or
+  by a refresh-token replay is never reactivated and never re-labelled; unrelated sessions and
+  their families are untouched.
+- **Committing after expiry.** Eligibility is decided once, under the row lock. A request that passed
+  it may commit a moment after the expiry instant; there is no second expiry check after
+  provisioning, so a retry cannot be half-applied.
+- **Refusal precedence.** Credential first, then sign-up expiry, then state, then the registration
+  token's lifetime: a caller without a valid credential learns nothing about the sign-up.
+
 ## Endpoint mapping
 
 `SessionsModule.MapSessionsModule` creates groups and delegates route mapping to slices:
