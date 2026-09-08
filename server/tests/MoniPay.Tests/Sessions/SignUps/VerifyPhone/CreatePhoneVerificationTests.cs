@@ -20,7 +20,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
 
-        CreatePhoneVerificationResult verified = await Api.VerifyPhoneAsync(started.SignUpId, Api.Sender.CodeFor(phone));
+        CreatePhoneVerificationResult verified = await Api.VerifyPhoneAsync(started.SignUpId, await Api.DeliveredCodeAsync(phone));
 
         Assert.Equal(started.SignUpId, verified.SignUpId);
         Assert.NotEmpty(verified.RegistrationToken);
@@ -39,7 +39,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
 
         RefusalException refusal = await SignUpFlow.RefusedAsync(
-            Api.VerifyPhoneAsync(started.SignUpId, SignUpFlow.Wrong(Api.Sender.CodeFor(phone))),
+            Api.VerifyPhoneAsync(started.SignUpId, SignUpFlow.Wrong(await Api.DeliveredCodeAsync(phone))),
             MoniPayErrorTypes.VerificationCodeInvalid);
 
         Assert.Equal([CreatePhoneVerificationHandler.VerificationCodePointer], refusal.Pointers);
@@ -51,7 +51,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
     {
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
-        string code = Api.Sender.CodeFor(phone);
+        string code = await Api.DeliveredCodeAsync(phone);
         for (int attempt = 1; attempt < MaximumAttempts; attempt++)
         {
             await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, SignUpFlow.Wrong(code)), MoniPayErrorTypes.VerificationCodeInvalid);
@@ -75,7 +75,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
         Api.Time.Advance(CodeLifetime);
 
-        await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, Api.Sender.CodeFor(phone)), MoniPayErrorTypes.VerificationCodeExpired);
+        await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, await Api.DeliveredCodeAsync(phone)), MoniPayErrorTypes.VerificationCodeExpired);
 
         Assert.Equal(SignUpStatus.CodePending, (await Api.ReadSignUpRowAsync(started.SignUpId)).Status);
     }
@@ -87,7 +87,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
         Api.Time.Advance(SignUpLifetime);
 
-        await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, Api.Sender.CodeFor(phone)), MoniPayErrorTypes.SignUpExpired);
+        await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, await Api.DeliveredCodeAsync(phone)), MoniPayErrorTypes.SignUpExpired);
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
             StartSignUpResult started = await Api.StartSignUpAsync(phone);
 
             await SignUpFlow.RefusedAsync(
-                Api.VerifyPhoneAsync(started.SignUpId, Api.Sender.CodeFor(phone)),
+                Api.VerifyPhoneAsync(started.SignUpId, await Api.DeliveredCodeAsync(phone)),
                 MoniPayErrorTypes.PhoneAlreadyRegistered);
 
             SignUp row = await Api.ReadSignUpRowAsync(started.SignUpId);
@@ -125,7 +125,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
         try
         {
             RefusalException refusal = await SignUpFlow.RefusedAsync(
-                Api.VerifyPhoneAsync(started.SignUpId, SignUpFlow.Wrong(Api.Sender.CodeFor(phone))),
+                Api.VerifyPhoneAsync(started.SignUpId, SignUpFlow.Wrong(await Api.DeliveredCodeAsync(phone))),
                 MoniPayErrorTypes.VerificationCodeInvalid);
 
             Assert.Equal([CreatePhoneVerificationHandler.VerificationCodePointer], refusal.Pointers);
@@ -144,7 +144,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
     {
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
-        string code = Api.Sender.CodeFor(phone);
+        string code = await Api.DeliveredCodeAsync(phone);
 
         RefusalException?[] outcomes = await Task.WhenAll(
             Enumerable.Range(0, 8).Select(_ => SignUpFlow.RefusalOfAsync(Api.VerifyPhoneAsync(started.SignUpId, code))));
@@ -159,7 +159,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
     {
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
-        string wrongCode = SignUpFlow.Wrong(Api.Sender.CodeFor(phone));
+        string wrongCode = SignUpFlow.Wrong(await Api.DeliveredCodeAsync(phone));
 
         RefusalException?[] outcomes = await Task.WhenAll(
             Enumerable.Range(0, 8).Select(_ => SignUpFlow.RefusalOfAsync(Api.VerifyPhoneAsync(started.SignUpId, wrongCode))));
