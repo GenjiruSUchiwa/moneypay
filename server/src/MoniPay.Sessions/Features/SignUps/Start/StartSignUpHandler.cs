@@ -25,6 +25,7 @@ internal sealed class StartSignUpHandler(
     SignUpTokens tokens,
     SignUpPersonalDataProtector personalData,
     PhoneLookupDigest phoneLookup,
+    VerificationCodeRenderer renderer,
     TimeProvider timeProvider,
     IOptions<SessionsOptions> options)
 {
@@ -52,7 +53,7 @@ internal sealed class StartSignUpHandler(
             ? StartNew(command, phoneHash, code, now)
             : Reopen(active, phoneHash, code, now);
 
-        VerificationCodeMessage message = signUp.ComposeVerificationCodeMessage(command.Phone, code, settings);
+        VerificationCodeMessage message = signUp.ComposeVerificationCodeMessage(command.Phone, code, settings, renderer);
         await sender.EnqueueAsync(message, cancellationToken).ConfigureAwait(false);
         await database.CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
 
