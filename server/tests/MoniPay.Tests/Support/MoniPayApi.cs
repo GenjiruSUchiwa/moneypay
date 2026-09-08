@@ -13,6 +13,7 @@ using MoniPay.Notifications.Features.Purge;
 using MoniPay.Sessions;
 using MoniPay.Sessions.Persistence;
 using MoniPay.Tests.Fakes;
+using Npgsql;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -54,7 +55,7 @@ public sealed class MoniPayApi : IAsyncLifetime
     {
         await container.StartAsync();
 
-        ConnectionString = container.GetConnectionString();
+        ConnectionString = ReachableConnectionString();
         factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment(MoniPayEnvironments.Testing);
@@ -105,6 +106,22 @@ public sealed class MoniPayApi : IAsyncLifetime
     {
         services.AddSingleton(Queries);
         services.AddSingleton<IDbContextOptionsContributor>(new SessionQueryCountContributor(Queries));
+    }
+
+    /// <summary>
+    /// The container's own connection string, pinned to IPv4 with SSL negotiation off. A host
+    /// whose Kerberos realm is misconfigured otherwise makes a PostgreSQL client hang in the
+    /// GSSAPI handshake before its first query; the sandbox needs neither mechanism.
+    /// </summary>
+    private string ReachableConnectionString()
+    {
+        NpgsqlConnectionStringBuilder builder = new(container.GetConnectionString())
+        {
+            Host = "127.0.0.1",
+            SslMode = SslMode.Disable,
+        };
+        builder["GSS Encryption Mode"] = "Disable";
+        return builder.ConnectionString;
     }
 
     public HttpClient CreateClient()
