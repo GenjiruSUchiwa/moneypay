@@ -411,6 +411,13 @@ The French title and detail live in `SessionMessages.fr.resx`. C# source contain
 | `refresh-token-reused` | `401` | A consumed refresh token was used again. |
 | `verification-delivery-unavailable` | `503` | Delivery could not be queued. The sign-up transaction was rolled back. |
 | `internal` | `500` | An unexpected server failure occurred. |
+| `bad-request` | `400` | Fallback for a bare `400` the framework produced without a MoniPay code. |
+| `unauthorized` | `401` | Fallback for a bare `401` the framework produced without a MoniPay code. |
+| `forbidden` | `403` | Fallback for a bare `403` the framework produced without a MoniPay code. |
+| `not-found` | `404` | Fallback for a bare `404` the framework produced without a MoniPay code. |
+| `method-not-allowed` | `405` | Fallback for a bare `405` the framework produced without a MoniPay code. |
+| `content-too-large` | `413` | Fallback for a bare `413` the framework produced without a MoniPay code. |
+| `service-unavailable` | `503` | Fallback for a bare `503` the framework produced without a MoniPay code. |
 
 Every `429` response includes `Retry-After` when the backend knows the remaining delay.
 
