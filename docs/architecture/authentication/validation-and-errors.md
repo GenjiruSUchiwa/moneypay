@@ -345,7 +345,7 @@ unchanged.
 
 ## Authentication failures
 
-Authentication handlers do not throw. They return `AuthenticateResult.Fail` and let the challenge produce a `401` through the Problem Details writer.
+Authentication handlers do not throw. They return `AuthenticateResult.Fail` and let the challenge produce a `401` through the Problem Details writer. The challenge stores its own scheme's stable code in `HttpContext.Items` (`MoniPayHttpContextItems.AuthenticationProblemCode`), and the writer reads it when it formats a bare `401`, so the body names the credential without trusting the submitted authorization scheme. The bearer handler clears the JWT error description, because the reason for the refusal stays in the log.
 
 | Scheme | Header | Bound to | Failure type |
 |---|---|---|---|
