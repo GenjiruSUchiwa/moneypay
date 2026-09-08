@@ -73,9 +73,10 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
     {
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
+        string code = await Api.DeliveredCodeAsync(phone);
         Api.Time.Advance(CodeLifetime);
 
-        await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, await Api.DeliveredCodeAsync(phone)), MoniPayErrorTypes.VerificationCodeExpired);
+        await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, code), MoniPayErrorTypes.VerificationCodeExpired);
 
         Assert.Equal(SignUpStatus.CodePending, (await Api.ReadSignUpRowAsync(started.SignUpId)).Status);
     }
@@ -85,9 +86,10 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
     {
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
+        string code = await Api.DeliveredCodeAsync(phone);
         Api.Time.Advance(SignUpLifetime);
 
-        await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, await Api.DeliveredCodeAsync(phone)), MoniPayErrorTypes.SignUpExpired);
+        await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, code), MoniPayErrorTypes.SignUpExpired);
     }
 
     [Fact]
