@@ -74,7 +74,7 @@ public sealed class StartSignUpTests(MoniPayApi api) : MoniPayApiTest(api)
     public async Task Starting_for_a_registered_phone_looks_like_any_other_start()
     {
         PhoneNumber phone = new(TestPhones.Next());
-        Api.RegisteredPhones.Owner = UserId.New();
+        await Api.RegisterUserAsync(phone);
 
         try
         {
@@ -85,7 +85,7 @@ public sealed class StartSignUpTests(MoniPayApi api) : MoniPayApiTest(api)
         }
         finally
         {
-            Api.RegisteredPhones.Owner = null;
+            await CleanUsersTablesAsync();
         }
     }
 
@@ -258,4 +258,7 @@ public sealed class StartSignUpTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.All(outcomes.OfType<RefusalException>(), refusal => Assert.Equal(MoniPayErrorTypes.SignUpResendTooSoon, refusal.Type));
         Assert.Equal(1, (await Api.ReadSignUpRowAsync(first.SignUpId)).ResendCount);
     }
+
+    private Task CleanUsersTablesAsync() =>
+        Api.QueryAsync("TRUNCATE TABLE user_consents, users;", reader => 0);
 }
