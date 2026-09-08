@@ -1,8 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using MoniPay.Api.Composition;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
+using MoniPay.Notifications;
+using MoniPay.Notifications.Domain;
+using MoniPay.Notifications.Persistence;
+using MoniPay.Notifications.Security;
 using MoniPay.Persistence;
 using MoniPay.Tests.Support;
 using MoniPay.Users.Features.Registration;
@@ -34,6 +39,79 @@ public sealed class RegisterUserTests(MoniPayApi api)
             Assert.Equal(1, await database.Users.CountAsync(user => user.SignUpId == command.SignUpId, Cancellation));
             Assert.Equal(2, await database.UserConsents.CountAsync(consent => consent.UserId == first.Id, Cancellation));
         });
+    }
+
+    [Fact]
+    public async Task A_first_registration_stages_one_welcome_for_the_normalized_recipient()
+    {
+        await InRolledBackTransactionAsync(async (handler, database) =>
+        {
+            RegisterUserCommand command = Command(email: "Marie.Ngo@Example.com");
+
+            RegisteredUser registered = await handler.HandleAsync(command, Cancellation);
+
+            RecipientProtector protector = api.Services.GetRequiredService<RecipientProtector>();
+            Notification welcome = await database.Notifications.SingleAsync(
+                row => row.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind && row.CorrelationId == registered.Id.Value,
+                Cancellation);
+            Assert.Equal(NotificationChannel.Email, welcome.Channel);
+            Assert.False(welcome.Required);
+            Assert.Null(welcome.ExpiresAt);
+            Assert.Equal(NotificationStatus.Pending, welcome.Status);
+            Assert.Equal($"welcome:{registered.Id}", welcome.IdempotencyKey);
+            Assert.DoesNotContain(command.Email.Value, welcome.IdempotencyKey, StringComparison.Ordinal);
+            Assert.DoesNotContain(command.FirstName.Value, welcome.IdempotencyKey, StringComparison.Ordinal);
+            Assert.Equal(command.Email.Value, protector.Unprotect(welcome.RecipientCiphertext));
+            Assert.Contains(
+                command.FirstName.Value,
+                protector.Unprotect(Assert.IsType<Ciphertext>(welcome.BodyCiphertext)),
+                StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    public async Task A_replay_returns_the_user_without_a_second_welcome()
+    {
+        await InRolledBackTransactionAsync(async (handler, database) =>
+        {
+            RegisterUserCommand command = Command();
+
+            RegisteredUser first = await handler.HandleAsync(command, Cancellation);
+            RegisteredUser replay = await handler.HandleAsync(command with { UserId = UserId.New() }, Cancellation);
+
+            Assert.True(first.Created);
+            Assert.False(replay.Created);
+            Assert.Equal(1, await database.Notifications.CountAsync(
+                row => row.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind && row.CorrelationId == first.Id.Value,
+                Cancellation));
+        });
+    }
+
+    [Fact]
+    public async Task A_contact_conflict_discards_the_staged_welcome_before_a_later_save()
+    {
+        string email = $"taken.{Guid.NewGuid():N}@example.com";
+        await api.RegisterUserAsync(new PhoneNumber(TestPhones.Next()), email);
+
+        try
+        {
+            await using AsyncServiceScope scope = api.Services.CreateAsyncScope();
+            MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
+            RegisterUserCommand command = Command(email: email);
+
+            await Assert.ThrowsAsync<RefusalException>(
+                () => scope.ServiceProvider.GetRequiredService<RegisterUserHandler>().HandleAsync(command, Cancellation));
+
+            await database.SaveChangesAsync(Cancellation);
+
+            Assert.Equal(0, await database.Notifications.CountAsync(
+                row => row.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind && row.CorrelationId == command.UserId.Value,
+                Cancellation));
+        }
+        finally
+        {
+            await CleanUsersTablesAsync();
+        }
     }
 
     [Fact]

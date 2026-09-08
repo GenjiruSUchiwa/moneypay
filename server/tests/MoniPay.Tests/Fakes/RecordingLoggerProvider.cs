@@ -8,7 +8,7 @@ public sealed class RecordingLoggerProvider : ILoggerProvider
 {
     private readonly ConcurrentQueue<LogEntry> entries = new();
 
-    public sealed record LogEntry(string Category, LogLevel Level, EventId EventId, string Message, IReadOnlyList<KeyValuePair<string, object?>> State);
+    public sealed record LogEntry(string Category, LogLevel Level, EventId EventId, string Message, IReadOnlyList<KeyValuePair<string, object?>> State, Exception? Exception);
 
     public IReadOnlyList<LogEntry> Entries => entries.ToArray();
 
@@ -28,7 +28,7 @@ public sealed class RecordingLoggerProvider : ILoggerProvider
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             IReadOnlyList<KeyValuePair<string, object?>> values = state as IReadOnlyList<KeyValuePair<string, object?>> ?? [];
-            entries.Enqueue(new LogEntry(category, logLevel, eventId, formatter(state, exception), values));
+            entries.Enqueue(new LogEntry(category, logLevel, eventId, formatter(state, exception), values, exception));
         }
     }
 }
