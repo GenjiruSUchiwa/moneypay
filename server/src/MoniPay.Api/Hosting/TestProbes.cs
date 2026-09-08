@@ -18,6 +18,7 @@ namespace MoniPay.Api.Hosting;
 internal static class TestProbes
 {
     private const string SecureRoute = "/test/secure";
+    private const string RoleRoute = "/test/role";
     private const string SignUpRoute = "/test/signups/{signUpId:guid}";
     private const string RegistrationRoute = "/test/registrations/{signUpId:guid}";
     private const string NoStoreRoute = "/test/no-store";
@@ -27,20 +28,25 @@ internal static class TestProbes
     public static void MapTestProbes(this WebApplication app)
     {
         app.MapGet(SecureRoute, () => Results.Ok())
-            .RequireAuthorization(MoniPayPolicies.AuthenticatedUser);
+            .RequireAuthorization(MoniPayPolicies.AuthenticatedUser)
+            .WithMetadata(nameof(TestProbes));
+
+        app.MapGet(RoleRoute, () => Results.Ok())
+            .RequireAuthorization(policy => policy.RequireRole(nameof(TestProbes)));
 
         app.MapGet(SignUpRoute, () => Results.Ok())
-            .RequireAuthorization(new AuthorizeAttribute { AuthenticationSchemes = SessionsSchemes.SignUp });
+            .RequireAuthorization(new AuthorizeAttribute { AuthenticationSchemes = SessionsSchemes.SignUp })
+            .WithMetadata(MoniPayConventions.NoStore);
 
         app.MapGet(RegistrationRoute, () => Results.Ok())
-            .RequireAuthorization(new AuthorizeAttribute { AuthenticationSchemes = SessionsSchemes.Registration });
+            .RequireAuthorization(MoniPayPolicies.Registration);
 
         app.MapGet(NoStoreRoute, () => Results.Ok())
-            .WithMetadata(MoniPayConventions.NoStore)
-            .AddEndpointFilter<NoStoreEndpointFilter>();
+            .WithMetadata(MoniPayConventions.NoStore);
 
         app.MapGet(LimitedStartRoute, () => Results.Ok())
-            .RequireRateLimiting(SignUpRateLimitPolicies.Start);
+            .RequireRateLimiting(SignUpRateLimitPolicies.Start)
+            .WithMetadata(MoniPayConventions.NoStore);
 
         app.MapGet(LimitedRefreshRoute, () => Results.Ok())
             .RequireRateLimiting(SessionRateLimitPolicies.Refresh);

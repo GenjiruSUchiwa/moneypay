@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -32,6 +33,8 @@ public sealed class RateLimitTests(MoniPayApi api) : MoniPayApiTest(api)
         using HttpResponseMessage rejected = await SendAsync(client);
 
         Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
+        Assert.Equal("no-store", rejected.Headers.CacheControl?.ToString());
+        Assert.Equal("no-cache", rejected.Headers.Pragma.ToString());
         Assert.True(int.TryParse(rejected.Headers.RetryAfter?.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int seconds));
         Assert.InRange(seconds, 1, 3_600);
     }
@@ -54,23 +57,41 @@ public sealed class RateLimitTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(HttpStatusCode.OK, await ProbeAsync(client, forwardedFor: "203.0.113.2"));
     }
 
-    [Fact]
-    public async Task A_forwarded_header_from_an_untrusted_edge_is_ignored()
+    [Theory]
+    [InlineData("")]
+    [InlineData("192.0.2.10")]
+    public async Task A_forwarded_header_from_an_untrusted_edge_is_ignored(string trustedProxies)
     {
-        // Nobody is trusted: the connection itself is the client, whatever the header claims.
-        using WebApplicationFactory<Program> host = Api.CreateHost();
-        using HttpClient client = host.CreateClient();
+        using WebApplicationFactory<Program> host = Api.CreateHost(builder =>
+            builder.UseSetting(MoniPayConfiguration.ForwardedHeadersKnownProxies, trustedProxies));
         int limit = host.Services.GetRequiredService<IOptions<RateLimitOptions>>().Value.StartPerHour;
 
-        for (int request = 0; request < limit; request++)
+        for (int request = 0; request <= limit; request++)
         {
-            string forged = request % 2 == 0 ? "203.0.113.1" : "203.0.113.2";
-            Assert.Equal(HttpStatusCode.OK, await ProbeAsync(client, forwardedFor: forged));
-        }
+            // TestServer leaves RemoteIpAddress null unless the test supplies a real peer.
+            HttpContext response = await host.Server.SendAsync(context =>
+            {
+                context.Connection.RemoteIpAddress = IPAddress.Loopback;
+                context.Request.Path = "/test/limited/start";
+                context.Request.Headers["X-Forwarded-For"] = $"203.0.113.{request + 1}";
+            }, Cancellation);
 
-        // A rotating forged address must not spread the budget: the real client IP is the key.
-        using HttpResponseMessage rejected = await SendAsync(client, forwardedFor: "203.0.113.3");
-        Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
+            Assert.Equal(
+                request < limit ? StatusCodes.Status200OK : StatusCodes.Status429TooManyRequests,
+                response.Response.StatusCode);
+        }
+    }
+
+    [Theory]
+    [InlineData("not-an-ip")]
+    [InlineData("127.0.0.1,not-an-ip")]
+    [InlineData("127.0.0.1,")]
+    public void Invalid_proxy_configuration_prevents_startup(string proxies)
+    {
+        using WebApplicationFactory<Program> host = Api.CreateHost(builder =>
+            builder.UseSetting(MoniPayConfiguration.ForwardedHeadersKnownProxies, proxies));
+
+        Assert.Throws<OptionsValidationException>(() => host.CreateClient());
     }
 
     private static async Task<HttpStatusCode> ProbeAsync(HttpClient client, string? forwardedFor = null)

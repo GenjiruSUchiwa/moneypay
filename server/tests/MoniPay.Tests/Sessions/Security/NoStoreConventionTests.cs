@@ -10,21 +10,24 @@ namespace MoniPay.Tests.Sessions.Security;
 /// </summary>
 public sealed class NoStoreConventionTests(MoniPayApi api) : MoniPayApiTest(api)
 {
-    [Fact]
-    public async Task Every_response_of_a_no_store_group_is_uncacheable()
+    [Theory]
+    [InlineData("/test/no-store", HttpStatusCode.OK)]
+    [InlineData("/test/signups/00000000-0000-0000-0000-000000000001", HttpStatusCode.Unauthorized)]
+    public async Task Every_response_of_a_no_store_group_is_uncacheable(string route, HttpStatusCode expected)
     {
         using HttpClient client = Api.CreateClient();
 
-        using HttpResponseMessage response = await client.GetAsync("/test/no-store", Cancellation);
+        using HttpResponseMessage response = await client.GetAsync(route, Cancellation);
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(expected, response.StatusCode);
         Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
         Assert.True(response.Headers.TryGetValues("Pragma", out IEnumerable<string>? pragma));
-        Assert.Equal("no-cache", Assert.Single(pragma!));
+        Assert.NotNull(pragma);
+        Assert.Equal("no-cache", Assert.Single(pragma));
     }
 
     [Fact]
-    public async Task A_group_without_the_marker_is_not_touched()
+    public async Task Unrelated_string_metadata_does_not_enable_the_convention()
     {
         using HttpClient client = Api.CreateClient();
 
