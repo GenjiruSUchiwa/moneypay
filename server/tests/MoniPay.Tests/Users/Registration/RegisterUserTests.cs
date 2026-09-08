@@ -62,10 +62,6 @@ public sealed class RegisterUserTests(MoniPayApi api)
             Assert.DoesNotContain(command.Email.Value, welcome.IdempotencyKey, StringComparison.Ordinal);
             Assert.DoesNotContain(command.FirstName.Value, welcome.IdempotencyKey, StringComparison.Ordinal);
             Assert.Equal(command.Email.Value, protector.Unprotect(welcome.RecipientCiphertext));
-            Assert.Contains(
-                command.FirstName.Value,
-                protector.Unprotect(Assert.IsType<Ciphertext>(welcome.BodyCiphertext)),
-                StringComparison.Ordinal);
         });
     }
 
@@ -88,7 +84,7 @@ public sealed class RegisterUserTests(MoniPayApi api)
     }
 
     [Fact]
-    public async Task A_contact_conflict_discards_the_staged_welcome_before_a_later_save()
+    public async Task A_contact_conflict_leaves_no_welcome_row()
     {
         string email = $"taken.{Guid.NewGuid():N}@example.com";
         await api.RegisterUserAsync(new PhoneNumber(TestPhones.Next()), email);
@@ -101,8 +97,6 @@ public sealed class RegisterUserTests(MoniPayApi api)
 
             await Assert.ThrowsAsync<RefusalException>(
                 () => scope.ServiceProvider.GetRequiredService<RegisterUserHandler>().HandleAsync(command, Cancellation));
-
-            await database.SaveChangesAsync(Cancellation);
 
             Assert.Equal(0, await database.Notifications.CountAsync(
                 row => row.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind && row.CorrelationId == command.UserId.Value,

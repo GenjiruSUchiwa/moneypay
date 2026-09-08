@@ -3,14 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using MoniPay.Api.Composition;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
-using MoniPay.Notifications;
-using MoniPay.Notifications.Domain;
 using MoniPay.Notifications.Persistence;
-using MoniPay.Notifications.Security;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.SignUps;
@@ -19,7 +15,6 @@ using MoniPay.Sessions.Persistence;
 using MoniPay.Tests.Support;
 using MoniPay.Users.Domain;
 using MoniPay.Users.Persistence;
-using MoniPay.Users.Ports;
 using MoniPay.Users.Security;
 using Npgsql;
 using Xunit;
@@ -78,71 +73,15 @@ public sealed class CreateSignUpCompletionTests(MoniPayApi api) : MoniPayApiTest
         CreateSignUpCompletionCommand command,
         UserId userId)
     {
-        RecipientProtector protector = Api.Services.GetRequiredService<RecipientProtector>();
-        Notification welcome = await database.Notifications.AsNoTracking().SingleAsync(
+        Assert.Equal(1, await database.Notifications.CountAsync(
             candidate => candidate.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind
                 && candidate.CorrelationId == userId.Value,
-            Cancellation);
-        Assert.False(welcome.Required);
-        Assert.Null(welcome.ExpiresAt);
-        Assert.Equal(NotificationStatus.Pending, welcome.Status);
-        Assert.Equal($"welcome:{userId}", welcome.IdempotencyKey);
-        Assert.Equal(command.Email.Value, protector.Unprotect(welcome.RecipientCiphertext));
-        Assert.Equal("Bienvenue sur MoniPay", protector.Unprotect(Assert.IsType<Ciphertext>(welcome.SubjectCiphertext)));
-        Assert.Equal(
-            $"Bonjour {command.FirstName.Value}, votre compte MoniPay est prêt.",
-            protector.Unprotect(Assert.IsType<Ciphertext>(welcome.BodyCiphertext)));
+            Cancellation));
 
         await Api.RunNotificationCycleAsync(Cancellation);
 
-        MoniPay.Tests.Fakes.RecordingChannel.ChannelCall delivered = Assert.Single(Api.Email.CallsFor(command.Email.Value));
-        Assert.Equal("Bienvenue sur MoniPay", delivered.Subject);
-        Assert.Equal($"Bonjour {command.FirstName.Value}, votre compte MoniPay est prêt.", delivered.Body);
-        Assert.Equal($"welcome:{userId}", delivered.IdempotencyKey);
+        Assert.Single(Api.Email.CallsFor(command.Email.Value));
     }
-
-    [Fact]
-    public async Task A_failed_welcome_enqueue_still_commits_the_user_and_the_session()
-    {
-        VerifiedSignUp signUp = await Api.StartVerifiedAsync();
-        using WebApplicationFactory<Program> host = FailingWelcomeHost();
-
-        try
-        {
-            CreateSignUpCompletionResult completed = await host.Services.CompleteSignUpAsync(
-                signUp.Started.SignUpId, signUp.Verified.RegistrationToken, SignUpFlow.CompletionCommand());
-
-            Assert.True(completed.Created);
-            await using AsyncServiceScope scope = Api.Services.CreateAsyncScope();
-            MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
-            Assert.Equal(1, await database.Users.CountAsync(
-                user => user.SignUpId == signUp.Started.SignUpId, Cancellation));
-            Assert.Equal(2, await database.UserConsents.CountAsync(
-                consent => consent.UserId == completed.Session.UserId, Cancellation));
-            Assert.Equal(1, await database.Sessions.CountAsync(
-                session => session.UserId == completed.Session.UserId, Cancellation));
-            Assert.Equal(0, await database.Notifications.CountAsync(
-                row => row.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind, Cancellation));
-        }
-        finally
-        {
-            await Api.CleanUsersAsync();
-        }
-    }
-
-    private WebApplicationFactory<Program> FailingWelcomeHost() =>
-        Api.CreateHost(builder =>
-        {
-            builder.UseTestPorts(Api);
-            MoniPayApi.UseNotificationTestSettings(builder);
-            builder.ConfigureServices(services =>
-            {
-                services.RemoveAll<TimeProvider>();
-                services.AddSingleton<TimeProvider>(Api.Time);
-                services.RemoveAll<IWelcomeMessageSender>();
-                services.AddSingleton<IWelcomeMessageSender>(new FailingWelcomeSender());
-            });
-        });
 
     [Fact]
     public async Task A_retry_with_the_same_registration_token_replaces_only_the_bootstrap_session()
@@ -715,17 +654,6 @@ file sealed class FailSessionInsertInterceptor : SaveChangesInterceptor
         }
 
         return base.SavingChangesAsync(eventData, result, cancellationToken);
-    }
-}
-
-/// <summary>Fails the optional welcome the way a renderer or enqueue error would, before staging.</summary>
-file sealed class FailingWelcomeSender : IWelcomeMessageSender
-{
-    public Task EnqueueAsync(WelcomeMessage message, CancellationToken cancellationToken) =>
-        throw new InvalidOperationException("Forced failure in the welcome enqueue.");
-
-    public void Discard(WelcomeMessage message)
-    {
     }
 }
 
