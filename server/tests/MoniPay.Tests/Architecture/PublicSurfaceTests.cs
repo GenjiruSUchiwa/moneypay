@@ -46,6 +46,7 @@ public sealed class PublicSurfaceTests
                 typeof(RegisterUserHandler),
                 typeof(RegisterUserCommand),
                 typeof(RegisteredUser),
+                typeof(PhoneRegistrationLookup),
             ]
         },
         {
