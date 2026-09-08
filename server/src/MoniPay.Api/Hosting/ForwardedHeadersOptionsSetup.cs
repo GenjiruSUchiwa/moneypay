@@ -1,15 +1,11 @@
 using System.Net;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
-using MoniPay.Api;
 
 namespace MoniPay.Api.Hosting;
 
 /// <summary>
-/// The forwarded-headers configuration the rate limiter's IP partitioning needs: the client IP
-/// is read from <c>X-Forwarded-For</c>, but only when the connection itself comes from an edge
-/// the host names. Networks are never trusted wholesale — an unlisted edge cannot forge a
-/// client IP, and a direct client cannot forge its own.
+/// Trusts only explicitly configured proxy addresses for client IP and protocol forwarding.
 /// </summary>
 internal sealed class ForwardedHeadersOptionsSetup(IConfiguration configuration) : IConfigureOptions<ForwardedHeadersOptions>
 {
@@ -17,31 +13,29 @@ internal sealed class ForwardedHeadersOptionsSetup(IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(options);
 
+        IConfigurationSection section = configuration.GetSection(MoniPayConfiguration.ForwardedHeadersKnownProxies);
+        string? configured = section.Value;
+        string[] proxies = string.IsNullOrWhiteSpace(configured)
+            ? []
+            : configured.Split(',', StringSplitOptions.TrimEntries);
+        if (section.GetChildren().Any() || proxies.Any(proxy => !IPAddress.TryParse(proxy, out _)))
+        {
+            throw new OptionsValidationException(
+                Options.DefaultName,
+                typeof(ForwardedHeadersOptions),
+                [$"{MoniPayConfiguration.ForwardedHeadersKnownProxies} must be a comma-separated list of IP addresses."]);
+        }
+
         options.KnownIPNetworks.Clear();
         options.KnownProxies.Clear();
-
-        IConfigurationSection proxiesSection = configuration.GetSection(MoniPayConfiguration.ForwardedHeadersKnownProxies);
-        // A flat value ("10.0.0.5,10.0.0.6") does not bind to an array; split it by hand.
-        string[] proxies = proxiesSection.Get<string[]>() is { Length: > 0 } listed
-            ? listed
-            : proxiesSection.Value?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                ?? [];
-        if (proxies.Length == 0)
-        {
-            // No edge is trusted, and an empty trust list means the middleware would trust every
-            // peer. With nobody named, the headers are simply not read: the client IP is the
-            // connection's own.
-            options.ForwardedHeaders = ForwardedHeaders.None;
-            return;
-        }
-
-        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
         foreach (string proxy in proxies)
         {
-            if (IPAddress.TryParse(proxy, out IPAddress? address))
-            {
-                options.KnownProxies.Add(address);
-            }
+            options.KnownProxies.Add(IPAddress.Parse(proxy));
         }
+
+        // Empty trust lists allow every peer, so forwarding must be disabled without named edges.
+        options.ForwardedHeaders = proxies.Length == 0
+            ? ForwardedHeaders.None
+            : ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
     }
 }

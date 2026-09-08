@@ -15,7 +15,7 @@ namespace MoniPay.Tests.Architecture;
 /// implements for the module. Entities, handlers, EF configurations and their constants stay
 /// internal, so a later change cannot bind another project to them by accident. The deliberate
 /// extra surface is the vocabulary the host composes: the rate-limit policy names, the scheme
-/// names and the no-store filter the host's own groups attach. Wallet is absent: it predates
+/// names. Wallet is absent: it predates
 /// this rule and still exports its endpoint surface.
 /// </summary>
 public sealed class PublicSurfaceTests
@@ -31,7 +31,6 @@ public sealed class PublicSurfaceTests
                 typeof(CodeDeliveryState),
                 typeof(IRegisteredPhoneLookup),
                 typeof(SessionsSchemes),
-                typeof(NoStoreEndpointFilter),
                 typeof(SignUpRateLimitPolicies),
                 typeof(SessionRateLimitPolicies),
             ]

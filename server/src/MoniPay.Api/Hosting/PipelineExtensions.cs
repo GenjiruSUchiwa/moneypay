@@ -27,6 +27,8 @@ public static class PipelineExtensions
             app.UseHsts();
         }
 
+        app.UseRouting();
+        app.UseMiddleware<NoStoreMiddleware>();
         app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
