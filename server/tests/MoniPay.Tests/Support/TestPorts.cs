@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using MoniPay.Sessions.Features.SignUps.Complete;
 using MoniPay.Sessions.Features.SignUps.Get;
 using MoniPay.Sessions.Features.SignUps.ResendCode;
 using MoniPay.Sessions.Features.SignUps.Start;
@@ -32,6 +33,7 @@ public static class TestPorts
             services.AddScoped<GetSignUpHandler>();
             services.AddScoped<CreateVerificationCodeDeliveryHandler>();
             services.AddScoped<CreatePhoneVerificationHandler>();
+            services.AddScoped<CreateSignUpCompletionHandler>();
         });
     }
 }
