@@ -142,6 +142,7 @@ public sealed class ProblemDetailsTests(MoniPayApi api) : MoniPayApiTest(api)
         ProblemDetails problem = await response.ReadProblemAsync(HttpStatusCode.Unauthorized, requireNoStore: false);
 
         Assert.Equal(MoniPayErrorTypes.Unauthorized.Urn, problem.Type);
+        Assert.Equal("Une authentification est requise.", problem.Title);
         Assert.Equal("Bearer", response.Headers.WwwAuthenticate.ToString());
     }
 
