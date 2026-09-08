@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
+using MoniPay.Notifications.Channels;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.SignUps.Complete;
@@ -80,6 +81,7 @@ internal static class SignUpFlow
     {
         ArgumentNullException.ThrowIfNull(api);
 
+        api.Sms.Result = new ChannelResult.Accepted("sms-ref");
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
         for (int cycle = 0; cycle < 20; cycle++)
         {
