@@ -8,6 +8,7 @@ using MoniPay.Sessions.Providers;
 using MoniPay.Sessions.Security;
 using MoniPay.Users;
 using MoniPay.Users.Features.Registration;
+using MoniPay.Users.Ports;
 using Xunit;
 
 namespace MoniPay.Tests.Architecture;
@@ -49,6 +50,8 @@ public sealed class PublicSurfaceTests
                 typeof(RegisterUserCommand),
                 typeof(RegisteredUser),
                 typeof(PhoneRegistrationLookup),
+                typeof(IWelcomeMessageSender),
+                typeof(WelcomeMessage),
             ]
         },
         {
