@@ -43,17 +43,15 @@ public sealed class SessionTokenConcurrencyTests(MoniPayApi api) : MoniPayApiTes
 
         // Hold the same versioned update lock as refresh/revoke until the competing request is blocked.
         await database.SaveChangesAsync(cancellationToken);
+        NpgsqlConnection holder = Assert.IsType<NpgsqlConnection>(database.Database.GetDbConnection());
         await using AsyncServiceScope second = Api.Services.CreateAsyncScope();
-        MoniPayDbContext secondDatabase = second.ServiceProvider.GetRequiredService<MoniPayDbContext>();
-        await secondDatabase.Database.OpenConnectionAsync(cancellationToken);
-        NpgsqlConnection connection = Assert.IsType<NpgsqlConnection>(secondDatabase.Database.GetDbConnection());
         SessionTokenService service = second.ServiceProvider.GetRequiredService<SessionTokenService>();
         Task pending = replaceBootstrap
             ? service.ReplaceBootstrapAsync(created.UserId, created.SessionId, deviceId, cancellationToken)
             : service.RevokeAsync(created.SessionId, cancellationToken);
         try
         {
-            await WaitUntilBlockedAsync(connection.ProcessID, cancellationToken);
+            await Api.WaitUntilBlockedAsync(holder.ProcessID, cancellationToken);
         }
         finally
         {
@@ -71,17 +69,5 @@ public sealed class SessionTokenConcurrencyTests(MoniPayApi api) : MoniPayApiTes
         Assert.Equal(firstRevokes ? 2 : 3, revoked.Version);
         Assert.Equal(replaceBootstrap ? 1 : 0, await reader.Sessions.CountAsync(
             row => row.UserId == created.UserId && row.RevokedAt == null, cancellationToken));
-    }
-
-    private async Task WaitUntilBlockedAsync(int processId, CancellationToken cancellationToken)
-    {
-        await using NpgsqlConnection observer = new(Api.ConnectionString);
-        await observer.OpenAsync(cancellationToken);
-        await using NpgsqlCommand command = new("SELECT cardinality(pg_blocking_pids($1)) > 0", observer);
-        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = processId });
-        while (await command.ExecuteScalarAsync(cancellationToken) is not true)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-        }
     }
 }

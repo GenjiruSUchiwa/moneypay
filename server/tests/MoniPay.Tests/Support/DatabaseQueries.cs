@@ -33,4 +33,27 @@ public static class DatabaseQueries
 
         return rows;
     }
+
+    /// <summary>
+    /// Waits until some backend is blocked by the one PostgreSQL named <paramref name="processId"/>,
+    /// so a test can act while a competing request waits for a row lock instead of sleeping.
+    /// </summary>
+    public static async Task WaitUntilBlockedAsync(
+        this MoniPayApi api,
+        int processId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(api);
+
+        await using NpgsqlConnection observer = new(api.ConnectionString);
+        await observer.OpenAsync(cancellationToken);
+        await using NpgsqlCommand command = new(
+            "SELECT EXISTS (SELECT 1 FROM pg_stat_activity WHERE $1 = ANY(pg_blocking_pids(pid)));",
+            observer);
+        command.Parameters.Add(new NpgsqlParameter<int> { TypedValue = processId });
+        while (await command.ExecuteScalarAsync(cancellationToken) is not true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+    }
 }
