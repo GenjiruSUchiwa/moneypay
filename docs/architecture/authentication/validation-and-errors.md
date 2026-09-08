@@ -297,19 +297,43 @@ internal sealed class MoniPayExceptionHandler(
 
 `MoniPayProblemDetailsWriter`:
 
-- Sets `Content-Type: application/problem+json`.
-- Sets `type` to `urn:monipay:error:` plus the code.
-- Resolves `title` and `detail` through the localizer of the module that owns the code, using the request culture.
-- Sets `instance` to the request path.
-- Sets `traceId` from `Activity.Current` or `HttpContext.TraceIdentifier`.
-- Adds `Retry-After` when the problem has a delay.
-- Adds `Cache-Control: no-store`.
+- Sets `Content-Type: application/problem+json`, without a charset.
+- Sets `type` to `urn:monipay:error:` plus the code, or a stable framework fallback when the
+  framework produced the status without a MoniPay code.
+- Resolves `title` and `detail` through the localizer of the module that owns the code, using the
+  request culture. An unknown code falls back to the code as its title and never throws.
+- Preserves a caller's explicit type, title and status, so the Wallet refusal keeps its
+  localized title.
+- Sets `instance` to the request path and `traceId` from `Activity.Current` or
+  `HttpContext.TraceIdentifier`.
+- Preserves `WWW-Authenticate`, `Allow`, `Pragma` and an existing `Retry-After`. It does not
+  replace a response whose body has started, and it skips the body for `HEAD`.
+- Adds `Retry-After` for a refusal that carries a delay. `no-store` stays the no-store
+  convention's job: `NoStoreMiddleware` already marks the credential routes before any
+  short-circuit, so the writer preserves that header instead of duplicating it.
 
-The writer never copies `exception.Message` into the body. A `500` body has `type`, `status`, `title`, `instance`, and `traceId` only.
+The writer never copies `exception.Message` into the body. A `500` body has `type`, `status`,
+`title`, `instance`, and `traceId` only.
 
-`UseStatusCodePages` stays in the pipeline for responses the framework produces without an exception, such as a `401` from the authentication handler. The same writer formats them, so every error body has one shape.
+`MoniPayErrorTypes.ForStatus` maps a bare status to a stable type, so a client switches on `type`
+and never on a localized reason phrase: `bad-request` (`400`), `unauthorized` (`401`),
+`forbidden` (`403`), `not-found` (`404`), `method-not-allowed` (`405`), `content-too-large`
+(`413`), plus the transport types above. A status with no fallback keeps RFC 9457's
+`about:blank` type.
 
-The writer is registered as the `IProblemDetailsWriter`, so the existing Wallet refusal built with `Results.Problem` keeps its localized `title` and status and gains `traceId`, `instance` and `Cache-Control: no-store`. `WalletLocalizationTests` must pass unchanged.
+`ProviderUnavailableException` maps to `503 verification-delivery-unavailable`. It carries no
+delay today, so the response omits `Retry-After` until a provider delay source exists. A `429`
+still carries the delay the refusal or the limiter supplies.
+
+`UseStatusCodePages` stays in the pipeline for responses the framework produces without an
+exception, such as a `401` from the authentication handler. The writer is registered as an
+`IProblemDetailsWriter` ahead of the framework default, and `MoniPayExceptionHandler` as the
+single `IExceptionHandler`, so the status-code pages, an explicit `Results.Problem` and a thrown
+exception all reach the same writer and every error body has one shape.
+
+The Wallet refusal built with `Results.Problem` keeps its localized `title` and status and gains
+`traceId`, `instance` and the stable fallback `type`. `WalletLocalizationTests` must pass
+unchanged.
 
 ## Authentication failures
 
