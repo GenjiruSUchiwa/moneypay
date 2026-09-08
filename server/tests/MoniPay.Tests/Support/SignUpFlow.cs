@@ -4,12 +4,14 @@ using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
+using MoniPay.Sessions.Features.SignUps.Complete;
 using MoniPay.Sessions.Features.SignUps.Get;
 using MoniPay.Sessions.Features.SignUps.ResendCode;
 using MoniPay.Sessions.Features.SignUps.Start;
 using MoniPay.Sessions.Features.SignUps.VerifyPhone;
 using MoniPay.Sessions.Persistence;
 using MoniPay.Sessions.Security;
+using MoniPay.Users.Features.Registration;
 using Xunit;
 
 namespace MoniPay.Tests.Support;
@@ -22,6 +24,8 @@ internal static class SignUpFlow
 {
     public const string TermsVersion = "terms-2026-08";
     public const string PrivacyVersion = "privacy-2026-07";
+
+    private static int sequence;
 
     public static async Task<TResult> InScopeAsync<TService, TResult>(
         this MoniPayApi api,
@@ -50,6 +54,35 @@ internal static class SignUpFlow
     public static Task<CreatePhoneVerificationResult> VerifyPhoneAsync(this MoniPayApi api, SignUpId signUpId, string code) =>
         api.InScopeAsync<CreatePhoneVerificationHandler, CreatePhoneVerificationResult>((handler, cancellationToken) =>
             handler.HandleAsync(signUpId, code, cancellationToken));
+
+    public static Task<CreateSignUpCompletionResult> CompleteSignUpAsync(
+        this MoniPayApi api,
+        SignUpId signUpId,
+        string registrationToken,
+        CreateSignUpCompletionCommand command) =>
+        api.InScopeAsync<CreateSignUpCompletionHandler, CreateSignUpCompletionResult>((handler, cancellationToken) =>
+            handler.HandleAsync(signUpId, registrationToken, command, cancellationToken));
+
+    /// <summary>Registers a user the way a completed sign-up would have provisioned one.</summary>
+    public static Task<RegisteredUser> RegisterUserAsync(this MoniPayApi api, PhoneNumber phone, string? email = null)
+    {
+        ArgumentNullException.ThrowIfNull(api);
+        int unique = Interlocked.Increment(ref sequence);
+        return api.InScopeAsync<RegisterUserHandler, RegisteredUser>((handler, cancellationToken) =>
+            handler.HandleAsync(
+                new RegisterUserCommand(
+                    SignUpId.New(),
+                    UserId.New(),
+                    phone,
+                    new PersonName("Marie"),
+                    new PersonName("Ngo Nyobé"),
+                    new EmailAddress(email ?? $"marie.ngo{unique}@example.com"),
+                    Locale.FrenchCameroon,
+                    TermsVersion,
+                    PrivacyVersion,
+                    new DateTimeOffset(2026, 8, 31, 10, 0, 0, TimeSpan.Zero)),
+                cancellationToken));
+    }
 
     /// <summary>The row as PostgreSQL holds it, for asserting what a slice persisted.</summary>
     public static Task<SignUp> ReadSignUpRowAsync(this MoniPayApi api, SignUpId signUpId) =>

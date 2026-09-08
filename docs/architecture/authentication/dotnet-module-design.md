@@ -76,7 +76,6 @@ server/src/MoniPay.Sessions/
         CreateSignUpCompletionResult.cs
         IUserProvisioning.cs
         ProvisionUserRequest.cs
-        ProvisionedUser.cs
   Ports/
     IRegisteredPhoneLookup.cs
     ISecurityAlertSender.cs
@@ -268,7 +267,7 @@ These adapters are the only code that names two modules. No module references an
 Only these Sessions types are public:
 
 - `SessionsModule`
-- `IUserProvisioning`, `ProvisionUserRequest`, `ProvisionedUser`
+- `IUserProvisioning`, `ProvisionUserRequest`
 - `IRegisteredPhoneLookup`
 - `IVerificationCodeSender`, `VerificationCodeMessage`, `CodeDeliveryState`
 - `ISecurityAlertSender`, `SecurityAlert`, `SecurityAlertKind`
@@ -392,13 +391,15 @@ This handler owns the cross-module transaction. The endpoint contains no transac
 ```csharp
 public interface IUserProvisioning
 {
-    Task<ProvisionedUser> ProvisionAsync(
+    Task<UserId> ProvisionAsync(
         ProvisionUserRequest request,
         CancellationToken cancellationToken);
 }
 ```
 
 `ProvisionUserRequest` contains `SignUpId`, `UserId`, verified `PhoneNumber`, profile data, locale, consent versions, and acceptance time.
+
+The port returns only the user identity. Completion determines its `Created` result from the sign-up state, not the Users registration result.
 
 ### Registered-phone port
 
@@ -436,7 +437,7 @@ The handler encrypts the already normalized contact data. `SignUpId` makes the o
 internal sealed class UserProvisioningAdapter(
     RegisterUserHandler users) : IUserProvisioning
 {
-    public Task<ProvisionedUser> ProvisionAsync(
+    public Task<UserId> ProvisionAsync(
         ProvisionUserRequest request,
         CancellationToken cancellationToken);
 }
@@ -529,7 +530,7 @@ The entity protects transitions. Handlers coordinate I/O and transactions. Endpo
 `CreateSignUpCompletionHandler.HandleAsync` performs one database transaction:
 
 1. Lock the `sign_ups` row.
-2. Validate state, expiry, and Registration-token digest.
+2. Read the current time and validate state, expiry, and Registration-token digest before any writes.
 3. Generate a `UserId`.
 4. Call `IUserProvisioning.ProvisionAsync`.
 5. Create the bootstrap session and refresh-token digest.
@@ -539,7 +540,11 @@ The entity protects transitions. Handlers coordinate I/O and transactions. Endpo
 
 The adapter and Users handler use the same scoped `MoniPayDbContext`. All inserts join the same transaction.
 
-A completion retry revokes the prior bootstrap session and creates one replacement session.
+`SignUp.CompletionRefusal` owns the state and lifetime rules shared by authentication and completion.
+Both first completion and retry must start before sign-up expiry and within ten minutes of phone verification.
+Eligibility uses the time after acquiring the row lock. Consent acceptance retains the server receipt time from handler entry.
+
+A completion retry revokes the prior bootstrap session and creates one replacement session. Other sessions remain active.
 
 ## Endpoint mapping
 

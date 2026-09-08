@@ -200,7 +200,7 @@ Scope: `MoniPay.Sessions`, `MoniPay.Users`, and the host adapter. This is one cr
 
 Add:
 
-- `IUserProvisioning`, `ProvisionUserRequest`, `ProvisionedUser`
+- `IUserProvisioning`, `ProvisionUserRequest` (returns `UserId`)
 - `UserProvisioningAdapter` and `RegisteredPhoneLookupAdapter` in the host, `PhoneRegistrationLookup` in Users
 - `CreateSignUpCompletionHandler`
 - Atomic user and bootstrap-session creation
