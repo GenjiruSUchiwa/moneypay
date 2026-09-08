@@ -104,18 +104,15 @@ Isolation comes from data, not from containers. Each test starts its own sign-up
 
 | Fake | Port | Records | Configurable |
 |---|---|---|---|
-| `RecordingSmsChannel` | `ISmsChannel` | Recipient, body, idempotency key | Next `ChannelResult` |
-| `RecordingEmailChannel` | `IEmailChannel` | Recipient, subject, body | Next `ChannelResult` |
+| `RecordingChannel` | `INotificationChannel` | Recipient, subject, body, idempotency key | Next `ChannelResult` |
 | `TestTimeProvider` | `TimeProvider` | Nothing | `Advance`, `Set`, `Reset` |
 | `StubHandler` | `HttpMessageHandler` | Requests | Canned status and body |
-| `RecordingVerificationCodeSender` | `IVerificationCodeSender` | Messages | Next `CodeDeliveryState`; used only until the host adapter lands |
-| `StubRegisteredPhoneLookup` | `IRegisteredPhoneLookup` | Phones | The `UserId?` to return; used only until the host adapter lands |
 
 `Support/DatabaseAssertions.cs` reads every table through Npgsql and returns the columns holding a given plaintext, for the "no personal data in a row" assertions.
 
 A fake contains no branch. If a test needs the fake to decide something, the decision belongs in the code under test.
 
-`RecordingSmsChannel.CodeFor(phone)` extracts the six digits from the last recorded body for that recipient. Tests read the verification code from there, never from the database and never from a predictable generator.
+`RecordingChannel.CodeFor(phone)` extracts the six digits from the last recorded body for that recipient. Tests run a delivery cycle first, then read the verification code from there, never from the database and never from a predictable generator.
 
 ## Flow helpers
 

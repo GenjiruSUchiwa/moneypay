@@ -255,8 +255,21 @@ The body of a verification-code SMS contains the code. The body is encrypted wit
 The producing module renders the text with its own `IStringLocalizer` and the recipient's stored locale. Before a user exists, the sign-up row's locale is used.
 
 ```csharp
-var culture = CultureInfo.GetCultureInfo(signUp.Locale);
-var body = localizer.WithCulture(culture)[SessionMessageKeys.VerificationCodeSms, code, lifetimeMinutes];
+CultureInfo culture = CultureInfo.GetCultureInfo(signUp.Locale.Value);
+string lifetimeMinutes = ((int)Math.Ceiling(codeLifetime.TotalMinutes)).ToString(CultureInfo.InvariantCulture);
+CultureInfo currentCulture = CultureInfo.CurrentCulture;
+CultureInfo currentUICulture = CultureInfo.CurrentUICulture;
+try
+{
+    CultureInfo.CurrentCulture = culture;
+    CultureInfo.CurrentUICulture = culture;
+    string body = localizer[SessionMessageKeys.VerificationCodeSms, code, lifetimeMinutes];
+}
+finally
+{
+    CultureInfo.CurrentCulture = currentCulture;
+    CultureInfo.CurrentUICulture = currentUICulture;
+}
 ```
 
 Keys are meanings, not sentences: `VerificationCodeSms`, `WelcomeEmailSubject`, `WelcomeEmailBody`, `RefreshTokenReuseDetectedSms`.
@@ -271,7 +284,8 @@ Money and dates in a future receipt message are formatted with the recipient's c
 |---|---|
 | Enqueue fails | The adapter wraps the failure in `ProviderUnavailableException`; the whole sign-up transaction rolls back and the client receives `503 verification-delivery-unavailable`. |
 | No channel registered yet | The row stays `Pending` with `channel-not-configured`; delivery starts when the provider channel ships. |
-| Provider rejects a verification code | Retry on the short schedule. `codeDelivery` reports `failed` after exhaustion. Resend stays available. |
+| Provider permanently rejects a verification code | Fail immediately. `codeDelivery` reports `failed`. Resend stays available. |
+| Provider transiently fails a verification code | Retry on the short schedule. `codeDelivery` reports `queued` between attempts and `failed` after exhaustion. Resend stays available. |
 | Provider accepts but the response is lost | The idempotency key prevents a duplicate on retry when the provider supports it. |
 | Verification code expires before delivery | The row is marked `Expired`. The client resends. |
 | Email provider is down | Welcome email fails after retries and is dropped. Sign-up is unaffected. |
@@ -298,13 +312,11 @@ Log events carry `NotificationId`, `Kind`, `Channel`, `CorrelationId`, `Attempts
 
 ## Test doubles
 
-`MoniPay.Tests/Fakes/RecordingSmsChannel.cs` implements `ISmsChannel`, records every call, and returns a configurable `ChannelResult`. A sign-up test reads the verification code from the recorded body.
-
-`MoniPay.Tests/Fakes/RecordingEmailChannel.cs` does the same for email.
+`MoniPay.Tests/Fakes/RecordingChannel.cs` implements `INotificationChannel`, records every call, and returns a configurable `ChannelResult`. The test host registers one instance for SMS and one for email. A sign-up test runs a delivery cycle and reads the verification code from the recorded SMS body.
 
 The test host sets `MoniPay:Notifications:Worker:Enabled` to `false`. A test calls `Api.RunNotificationCycleAsync()` to deliver. See [Testing strategy](testing-strategy.md#the-test-host).
 
-Until the host adapter exists, the Sessions slice tests use `Fakes/RecordingVerificationCodeSender.cs`, which records the message and adds nothing to the context; the adapter replaces it in the delivery-composition change.
+Sign-up tests use the real outbox through the host `VerificationCodeDeliveryAdapter`. No recording sender masks production wiring.
 
 ## Provider decision gate
 
