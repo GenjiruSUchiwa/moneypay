@@ -36,9 +36,6 @@ public sealed class MoniPayApi : IAsyncLifetime
 
     public TestTimeProvider Time { get; } = new();
 
-    /// <summary>Stands in for the host's delivery adapter until it lands; tests read codes from here.</summary>
-    public RecordingVerificationCodeSender Sender { get; } = new();
-
     /// <summary>Counts the sessions-table queries the test host runs, for the active-session check.</summary>
     public SessionQueryCounter Queries { get; } = new();
 

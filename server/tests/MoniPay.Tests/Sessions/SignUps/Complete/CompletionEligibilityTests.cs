@@ -209,6 +209,7 @@ public sealed class CompletionEligibilityTests(MoniPayApi api) : MoniPayApiTest(
         using WebApplicationFactory<Program> shortLived = Api.CreateHost(builder =>
         {
             builder.UseTestPorts(Api);
+            MoniPayApi.UseNotificationTestSettings(builder);
             builder.UseSetting(SessionsOptions.Keys.SignUpLifetime, ShortSignUpLifetime.ToString());
             builder.ConfigureServices(services =>
             {
@@ -216,7 +217,7 @@ public sealed class CompletionEligibilityTests(MoniPayApi api) : MoniPayApiTest(
                 services.AddSingleton<TimeProvider>(Api.Time);
             });
         });
-        VerifiedSignUp signUp = await shortLived.Services.StartVerifiedAsync(Api.Sender);
+        VerifiedSignUp signUp = await Api.StartVerifiedAsync(shortLived.Services);
         Api.Time.Advance(ShortSignUpLifetime + offsetFromLimit);
         long sessionsBefore = await SessionsAsync();
 

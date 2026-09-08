@@ -15,22 +15,18 @@ public sealed class GetSignUpTests(MoniPayApi api) : MoniPayApiTest(api)
     public async Task The_view_reports_the_state_the_timing_and_the_latest_delivery()
     {
         StartSignUpResult started = await Api.StartSignUpAsync(new PhoneNumber(TestPhones.Next()));
-        Api.Sender.Delivery = CodeDeliveryState.Sent;
 
-        try
-        {
-            SignUpView view = await Api.GetSignUpAsync(started.SignUpId);
+        SignUpView queued = await Api.GetSignUpAsync(started.SignUpId);
+        Assert.Equal(SignUpStatus.CodePending, queued.Status);
+        Assert.Equal(CodeDeliveryState.Queued, queued.CodeDelivery);
+        Assert.Equal(started.CodeExpiresAt, queued.CodeExpiresAt);
+        Assert.Equal(started.CanResendAt, queued.CanResendAt);
+        Assert.Equal(started.SignUpExpiresAt, queued.SignUpExpiresAt);
 
-            Assert.Equal(SignUpStatus.CodePending, view.Status);
-            Assert.Equal(CodeDeliveryState.Sent, view.CodeDelivery);
-            Assert.Equal(started.CodeExpiresAt, view.CodeExpiresAt);
-            Assert.Equal(started.CanResendAt, view.CanResendAt);
-            Assert.Equal(started.SignUpExpiresAt, view.SignUpExpiresAt);
-        }
-        finally
-        {
-            Api.Sender.Delivery = CodeDeliveryState.Queued;
-        }
+        await Api.RunNotificationCycleAsync(Cancellation);
+
+        SignUpView sent = await Api.GetSignUpAsync(started.SignUpId);
+        Assert.Equal(CodeDeliveryState.Sent, sent.CodeDelivery);
     }
 
     [Fact]

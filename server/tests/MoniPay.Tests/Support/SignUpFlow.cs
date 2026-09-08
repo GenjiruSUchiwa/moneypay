@@ -11,7 +11,6 @@ using MoniPay.Sessions.Features.SignUps.Start;
 using MoniPay.Sessions.Features.SignUps.VerifyPhone;
 using MoniPay.Sessions.Persistence;
 using MoniPay.Sessions.Security;
-using MoniPay.Tests.Fakes;
 using MoniPay.Users.Features.Registration;
 using Xunit;
 
@@ -90,25 +89,26 @@ internal static class SignUpFlow
     {
         ArgumentNullException.ThrowIfNull(api);
 
-        return api.Services.StartVerifiedAsync(api.Sender);
+        return api.StartVerifiedAsync(api.Services);
     }
 
-    public static async Task<VerifiedSignUp> StartVerifiedAsync(
-        this IServiceProvider services,
-        RecordingVerificationCodeSender sender)
+    /// <summary>Starts through one host and delivers through the shared fixture.</summary>
+    public static async Task<VerifiedSignUp> StartVerifiedAsync(this MoniPayApi api, IServiceProvider services)
     {
+        ArgumentNullException.ThrowIfNull(api);
         ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(sender);
 
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await services.InScopeAsync<StartSignUpHandler, StartSignUpResult>(
             (handler, cancellationToken) => handler.HandleAsync(
                 new StartSignUpCommand(phone, Locale.FrenchCameroon, TermsVersion, PrivacyVersion),
                 cancellationToken));
+        await api.RunNotificationCycleAsync(TestContext.Current.CancellationToken);
+        string code = api.Sms.CodeFor(phone.Value);
         return new VerifiedSignUp(
             started,
             await services.InScopeAsync<CreatePhoneVerificationHandler, CreatePhoneVerificationResult>(
-                (handler, cancellationToken) => handler.HandleAsync(started.SignUpId, sender.CodeFor(phone), cancellationToken)),
+                (handler, cancellationToken) => handler.HandleAsync(started.SignUpId, code, cancellationToken)),
             phone);
     }
 
