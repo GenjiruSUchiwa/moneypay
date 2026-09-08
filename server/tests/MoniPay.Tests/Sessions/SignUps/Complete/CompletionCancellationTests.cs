@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using MoniPay.Api.Composition;
 using MoniPay.Kernel;
+using MoniPay.Notifications.Persistence;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.SignUps;
@@ -83,6 +84,7 @@ public sealed class CompletionCancellationTests(MoniPayApi api) : MoniPayApiTest
         using WebApplicationFactory<Program> cancelling = Api.CreateHost(builder =>
         {
             builder.UseTestPorts(Api);
+            MoniPayApi.UseNotificationTestSettings(builder);
             builder.ConfigureServices(services =>
             {
                 services.AddScoped<UserProvisioningAdapter>();
@@ -103,6 +105,7 @@ public sealed class CompletionCancellationTests(MoniPayApi api) : MoniPayApiTest
             MoniPayDbContext database = reader.ServiceProvider.GetRequiredService<MoniPayDbContext>();
             Assert.Equal(0, await database.Users.CountAsync(user => user.SignUpId == signUp.Started.SignUpId, Cancellation));
             Assert.Equal(sessionsBefore, await database.Sessions.CountAsync(Cancellation));
+            Assert.Equal(0, await WelcomeCountAsync());
             Assert.Equal(SignUpStatus.PhoneVerified, (await Api.ReadSignUpRowAsync(signUp.Started.SignUpId)).Status);
         }
         finally
@@ -140,6 +143,14 @@ public sealed class CompletionCancellationTests(MoniPayApi api) : MoniPayApiTest
         await using AsyncServiceScope scope = Api.Services.CreateAsyncScope();
         MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
         return await set(database).CountAsync(Cancellation);
+    }
+
+    private async Task<long> WelcomeCountAsync()
+    {
+        await using AsyncServiceScope scope = Api.Services.CreateAsyncScope();
+        MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
+        return await database.Notifications.CountAsync(
+            row => row.Kind == WelcomeMessageDeliveryAdapter.WelcomeKind, Cancellation);
     }
 }
 

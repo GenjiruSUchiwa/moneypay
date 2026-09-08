@@ -299,6 +299,29 @@ public sealed class NotificationProcessorTests(MoniPayApi api) : MoniPayApiTest(
     }
 
     [Fact]
+    public async Task An_optional_welcome_that_fails_emits_no_critical_event()
+    {
+        string email = $"welcome.{Guid.NewGuid():N}@example.com";
+        Api.Email.Result = new ChannelResult.Rejected("blocked");
+        int before = Api.Logs.Entries.Count;
+        Guid id = await EnqueueAsync(Message(TestPhones.Next()) with
+        {
+            Channel = NotificationChannel.Email,
+            Recipient = email,
+            Subject = "Bienvenue sur MoniPay",
+            Kind = "Welcome",
+            Required = false,
+        });
+
+        await Api.RunNotificationCycleAsync(Cancellation);
+
+        Assert.Equal(NotificationStatus.Failed, (await RowAsync(id)).Status);
+        Assert.DoesNotContain(
+            Api.Logs.Entries.Skip(before),
+            entry => entry.Level == LogLevel.Critical);
+    }
+
+    [Fact]
     public async Task Log_events_carry_no_recipient_body_or_code()
     {
         string phone = TestPhones.Next();
