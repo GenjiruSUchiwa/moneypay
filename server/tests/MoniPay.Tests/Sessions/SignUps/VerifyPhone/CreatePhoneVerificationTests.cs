@@ -111,7 +111,31 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
         }
         finally
         {
-            await CleanUsersTablesAsync();
+            await Api.CleanUsersAsync();
+        }
+    }
+
+    [Fact]
+    public async Task A_wrong_code_does_not_disclose_that_the_phone_is_registered()
+    {
+        PhoneNumber phone = new(TestPhones.Next());
+        await Api.RegisterUserAsync(phone);
+        StartSignUpResult started = await Api.StartSignUpAsync(phone);
+
+        try
+        {
+            RefusalException refusal = await SignUpFlow.RefusedAsync(
+                Api.VerifyPhoneAsync(started.SignUpId, SignUpFlow.Wrong(Api.Sender.CodeFor(phone))),
+                MoniPayErrorTypes.VerificationCodeInvalid);
+
+            Assert.Equal([CreatePhoneVerificationHandler.VerificationCodePointer], refusal.Pointers);
+            SignUp row = await Api.ReadSignUpRowAsync(started.SignUpId);
+            Assert.Equal(SignUpStatus.CodePending, row.Status);
+            Assert.Null(row.RegistrationTokenDigest);
+        }
+        finally
+        {
+            await Api.CleanUsersAsync();
         }
     }
 
@@ -144,6 +168,4 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
         Assert.Equal(MaximumAttempts, (await Api.ReadSignUpRowAsync(started.SignUpId)).FailedAttempts);
     }
 
-    private Task CleanUsersTablesAsync() =>
-        Api.QueryAsync("TRUNCATE TABLE user_consents, users;", reader => 0);
 }
