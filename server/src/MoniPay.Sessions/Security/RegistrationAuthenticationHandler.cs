@@ -1,14 +1,9 @@
-using System.Buffers.Text;
-using System.Security.Claims;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MoniPay.Kernel;
+using MoniPay.Kernel.Errors;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
-using MoniPay.Sessions.Persistence;
 
 namespace MoniPay.Sessions.Security;
 
@@ -35,29 +30,14 @@ internal sealed class RegistrationAuthenticationHandler(
         tokens,
         timeProvider)
 {
-    /// <summary>How long a registration credential outlives its issue, whatever the sign-up has left.</summary>
-    internal static readonly TimeSpan MaximumLifetime = TimeSpan.FromMinutes(10);
-
     protected override byte[]? StoredDigest(SignUp signUp) => signUp.RegistrationTokenDigest;
 
     protected override bool IsUsable(SignUp signUp, DateTimeOffset now, out WorkflowCredentialFailure unusable)
     {
-        if (signUp.Status == SignUpStatus.Expired
-            || signUp.ExpiresAt <= now
-            || signUp.VerifiedAt is not { } issuedAt
-            || issuedAt + MaximumLifetime <= now)
-        {
-            unusable = WorkflowCredentialFailure.Expired;
-            return false;
-        }
-
-        if (signUp.Status is not (SignUpStatus.PhoneVerified or SignUpStatus.Completed))
-        {
-            unusable = WorkflowCredentialFailure.Consumed;
-            return false;
-        }
-
-        unusable = default;
-        return true;
+        ProblemType? refusal = signUp.CompletionRefusal(now);
+        unusable = refusal == MoniPayErrorTypes.SignUpStateInvalid
+            ? WorkflowCredentialFailure.Consumed
+            : WorkflowCredentialFailure.Expired;
+        return refusal is null;
     }
 }

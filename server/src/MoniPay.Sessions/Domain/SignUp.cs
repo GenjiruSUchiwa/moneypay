@@ -6,11 +6,13 @@ namespace MoniPay.Sessions.Domain;
 
 /// <summary>
 /// One phone-verification workflow. The entity protects every transition; handlers coordinate
-/// I/O and transactions, and never inspect <see cref="Status"/> themselves. The caller hands in
+/// I/O and transactions. The caller hands in
 /// digests and ciphertexts it produced; the aggregate never sees a plaintext code or phone.
 /// </summary>
 internal sealed class SignUp
 {
+    private static readonly TimeSpan RegistrationLifetime = TimeSpan.FromMinutes(10);
+
     private SignUp()
     {
     }
@@ -273,27 +275,45 @@ internal sealed class SignUp
     }
 
     /// <summary>
+    /// The same eligibility rule is used by authentication and, under the row lock, completion.
+    /// A completed sign-up permits retries only within the original credential lifetime.
+    /// </summary>
+    public ProblemType? CompletionRefusal(DateTimeOffset now)
+    {
+        if (Status == SignUpStatus.Expired || ExpiresAt <= now)
+        {
+            return MoniPayErrorTypes.SignUpExpired;
+        }
+
+        if (Status is not (SignUpStatus.PhoneVerified or SignUpStatus.Completed))
+        {
+            return MoniPayErrorTypes.SignUpStateInvalid;
+        }
+
+        if (VerifiedAt is not { } issuedAt || issuedAt + RegistrationLifetime <= now)
+        {
+            return MoniPayErrorTypes.RegistrationTokenInvalid;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Marks the sign-up completed with its provisioned user and bootstrap session. A retry
     /// from <see cref="SignUpStatus.Completed"/> replaces the bootstrap session only, so a
     /// repeated completion leaves one active session; a retry naming a different user is
-    /// refused, so a replay can never rebind a finished sign-up. The first completion refuses
-    /// an expired sign-up.
+    /// refused, so a replay can never rebind a finished sign-up.
     /// </summary>
     public void Complete(UserId userId, Guid sessionId, DateTimeOffset now)
     {
-        if (Status is not (SignUpStatus.PhoneVerified or SignUpStatus.Completed))
+        if (CompletionRefusal(now) is { } refusal)
         {
-            throw new RefusalException(MoniPayErrorTypes.SignUpStateInvalid);
+            throw new RefusalException(refusal);
         }
 
         if (Status == SignUpStatus.Completed && ProvisionedUserId != userId)
         {
             throw new RefusalException(MoniPayErrorTypes.SignUpStateInvalid);
-        }
-
-        if (Status == SignUpStatus.PhoneVerified)
-        {
-            RefuseUnlessAlive(now);
         }
 
         ProvisionedUserId = userId;

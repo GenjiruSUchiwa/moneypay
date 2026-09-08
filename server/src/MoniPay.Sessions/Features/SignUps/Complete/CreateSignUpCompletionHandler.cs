@@ -28,12 +28,13 @@ internal sealed class CreateSignUpCompletionHandler(
         CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(registrationToken);
-        DateTimeOffset now = timeProvider.GetUtcNow();
+        DateTimeOffset acceptedAt = timeProvider.GetUtcNow();
 
         await using IDbContextTransaction transaction = await database.Database
             .BeginTransactionAsync(cancellationToken)
             .ConfigureAwait(false);
         SignUp signUp = await database.LockSignUpAsync(signUpId, cancellationToken).ConfigureAwait(false);
+        DateTimeOffset now = timeProvider.GetUtcNow();
 
         byte[] presented = tokens.Digest(SignUpTokenPurpose.Registration, signUp.Id, registrationToken);
         if (signUp.RegistrationTokenDigest is not { } stored
@@ -42,42 +43,46 @@ internal sealed class CreateSignUpCompletionHandler(
             throw new RefusalException(MoniPayErrorTypes.RegistrationTokenInvalid);
         }
 
-        if (signUp.Status == SignUpStatus.Completed)
+        if (signUp.CompletionRefusal(now) is { } refusal)
+        {
+            throw new RefusalException(refusal);
+        }
+
+        bool created = signUp.Status == SignUpStatus.PhoneVerified;
+        SessionTokenResult session;
+        if (created)
+        {
+            PhoneNumber phone = new(personalData.Unprotect(signUp.PhoneCiphertext));
+            UserId userId = await users.ProvisionAsync(
+                new ProvisionUserRequest(
+                    signUp.Id,
+                    UserId.New(),
+                    phone,
+                    command.FirstName,
+                    command.LastName,
+                    command.Email,
+                    signUp.Locale,
+                    signUp.TermsVersion,
+                    signUp.PrivacyVersion,
+                    acceptedAt),
+                cancellationToken).ConfigureAwait(false);
+            session = await sessions.CreateAsync(userId, command.DeviceId, cancellationToken).ConfigureAwait(false);
+        }
+        else
         {
             if (signUp.ProvisionedUserId is not { } userId || signUp.BootstrapSessionId is not { } priorSessionId)
             {
                 throw new RefusalException(MoniPayErrorTypes.SignUpStateInvalid);
             }
 
-            SessionTokenResult replacement = await sessions
+            session = await sessions
                 .ReplaceBootstrapAsync(userId, priorSessionId, command.DeviceId, cancellationToken)
                 .ConfigureAwait(false);
-            signUp.Complete(userId, replacement.SessionId, now);
-            await database.CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
-
-            return new(Created: false, replacement);
         }
 
-        PhoneNumber phone = new(personalData.Unprotect(signUp.PhoneCiphertext));
-        ProvisionedUser provisioned = await users.ProvisionAsync(
-            new ProvisionUserRequest(
-                signUp.Id,
-                UserId.New(),
-                phone,
-                command.FirstName,
-                command.LastName,
-                command.Email,
-                signUp.Locale,
-                signUp.TermsVersion,
-                signUp.PrivacyVersion,
-                now),
-            cancellationToken).ConfigureAwait(false);
-        SessionTokenResult session = await sessions
-            .CreateAsync(provisioned.Id, command.DeviceId, cancellationToken)
-            .ConfigureAwait(false);
-        signUp.Complete(provisioned.Id, session.SessionId, now);
+        signUp.Complete(session.UserId, session.SessionId, now);
         await database.CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
 
-        return new(Created: true, session);
+        return new(created, session);
     }
 }

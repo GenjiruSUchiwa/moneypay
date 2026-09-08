@@ -37,7 +37,6 @@ public sealed class PublicSurfaceTests
                 typeof(SessionRateLimitPolicies),
                 typeof(IUserProvisioning),
                 typeof(ProvisionUserRequest),
-                typeof(ProvisionedUser),
             ]
         },
         {

@@ -1,3 +1,5 @@
+using MoniPay.Kernel;
+
 namespace MoniPay.Sessions.Features.SignUps.Complete;
 
 /// <summary>
@@ -6,5 +8,5 @@ namespace MoniPay.Sessions.Features.SignUps.Complete;
 /// </summary>
 public interface IUserProvisioning
 {
-    Task<ProvisionedUser> ProvisionAsync(ProvisionUserRequest request, CancellationToken cancellationToken);
+    Task<UserId> ProvisionAsync(ProvisionUserRequest request, CancellationToken cancellationToken);
 }
