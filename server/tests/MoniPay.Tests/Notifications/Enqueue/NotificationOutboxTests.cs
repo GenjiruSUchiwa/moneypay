@@ -83,6 +83,30 @@ public sealed class NotificationOutboxTests(MoniPayApi api) : MoniPayApiTest(api
     }
 
     [Fact]
+    public async Task Discard_detaches_a_staged_row_so_a_later_save_persists_nothing()
+    {
+        string discarded = $"discarded-{Guid.CreateVersion7()}";
+        string kept = $"kept-{Guid.CreateVersion7()}";
+
+        using IServiceScope scope = Api.Services.CreateScope();
+        MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
+        NotificationOutbox outbox = scope.ServiceProvider.GetRequiredService<NotificationOutbox>();
+
+        outbox.Enqueue(Message(discarded));
+        outbox.Enqueue(Message(kept));
+        outbox.Discard(discarded);
+
+        await database.SaveChangesAsync(Cancellation);
+
+        Assert.Equal(0, await database.Notifications.CountAsync(row => row.IdempotencyKey == discarded, Cancellation));
+        Assert.Equal(1, await database.Notifications.CountAsync(row => row.IdempotencyKey == kept, Cancellation));
+
+        outbox.Discard(kept);
+        await database.SaveChangesAsync(Cancellation);
+        Assert.Equal(1, await database.Notifications.CountAsync(row => row.IdempotencyKey == kept, Cancellation));
+    }
+
+    [Fact]
     public async Task FindLatestStatusAsync_returns_the_newest_row_for_a_correlation_and_kind()
     {
         Guid correlationId = Guid.CreateVersion7();
