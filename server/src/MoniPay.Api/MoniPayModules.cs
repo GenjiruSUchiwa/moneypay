@@ -8,7 +8,7 @@ using MoniPay.Sessions.Features.SignUps.Complete;
 using MoniPay.Sessions.Ports;
 using MoniPay.Sessions.Providers;
 using MoniPay.Users;
-using MoniPay.Users.Ports;
+using MoniPay.Users.Providers;
 using MoniPay.Wallet;
 using MoniPay.Wallet.Endpoints;
 

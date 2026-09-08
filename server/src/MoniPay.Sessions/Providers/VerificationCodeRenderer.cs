@@ -22,21 +22,8 @@ internal sealed class VerificationCodeRenderer(IStringLocalizer<SessionMessages>
         ArgumentException.ThrowIfNullOrWhiteSpace(locale.Value);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(codeLifetime, TimeSpan.Zero);
 
-        CultureInfo culture = CultureInfo.GetCultureInfo(locale.Value);
         string lifetimeMinutes = ((int)Math.Ceiling(codeLifetime.TotalMinutes)).ToString(CultureInfo.InvariantCulture);
 
-        CultureInfo currentCulture = CultureInfo.CurrentCulture;
-        CultureInfo currentUICulture = CultureInfo.CurrentUICulture;
-        try
-        {
-            CultureInfo.CurrentCulture = culture;
-            CultureInfo.CurrentUICulture = culture;
-            return messages[SessionMessageKeys.VerificationCodeSms, code, lifetimeMinutes].Value;
-        }
-        finally
-        {
-            CultureInfo.CurrentCulture = currentCulture;
-            CultureInfo.CurrentUICulture = currentUICulture;
-        }
+        return locale.Invoke(() => messages[SessionMessageKeys.VerificationCodeSms, code, lifetimeMinutes].Value);
     }
 }

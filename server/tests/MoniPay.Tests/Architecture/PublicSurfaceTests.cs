@@ -8,7 +8,7 @@ using MoniPay.Sessions.Providers;
 using MoniPay.Sessions.Security;
 using MoniPay.Users;
 using MoniPay.Users.Features.Registration;
-using MoniPay.Users.Ports;
+using MoniPay.Users.Providers;
 using Xunit;
 
 namespace MoniPay.Tests.Architecture;

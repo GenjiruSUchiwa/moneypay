@@ -1,6 +1,6 @@
 using MoniPay.Kernel;
 
-namespace MoniPay.Users.Ports;
+namespace MoniPay.Users.Providers;
 
 /// <summary>
 /// One welcome email to deliver, in its raw parts: Users renders the localized subject and body
