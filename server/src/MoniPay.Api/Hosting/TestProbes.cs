@@ -1,8 +1,12 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using MoniPay.Kernel;
+using MoniPay.Kernel.Errors;
 using MoniPay.Kernel.Http;
+using MoniPay.Kernel.Validation;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Security;
@@ -24,6 +28,10 @@ internal static class TestProbes
     private const string NoStoreRoute = "/test/no-store";
     private const string LimitedStartRoute = "/test/limited/start";
     private const string LimitedRefreshRoute = "/test/limited/refresh";
+    private const string ErrorRoute = "/test/errors/{kind}";
+
+    /// <summary>The endpoint name the error probe logs under.</summary>
+    public const string ErrorProbeName = nameof(TestProbes) + ".Errors";
 
     public static void MapTestProbes(this WebApplication app)
     {
@@ -51,5 +59,35 @@ internal static class TestProbes
         app.MapGet(LimitedRefreshRoute, () => Results.Ok())
             .RequireRateLimiting(SessionRateLimitPolicies.Refresh);
 
+        app.MapGet(ErrorRoute, ThrowProbe)
+            .WithName(ErrorProbeName)
+            .WithMetadata(MoniPayConventions.NoStore);
+    }
+
+    private static IResult ThrowProbe(string kind) => throw ErrorFor(kind);
+
+    private static Exception ErrorFor(string kind) => kind switch
+    {
+        "validation" => ValidationExceptionProbe(),
+        "refusal" => new RefusalException(
+            MoniPayErrorTypes.RateLimited,
+            TimeSpan.FromSeconds(1.5),
+            ["/data/attributes/phone"]),
+        "refusal-no-pointers" => new RefusalException(MoniPayErrorTypes.SignUpStateInvalid),
+        "unknown" => new RefusalException(new ProblemType("mystery", System.Net.HttpStatusCode.BadRequest)),
+        "provider" => new ProviderUnavailableException("campay", "E123"),
+        "concurrency" => new DbUpdateConcurrencyException("lost update"),
+        "json" => new JsonException("syntax"),
+        _ => new InvalidOperationException("boom"),
+    };
+
+    private static ValidationException ValidationExceptionProbe()
+    {
+        ValidationFailures failures = new();
+        failures.Require(false, "/data/attributes/phone", ValidationCodes.PhoneFormatInvalid);
+        failures.Require(false, "/data/attributes/name~1first", ValidationCodes.PersonNameInvalid);
+        failures.Require(false, "/data/attributes/email~0local", ValidationCodes.EmailInvalid);
+
+        return new ValidationException(failures);
     }
 }

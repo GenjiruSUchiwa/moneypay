@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="malformed-json" xml:space="preserve">
+    <value>The request body is not valid JSON.</value>
+    <comment>Title of the 400 problem returned when a body cannot be parsed.</comment>
+  </data>
+  <data name="jsonapi-document-invalid" xml:space="preserve">
+    <value>The request document is not a valid JSON:API document.</value>
+    <comment>Title of the 400 problem returned when a JSON body has the wrong JSON:API shape.</comment>
+  </data>
+  <data name="not-acceptable" xml:space="preserve">
+    <value>No acceptable response media type was requested.</value>
+    <comment>Title of the 406 problem returned when the Accept header excludes both supported types.</comment>
+  </data>
+  <data name="unsupported-media-type" xml:space="preserve">
+    <value>The request media type is not supported.</value>
+    <comment>Title of the 415 problem returned when a body uses a media type other than JSON:API.</comment>
+  </data>
+  <data name="validation" xml:space="preserve">
+    <value>The request is not valid.</value>
+    <comment>Title of the 422 problem returned when one or more attributes fail validation.</comment>
+  </data>
+  <data name="resource-identity-mismatch" xml:space="preserve">
+    <value>The route and relationship identifiers do not match.</value>
+    <comment>Title of the 409 problem returned when two identifiers for one resource differ.</comment>
+  </data>
+  <data name="concurrent-modification" xml:space="preserve">
+    <value>The resource changed before this request could be applied.</value>
+    <comment>Title of the 409 problem returned after a lost update; the client reads and retries.</comment>
+  </data>
+  <data name="rate-limited" xml:space="preserve">
+    <value>Too many requests.</value>
+    <comment>Title of the 429 problem returned by either rate-limit layer.</comment>
+  </data>
+  <data name="internal" xml:space="preserve">
+    <value>An unexpected error occurred.</value>
+    <comment>Title of the 500 problem returned for any unhandled failure. The body carries no detail.</comment>
+  </data>
+  <data name="bad-request" xml:space="preserve">
+    <value>The request is not valid.</value>
+    <comment>Fallback title for a bare 400 the framework produced without a MoniPay code.</comment>
+  </data>
+  <data name="unauthorized" xml:space="preserve">
+    <value>Authentication is required.</value>
+    <comment>Fallback title for a bare 401 the framework produced without a MoniPay code.</comment>
+  </data>
+  <data name="forbidden" xml:space="preserve">
+    <value>You do not have permission to perform this action.</value>
+    <comment>Fallback title for a bare 403 the framework produced without a MoniPay code.</comment>
+  </data>
+  <data name="not-found" xml:space="preserve">
+    <value>The requested resource was not found.</value>
+    <comment>Fallback title for a bare 404 the framework produced without a MoniPay code.</comment>
+  </data>
+  <data name="method-not-allowed" xml:space="preserve">
+    <value>The HTTP method is not allowed for this route.</value>
+    <comment>Fallback title for a bare 405 the framework produced without a MoniPay code.</comment>
+  </data>
+  <data name="content-too-large" xml:space="preserve">
+    <value>The request body is too large.</value>
+    <comment>Fallback title for a bare 413 the framework produced without a MoniPay code.</comment>
+  </data>
+  <data name="service-unavailable" xml:space="preserve">
+    <value>The service is temporarily unavailable.</value>
+    <comment>Fallback title for a bare 503 the framework produced without a MoniPay code.</comment>
+  </data>
+</root>

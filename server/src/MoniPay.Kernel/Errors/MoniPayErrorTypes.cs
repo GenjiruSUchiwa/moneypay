@@ -37,6 +37,31 @@ public static class MoniPayErrorTypes
     /// <summary>An unexpected server failure occurred.</summary>
     public static readonly ProblemType Internal = new("internal", HttpStatusCode.InternalServerError);
 
+    // Framework fallbacks. A response the framework produces without a MoniPay code still gets a
+    // stable type, so a client switches on the type and never on a localized reason phrase. The
+    // statuses below are the ones this host can answer without an application exception.
+
+    /// <summary>A bare 400 the framework produced.</summary>
+    public static readonly ProblemType BadRequest = new("bad-request", HttpStatusCode.BadRequest);
+
+    /// <summary>A bare 401 the framework produced, such as a missing credential.</summary>
+    public static readonly ProblemType Unauthorized = new("unauthorized", HttpStatusCode.Unauthorized);
+
+    /// <summary>A bare 403 the framework produced.</summary>
+    public static readonly ProblemType Forbidden = new("forbidden", HttpStatusCode.Forbidden);
+
+    /// <summary>A bare 404 the framework produced.</summary>
+    public static readonly ProblemType NotFound = new("not-found", HttpStatusCode.NotFound);
+
+    /// <summary>A bare 405 the framework produced.</summary>
+    public static readonly ProblemType MethodNotAllowed = new("method-not-allowed", HttpStatusCode.MethodNotAllowed);
+
+    /// <summary>A bare 413 the framework produced.</summary>
+    public static readonly ProblemType ContentTooLarge = new("content-too-large", HttpStatusCode.RequestEntityTooLarge);
+
+    /// <summary>A bare 503 the framework produced, when no provider detail exists.</summary>
+    public static readonly ProblemType ServiceUnavailable = new("service-unavailable", HttpStatusCode.ServiceUnavailable);
+
     // Sign-up failures.
 
     /// <summary>The sign-up is not in a state that permits the requested action.</summary>
@@ -82,4 +107,26 @@ public static class MoniPayErrorTypes
 
     /// <summary>A consumed refresh token was presented again.</summary>
     public static readonly ProblemType RefreshTokenReused = new("refresh-token-reused", HttpStatusCode.Unauthorized);
+
+    private static readonly IReadOnlyDictionary<HttpStatusCode, ProblemType> FrameworkFallbacks =
+        new Dictionary<HttpStatusCode, ProblemType>
+        {
+            [BadRequest.Status] = BadRequest,
+            [Unauthorized.Status] = Unauthorized,
+            [Forbidden.Status] = Forbidden,
+            [NotFound.Status] = NotFound,
+            [MethodNotAllowed.Status] = MethodNotAllowed,
+            [NotAcceptable.Status] = NotAcceptable,
+            [ContentTooLarge.Status] = ContentTooLarge,
+            [UnsupportedMediaType.Status] = UnsupportedMediaType,
+            [RateLimited.Status] = RateLimited,
+            [Internal.Status] = Internal,
+            [ServiceUnavailable.Status] = ServiceUnavailable,
+        };
+
+    /// <summary>
+    /// The stable type for a status the framework produced without a MoniPay code, or <c>null</c>
+    /// when the status has no fallback and the response keeps RFC 9457's <c>about:blank</c> default.
+    /// </summary>
+    public static ProblemType? ForStatus(HttpStatusCode status) => FrameworkFallbacks.GetValueOrDefault(status);
 }
