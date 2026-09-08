@@ -5,8 +5,8 @@ using MoniPay.Sessions.Providers;
 namespace MoniPay.Sessions.Features.SignUps;
 
 /// <summary>
-/// What the start and resend slices hand the delivery port: the code in its raw parts plus its
-/// rendered body, bound to the code's expiry so a late delivery is dropped rather than sent.
+/// What the start and resend slices hand the delivery port: the rendered body, bound to the
+/// code's expiry so a late delivery is dropped rather than sent.
 /// </summary>
 internal static class VerificationCodeMessages
 {
@@ -31,9 +31,6 @@ internal static class VerificationCodeMessages
             return new(
                 signUp.Id,
                 recipient,
-                code,
-                options.VerificationCodeLifetime,
-                signUp.Locale,
                 renderer.Render(signUp.Locale, code, options.VerificationCodeLifetime),
                 signUp.CodeExpiresAt ?? throw new InvalidOperationException("The sign-up holds no code to deliver."),
                 FormattableString.Invariant($"{IdempotencyKeyPrefix}:{signUp.Id}:{signUp.ResendCount}"));

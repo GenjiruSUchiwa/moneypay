@@ -26,9 +26,6 @@ public sealed class VerificationCodeDeliveryAdapterTests(MoniPayApi api) : MoniP
         VerificationCodeMessage message = new(
             signUpId,
             recipient,
-            "001234",
-            TimeSpan.FromMinutes(2),
-            Locale.FrenchCameroon,
             "MoniPay : votre code de vérification est 001234. Il expire dans 2 minutes.",
             Api.Time.GetUtcNow() + TimeSpan.FromMinutes(2),
             $"verification-code:{signUpId}:0");
@@ -38,6 +35,14 @@ public sealed class VerificationCodeDeliveryAdapterTests(MoniPayApi api) : MoniP
         VerificationCodeDeliveryAdapter adapter = (VerificationCodeDeliveryAdapter)scope.ServiceProvider.GetRequiredService<IVerificationCodeSender>();
 
         await adapter.EnqueueAsync(message, Cancellation);
+
+        await using (AsyncServiceScope verificationScope = Api.Services.CreateAsyncScope())
+        {
+            MoniPayDbContext persistedDatabase = verificationScope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
+            Assert.False(await persistedDatabase.Notifications.AnyAsync(
+                notification => notification.CorrelationId == signUpId.Value, Cancellation));
+        }
+
         await database.SaveChangesAsync(Cancellation);
 
         try
@@ -64,9 +69,6 @@ public sealed class VerificationCodeDeliveryAdapterTests(MoniPayApi api) : MoniP
         VerificationCodeMessage message = new(
             signUpId,
             new PhoneNumber(TestPhones.Next()),
-            "001234",
-            TimeSpan.FromMinutes(2),
-            Locale.FrenchCameroon,
             "",
             Api.Time.GetUtcNow() + TimeSpan.FromMinutes(2),
             $"verification-code:{signUpId}:0");
@@ -88,9 +90,6 @@ public sealed class VerificationCodeDeliveryAdapterTests(MoniPayApi api) : MoniP
         VerificationCodeMessage message = new(
             signUpId,
             new PhoneNumber(TestPhones.Next()),
-            "001234",
-            TimeSpan.FromMinutes(2),
-            Locale.FrenchCameroon,
             "MoniPay : body.",
             Api.Time.GetUtcNow() + TimeSpan.FromMinutes(2),
             $"verification-code:{signUpId}:0");
@@ -125,9 +124,6 @@ public sealed class VerificationCodeDeliveryAdapterTests(MoniPayApi api) : MoniP
         VerificationCodeMessage message = new(
             signUpId,
             new PhoneNumber(phone),
-            "001234",
-            TimeSpan.FromMinutes(2),
-            Locale.FrenchCameroon,
             "MoniPay : body.",
             expiresAt,
             $"verification-code:{signUpId}:0");

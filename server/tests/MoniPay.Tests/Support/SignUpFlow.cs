@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
-using MoniPay.Notifications.Channels;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.SignUps.Complete;
@@ -76,36 +75,28 @@ internal static class SignUpFlow
         api.InScopeAsync<CreatePhoneVerificationHandler, CreatePhoneVerificationResult>((handler, cancellationToken) =>
             handler.HandleAsync(signUpId, code, cancellationToken));
 
-    /// <summary>The code the worker delivered for a phone through the real outbox.</summary>
+    /// <summary>The current sign-up code, selected by its delivery key rather than phone history.</summary>
     public static async Task<string> DeliveredCodeAsync(this MoniPayApi api, PhoneNumber phone)
     {
         ArgumentNullException.ThrowIfNull(api);
 
-        api.Sms.Result = new ChannelResult.Accepted("sms-ref");
+        LookupHash phoneHash = api.Services.GetRequiredService<PhoneLookupDigest>().Compute(phone);
+        SignUp signUp = await api.InScopeAsync<MoniPayDbContext, SignUp>((database, token) =>
+            database.SignUps.AsNoTracking()
+                .Where(row => row.PhoneLookupHash.Equals(phoneHash))
+                .OrderByDescending(row => row.CreatedAt)
+                .ThenByDescending(row => row.Id)
+                .FirstAsync(token));
+        string key = FormattableString.Invariant($"verification-code:{signUp.Id}:{signUp.ResendCount}");
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
-        for (int cycle = 0; cycle < 20; cycle++)
+        while (!api.Sms.CallsFor(phone.Value).Any(call => call.IdempotencyKey == key)
+            && await api.RunNotificationCycleAsync(cancellationToken) > 0)
         {
-            await api.RunNotificationCycleAsync(cancellationToken);
-            if (api.Sms.CallsFor(phone.Value).Count > 0)
-            {
-                return api.Sms.CodeFor(phone.Value);
-            }
         }
 
-        return api.Sms.CodeFor(phone.Value);
-    }
-
-    /// <summary>Drains due notifications so a later cycle never delivers another test's rows first.</summary>
-    public static async Task DrainNotificationsAsync(this MoniPayApi api)
-    {
-        ArgumentNullException.ThrowIfNull(api);
-
-        api.Sms.Result = new ChannelResult.Accepted("sms-ref");
-        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
-        for (int cycle = 0; cycle < 20; cycle++)
-        {
-            await api.RunNotificationCycleAsync(cancellationToken);
-        }
+        Fakes.RecordingChannel.ChannelCall delivered = Assert.Single(
+            api.Sms.CallsFor(phone.Value), call => call.IdempotencyKey == key);
+        return System.Text.RegularExpressions.Regex.Match(delivered.Body, "[0-9]{6}").Value;
     }
 
     /// <summary>A phone proven by its code, on its own number: the state completion starts from.</summary>
