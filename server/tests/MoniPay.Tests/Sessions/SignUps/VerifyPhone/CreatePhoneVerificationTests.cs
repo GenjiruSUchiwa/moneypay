@@ -30,7 +30,6 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
         Assert.Null(row.SignUpTokenDigest);
         Assert.NotNull(row.RegistrationTokenDigest);
         Assert.Empty(await Api.RowsContainingAsync(verified.RegistrationToken));
-        Assert.Contains(phone, Api.RegisteredPhones.Phones);
     }
 
     [Fact]
@@ -95,22 +94,25 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
     public async Task A_phone_a_user_already_owns_is_refused_and_its_sign_up_closed_so_a_fresh_start_is_free()
     {
         PhoneNumber phone = new(TestPhones.Next());
-        StartSignUpResult started = await Api.StartSignUpAsync(phone);
-        Api.RegisteredPhones.Owner = UserId.New();
+        await Api.RegisterUserAsync(phone);
 
         try
         {
-            await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, Api.Sender.CodeFor(phone)), MoniPayErrorTypes.PhoneAlreadyRegistered);
+            StartSignUpResult started = await Api.StartSignUpAsync(phone);
+
+            await SignUpFlow.RefusedAsync(
+                Api.VerifyPhoneAsync(started.SignUpId, Api.Sender.CodeFor(phone)),
+                MoniPayErrorTypes.PhoneAlreadyRegistered);
+
+            SignUp row = await Api.ReadSignUpRowAsync(started.SignUpId);
+            Assert.Equal(SignUpStatus.Expired, row.Status);
+            Assert.Null(row.RegistrationTokenDigest);
+            Assert.NotEqual(started.SignUpId, (await Api.StartSignUpAsync(phone)).SignUpId);
         }
         finally
         {
-            Api.RegisteredPhones.Owner = null;
+            await CleanUsersTablesAsync();
         }
-
-        SignUp row = await Api.ReadSignUpRowAsync(started.SignUpId);
-        Assert.Equal(SignUpStatus.Expired, row.Status);
-        Assert.Null(row.RegistrationTokenDigest);
-        Assert.NotEqual(started.SignUpId, (await Api.StartSignUpAsync(phone)).SignUpId);
     }
 
     [Fact]
@@ -141,4 +143,7 @@ public sealed class CreatePhoneVerificationTests(MoniPayApi api) : MoniPayApiTes
         Assert.All(outcomes, outcome => Assert.NotNull(outcome));
         Assert.Equal(MaximumAttempts, (await Api.ReadSignUpRowAsync(started.SignUpId)).FailedAttempts);
     }
+
+    private Task CleanUsersTablesAsync() =>
+        Api.QueryAsync("TRUNCATE TABLE user_consents, users;", reader => 0);
 }
