@@ -76,6 +76,15 @@ internal static class SignUpFlow
         api.InScopeAsync<CreatePhoneVerificationHandler, CreatePhoneVerificationResult>((handler, cancellationToken) =>
             handler.HandleAsync(signUpId, code, cancellationToken));
 
+    /// <summary>The code the worker delivered for a phone through the real outbox.</summary>
+    public static async Task<string> DeliveredCodeAsync(this MoniPayApi api, PhoneNumber phone)
+    {
+        ArgumentNullException.ThrowIfNull(api);
+
+        await api.RunNotificationCycleAsync(TestContext.Current.CancellationToken);
+        return api.Sms.CodeFor(phone.Value);
+    }
+
     /// <summary>A phone proven by its code, on its own number: the state completion starts from.</summary>
     public static Task<VerifiedSignUp> StartVerifiedAsync(this MoniPayApi api)
     {
