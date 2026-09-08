@@ -19,6 +19,7 @@ internal sealed class CreateVerificationCodeDeliveryHandler(
     VerificationCodeGenerator codes,
     VerificationCodeDigest codeDigest,
     SignUpPersonalDataProtector personalData,
+    VerificationCodeRenderer renderer,
     TimeProvider timeProvider,
     IOptions<SessionsOptions> options)
 {
@@ -36,7 +37,7 @@ internal sealed class CreateVerificationCodeDeliveryHandler(
         string code = codes.Next();
         signUp.RotateVerificationCode(codeDigest.Compute(signUp.Id, signUp.PhoneLookupHash, code), now, settings);
         PhoneNumber recipient = new(personalData.Unprotect(signUp.PhoneCiphertext));
-        VerificationCodeMessage message = signUp.ComposeVerificationCodeMessage(recipient, code, settings);
+        VerificationCodeMessage message = signUp.ComposeVerificationCodeMessage(recipient, code, settings, renderer);
         await sender.EnqueueAsync(message, cancellationToken).ConfigureAwait(false);
         await database.CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
 

@@ -11,6 +11,7 @@ using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Persistence;
+using MoniPay.Sessions.Providers;
 using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions;
@@ -61,6 +62,7 @@ public static class SessionsModule
 
         // Holds request state: the context it saves through.
         services.AddScoped<SessionTokenService>();
+        services.AddSingleton<VerificationCodeRenderer>();
 
         services.AddSingleton<ExpiredCredentialCleanupService>();
         services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<ExpiredCredentialCleanupService>());
