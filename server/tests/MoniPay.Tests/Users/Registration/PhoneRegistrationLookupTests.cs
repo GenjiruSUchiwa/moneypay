@@ -3,8 +3,11 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using MoniPay.Kernel;
 using MoniPay.Persistence;
+using MoniPay.Sessions.Features.SignUps.Start;
 using MoniPay.Tests.Support;
 using MoniPay.Users.Features.Registration;
+using MoniPay.Users.Persistence;
+using MoniPay.Users.Security;
 using Xunit;
 
 namespace MoniPay.Tests.Users.Registration;
@@ -25,6 +28,31 @@ public sealed class PhoneRegistrationLookupTests(MoniPayApi api) : MoniPayApiTes
             Assert.Equal(registered.Id, await lookup.FindUserIdAsync(phone, Cancellation));
             Assert.Null(await lookup.FindUserIdAsync(new PhoneNumber(TestPhones.Next()), Cancellation));
         });
+    }
+
+    [Fact]
+    public async Task The_two_modules_hash_one_phone_differently()
+    {
+        PhoneNumber phone = new(TestPhones.Next());
+        await Api.RegisterUserAsync(phone);
+        StartSignUpResult started = await Api.StartSignUpAsync(phone);
+        LookupHash forUsers = Api.Services.GetRequiredService<UserLookupDigest>().Compute(phone.Value);
+
+        try
+        {
+            LookupHash stored = await Api.InScopeAsync<MoniPayDbContext, LookupHash>((database, cancellationToken) =>
+                database.Users
+                    .Where(user => user.Phone.Hash.Equals(forUsers))
+                    .Select(user => user.Phone.Hash)
+                    .SingleAsync(cancellationToken));
+            LookupHash forSessions = (await Api.ReadSignUpRowAsync(started.SignUpId)).PhoneLookupHash;
+
+            Assert.NotEqual(stored.Value, forSessions.Value);
+        }
+        finally
+        {
+            await Api.QueryAsync("TRUNCATE TABLE user_consents, users;", reader => 0);
+        }
     }
 
     [Fact]
