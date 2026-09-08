@@ -1,9 +1,12 @@
+using Microsoft.EntityFrameworkCore;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
+using MoniPay.Notifications.Domain;
+using MoniPay.Notifications.Persistence;
+using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.SignUps.ResendCode;
 using MoniPay.Sessions.Features.SignUps.Start;
-using MoniPay.Sessions.Providers;
 using MoniPay.Tests.Support;
 using Xunit;
 
@@ -22,7 +25,7 @@ public sealed class CreateVerificationCodeDeliveryTests(MoniPayApi api) : MoniPa
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
         await SignUpFlow.RefusedAsync(
-            Api.VerifyPhoneAsync(started.SignUpId, SignUpFlow.Wrong(Api.Sender.CodeFor(phone))),
+            Api.VerifyPhoneAsync(started.SignUpId, SignUpFlow.Wrong(await Api.DeliveredCodeAsync(phone))),
             MoniPayErrorTypes.VerificationCodeInvalid);
         Api.Time.Advance(ResendCooldown);
         DateTimeOffset now = Api.Time.GetUtcNow();
@@ -42,17 +45,19 @@ public sealed class CreateVerificationCodeDeliveryTests(MoniPayApi api) : MoniPa
     {
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
-        string priorCode = Api.Sender.CodeFor(phone);
+        string priorCode = await Api.DeliveredCodeAsync(phone);
         Api.Time.Advance(ResendCooldown);
 
         CreateVerificationCodeDeliveryResult resent = await Api.ResendCodeAsync(started.SignUpId);
 
-        VerificationCodeMessage message = Api.Sender.MessagesFor(started.SignUpId)[^1];
-        Assert.NotEqual(priorCode, message.Code);
-        Assert.Equal(resent.CodeExpiresAt, message.ExpiresAt);
-        Assert.Equal($"verification-code:{started.SignUpId}:1", message.IdempotencyKey);
+        IReadOnlyList<Notification> notifications = await NotificationsForAsync(started.SignUpId);
+        Assert.Equal(2, notifications.Count);
+        Assert.Equal($"verification-code:{started.SignUpId}:1", notifications[^1].IdempotencyKey);
+        Assert.Equal(resent.CodeExpiresAt, notifications[^1].ExpiresAt);
+        string newCode = await Api.DeliveredCodeAsync(phone);
+        Assert.NotEqual(priorCode, newCode);
         await SignUpFlow.RefusedAsync(Api.VerifyPhoneAsync(started.SignUpId, priorCode), MoniPayErrorTypes.VerificationCodeInvalid);
-        Assert.NotNull(await Api.VerifyPhoneAsync(started.SignUpId, message.Code));
+        Assert.NotNull(await Api.VerifyPhoneAsync(started.SignUpId, newCode));
     }
 
     [Fact]
@@ -71,7 +76,7 @@ public sealed class CreateVerificationCodeDeliveryTests(MoniPayApi api) : MoniPa
     {
         PhoneNumber phone = new(TestPhones.Next());
         StartSignUpResult started = await Api.StartSignUpAsync(phone);
-        string wrongCode = SignUpFlow.Wrong(Api.Sender.CodeFor(phone));
+        string wrongCode = SignUpFlow.Wrong(await Api.DeliveredCodeAsync(phone));
         for (int attempt = 0; attempt < MaximumAttempts; attempt++)
         {
             await SignUpFlow.RefusalOfAsync(Api.VerifyPhoneAsync(started.SignUpId, wrongCode));
@@ -92,4 +97,13 @@ public sealed class CreateVerificationCodeDeliveryTests(MoniPayApi api) : MoniPa
 
         await SignUpFlow.RefusedAsync(Api.ResendCodeAsync(started.SignUpId), MoniPayErrorTypes.SignUpExpired);
     }
+
+    private async Task<IReadOnlyList<Notification>> NotificationsForAsync(SignUpId signUpId) =>
+        await Api.InScopeAsync<MoniPayDbContext, List<Notification>>(async (database, cancellationToken) =>
+            await database.Notifications
+                .AsNoTracking()
+                .Where(notification => notification.CorrelationId == signUpId.Value)
+                .OrderBy(notification => notification.CreatedAt)
+                .ThenBy(notification => notification.Id)
+                .ToListAsync(cancellationToken));
 }
