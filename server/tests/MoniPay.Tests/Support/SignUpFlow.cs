@@ -80,7 +80,16 @@ internal static class SignUpFlow
     {
         ArgumentNullException.ThrowIfNull(api);
 
-        await api.RunNotificationCycleAsync(TestContext.Current.CancellationToken);
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        for (int cycle = 0; cycle < 20; cycle++)
+        {
+            await api.RunNotificationCycleAsync(cancellationToken);
+            if (api.Sms.CallsFor(phone.Value).Count > 0)
+            {
+                return api.Sms.CodeFor(phone.Value);
+            }
+        }
+
         return api.Sms.CodeFor(phone.Value);
     }
 
@@ -103,8 +112,7 @@ internal static class SignUpFlow
             (handler, cancellationToken) => handler.HandleAsync(
                 new StartSignUpCommand(phone, Locale.FrenchCameroon, TermsVersion, PrivacyVersion),
                 cancellationToken));
-        await api.RunNotificationCycleAsync(TestContext.Current.CancellationToken);
-        string code = api.Sms.CodeFor(phone.Value);
+        string code = await api.DeliveredCodeAsync(phone);
         return new VerifiedSignUp(
             started,
             await services.InScopeAsync<CreatePhoneVerificationHandler, CreatePhoneVerificationResult>(
