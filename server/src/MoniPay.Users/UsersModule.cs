@@ -27,8 +27,7 @@ public static class UsersModule
             .RequireKey(options => options.PersonalDataKeyBase64, UsersOptions.Keys.PersonalDataKeyBase64)
             .ValidateOnStart();
 
-        // Both hold key material only; neither holds request state. The renderer holds only the
-        // localizer.
+        // Both hold key material only; neither holds request state.
         services.AddSingleton<UserPersonalDataProtector>();
         services.AddSingleton<UserLookupDigest>();
         services.AddSingleton<WelcomeMessageRenderer>();
