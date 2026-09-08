@@ -25,10 +25,11 @@ internal sealed class PolicyFailureResultHandler : IAuthorizationMiddlewareResul
         ArgumentNullException.ThrowIfNull(policy);
         ArgumentNullException.ThrowIfNull(policyResult);
 
-        if (!policyResult.Succeeded && context.User.Identity?.IsAuthenticated == true)
+        if (policyResult.Forbidden
+            && policyResult.AuthorizationFailure?.FailedRequirements.Any(requirement =>
+                requirement is ActiveSessionRequirement or RegistrationRouteRequirement) == true)
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return;
+            policyResult = PolicyAuthorizationResult.Challenge();
         }
 
         await defaultHandler.HandleAsync(next, context, policy, policyResult).ConfigureAwait(false);

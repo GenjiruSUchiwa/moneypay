@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MoniPay.Api.Hosting;
@@ -20,7 +21,8 @@ public sealed class AccessTokenValidationTests(MoniPayApi api) : MoniPayApiTest(
     public async Task An_expired_token_is_refused()
     {
         using HttpClient client = Api.CreateClient();
-        string token = TestTokens.Bearer(UserId.New(), Guid.CreateVersion7(), expires: DateTimeOffset.UtcNow - TimeSpan.FromMinutes(5));
+        SessionTokenResult issued = await CreateValidatedSessionAsync(client);
+        string token = TestTokens.Bearer(issued.UserId, issued.SessionId, expires: DateTimeOffset.UtcNow - TimeSpan.FromMinutes(5));
 
         using HttpResponseMessage response = await SecureAsync(client, token);
 
@@ -31,7 +33,8 @@ public sealed class AccessTokenValidationTests(MoniPayApi api) : MoniPayApiTest(
     public async Task A_token_from_another_issuer_is_refused()
     {
         using HttpClient client = Api.CreateClient();
-        string token = TestTokens.Bearer(UserId.New(), Guid.CreateVersion7(), issuer: "https://evil.example");
+        SessionTokenResult issued = await CreateValidatedSessionAsync(client);
+        string token = TestTokens.Bearer(issued.UserId, issued.SessionId, issuer: "https://evil.example");
 
         using HttpResponseMessage response = await SecureAsync(client, token);
 
@@ -42,7 +45,8 @@ public sealed class AccessTokenValidationTests(MoniPayApi api) : MoniPayApiTest(
     public async Task A_token_for_another_audience_is_refused()
     {
         using HttpClient client = Api.CreateClient();
-        string token = TestTokens.Bearer(UserId.New(), Guid.CreateVersion7(), audience: "other-client");
+        SessionTokenResult issued = await CreateValidatedSessionAsync(client);
+        string token = TestTokens.Bearer(issued.UserId, issued.SessionId, audience: "other-client");
 
         using HttpResponseMessage response = await SecureAsync(client, token);
 
@@ -53,7 +57,8 @@ public sealed class AccessTokenValidationTests(MoniPayApi api) : MoniPayApiTest(
     public async Task A_token_signed_by_an_unknown_key_is_refused()
     {
         using HttpClient client = Api.CreateClient();
-        string token = TestTokens.Bearer(UserId.New(), Guid.CreateVersion7(), key: Convert.FromBase64String(TestKeys.OtherSigning));
+        SessionTokenResult issued = await CreateValidatedSessionAsync(client);
+        string token = TestTokens.Bearer(issued.UserId, issued.SessionId, key: Convert.FromBase64String(TestKeys.OtherSigning));
 
         using HttpResponseMessage response = await SecureAsync(client, token);
 
@@ -66,7 +71,10 @@ public sealed class AccessTokenValidationTests(MoniPayApi api) : MoniPayApiTest(
         using HttpClient client = Api.CreateClient();
 
         using HttpRequestMessage request = new(HttpMethod.Get, "/test/secure");
-        request.Headers.Authorization = new("Bearer", TestTokens.Unsigned());
+        SessionTokenResult issued = await CreateValidatedSessionAsync(client);
+        string payload = TestTokens.Bearer(issued.UserId, issued.SessionId).Split('.')[1];
+        string header = Base64Url.EncodeToString("""{"alg":"none","typ":"JWT"}"""u8);
+        request.Headers.Authorization = new("Bearer", $"{header}.{payload}.");
         using HttpResponseMessage response = await client.SendAsync(request, Cancellation);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -92,7 +100,8 @@ public sealed class AccessTokenValidationTests(MoniPayApi api) : MoniPayApiTest(
     public async Task A_token_signed_by_the_previous_key_is_refused_once_the_rotation_is_cleared()
     {
         using HttpClient client = Api.CreateClient();
-        string token = TestTokens.Bearer(UserId.New(), Guid.CreateVersion7(), key: Convert.FromBase64String(TestKeys.OtherSigning));
+        SessionTokenResult issued = await CreateValidatedSessionAsync(client);
+        string token = TestTokens.Bearer(issued.UserId, issued.SessionId, key: Convert.FromBase64String(TestKeys.OtherSigning));
 
         using HttpResponseMessage response = await SecureAsync(client, token);
 
@@ -104,6 +113,14 @@ public sealed class AccessTokenValidationTests(MoniPayApi api) : MoniPayApiTest(
         HttpRequestMessage request = new(HttpMethod.Get, "/test/secure");
         request.Headers.Authorization = new("Bearer", token);
         return client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
+    private async Task<SessionTokenResult> CreateValidatedSessionAsync(HttpClient client)
+    {
+        SessionTokenResult issued = await CreateSessionAsync();
+        using HttpResponseMessage control = await SecureAsync(client, TestTokens.Bearer(issued.UserId, issued.SessionId));
+        Assert.Equal(HttpStatusCode.OK, control.StatusCode);
+        return issued;
     }
 
     private Task<SessionTokenResult> CreateSessionAsync() =>

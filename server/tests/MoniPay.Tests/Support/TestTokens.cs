@@ -26,8 +26,8 @@ internal static class TestTokens
         {
             Issuer = issuer,
             Audience = audience,
-            NotBefore = DateTime.UtcNow,
-            IssuedAt = DateTime.UtcNow,
+            NotBefore = DateTime.UtcNow.AddMinutes(-10),
+            IssuedAt = DateTime.UtcNow.AddMinutes(-10),
             Expires = (expires ?? DateTimeOffset.UtcNow + TimeSpan.FromMinutes(5)).UtcDateTime,
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key ?? Convert.FromBase64String(TestKeys.Signing)),

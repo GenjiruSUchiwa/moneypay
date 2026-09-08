@@ -56,6 +56,12 @@ internal abstract class WorkflowAuthenticationHandler(
     TimeProvider timeProvider)
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
+    protected override Task HandleChallengeAsync(AuthenticationProperties properties)
+    {
+        Response.Headers.WWWAuthenticate = Scheme.Name;
+        return base.HandleChallengeAsync(properties);
+    }
+
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         string? header = Request.Headers.Authorization;

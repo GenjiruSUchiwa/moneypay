@@ -66,7 +66,9 @@ internal sealed class SessionsAuthorizationHandler(MoniPayDbContext database) : 
         }
 
         string? claim = Find(context.User, MoniPayClaimTypes.SignUpId);
-        if (claim is not null && claim == http.Request.RouteValues[MoniPayClaimTypes.SignUpId]?.ToString())
+        if (Guid.TryParse(claim, out Guid claimId)
+            && Guid.TryParse(http.Request.RouteValues[MoniPayClaimTypes.SignUpId]?.ToString(), out Guid routeId)
+            && claimId == routeId)
         {
             context.Succeed(requirement);
         }

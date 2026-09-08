@@ -49,6 +49,7 @@ public sealed class SchemeIsolationTests(MoniPayApi api) : MoniPayApiTest(api)
 
         using HttpClient client = Api.CreateClient();
         Assert.Equal(HttpStatusCode.OK, await SendAsync(client, "Registration", firstToken, $"/test/registrations/{firstId.Value}"));
+        Assert.Equal(HttpStatusCode.OK, await SendAsync(client, "Registration", firstToken, $"/test/registrations/{firstId.Value.ToString().ToUpperInvariant()}"));
         Assert.Equal(HttpStatusCode.Unauthorized, await SendAsync(client, "Registration", firstToken, $"/test/registrations/{secondId.Value}"));
         Assert.Equal(HttpStatusCode.Unauthorized, await SendAsync(client, "Registration", firstToken, $"/test/signups/{firstId.Value}"));
         Assert.Equal(HttpStatusCode.Unauthorized, await SendAsync(client, "Registration", firstToken, "/test/secure"));
@@ -66,6 +67,18 @@ public sealed class SchemeIsolationTests(MoniPayApi api) : MoniPayApiTest(api)
 
         // A refresh token is not a bearer credential either, whatever its shape.
         Assert.Equal(HttpStatusCode.Unauthorized, await SendAsync(client, "Bearer", issued.RefreshToken, "/test/secure"));
+    }
+
+    [Theory]
+    [InlineData("/test/signups/00000000-0000-0000-0000-000000000001", SessionsSchemes.SignUp)]
+    [InlineData("/test/registrations/00000000-0000-0000-0000-000000000001", SessionsSchemes.Registration)]
+    public async Task Missing_workflow_credentials_challenge_with_the_route_scheme(string route, string scheme)
+    {
+        using HttpClient client = Api.CreateClient();
+        using HttpResponseMessage response = await client.GetAsync(route, Cancellation);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(scheme, response.Headers.WwwAuthenticate.ToString());
     }
 
     private async Task<(SignUpId SignUpId, string RegistrationToken)> VerifiedSignUpAsync()
