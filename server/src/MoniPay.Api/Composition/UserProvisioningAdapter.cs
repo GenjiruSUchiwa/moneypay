@@ -1,3 +1,4 @@
+using MoniPay.Kernel;
 using MoniPay.Sessions.Features.SignUps.Complete;
 using MoniPay.Users.Features.Registration;
 
@@ -9,7 +10,7 @@ namespace MoniPay.Api.Composition;
 /// </summary>
 internal sealed class UserProvisioningAdapter(RegisterUserHandler users) : IUserProvisioning
 {
-    public async Task<ProvisionedUser> ProvisionAsync(ProvisionUserRequest request, CancellationToken cancellationToken)
+    public async Task<UserId> ProvisionAsync(ProvisionUserRequest request, CancellationToken cancellationToken)
     {
         RegisteredUser registered = await users.HandleAsync(
             new RegisterUserCommand(
@@ -24,6 +25,6 @@ internal sealed class UserProvisioningAdapter(RegisterUserHandler users) : IUser
                 request.PrivacyVersion,
                 request.AcceptedAt),
             cancellationToken).ConfigureAwait(false);
-        return new(registered.Id, registered.Created);
+        return registered.Id;
     }
 }
