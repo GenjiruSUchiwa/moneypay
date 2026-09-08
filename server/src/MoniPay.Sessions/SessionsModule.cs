@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MoniPay.Kernel;
+using MoniPay.Kernel.Errors;
+using MoniPay.Kernel.Http;
 using MoniPay.Kernel.Security;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.Sessions;
@@ -103,6 +105,17 @@ public static class SessionsModule
                     ClockSkew = settings.ClockSkew,
                     RequireSignedTokens = true,
                     ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+                };
+                bearer.Events = new JwtBearerEvents
+                {
+                    OnChallenge = challenge =>
+                    {
+                        challenge.HttpContext.Items[MoniPayHttpContextItems.AuthenticationProblemCode] =
+                            MoniPayErrorTypes.SessionInvalid.Code;
+                        challenge.Error = null;
+                        challenge.ErrorDescription = null;
+                        return Task.CompletedTask;
+                    },
                 };
             });
     }
