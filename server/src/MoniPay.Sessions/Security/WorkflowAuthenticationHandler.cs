@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoniPay.Kernel;
+using MoniPay.Kernel.Errors;
+using MoniPay.Kernel.Http;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Persistence;
@@ -59,6 +61,13 @@ internal abstract class WorkflowAuthenticationHandler(
     protected override Task HandleChallengeAsync(AuthenticationProperties properties)
     {
         Response.Headers.WWWAuthenticate = Scheme.Name;
+        Context.Items[MoniPayHttpContextItems.AuthenticationProblemCode] = Scheme.Name switch
+        {
+            SessionsSchemes.SignUp => MoniPayErrorTypes.SignUpTokenInvalid.Code,
+            SessionsSchemes.Registration => MoniPayErrorTypes.RegistrationTokenInvalid.Code,
+            _ => MoniPayErrorTypes.Unauthorized.Code,
+        };
+
         return base.HandleChallengeAsync(properties);
     }
 

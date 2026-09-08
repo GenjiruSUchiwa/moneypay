@@ -62,4 +62,16 @@
     <value>MoniPay: your verification code is {0}. It expires in {1} minutes.</value>
     <comment>Verification SMS. {0} is the numeric code with leading zeroes preserved. {1} is its lifetime in whole minutes. Contains the product name and nothing personal.</comment>
   </data>
+  <data name="signup-token-invalid" xml:space="preserve">
+    <value>The sign-up token is invalid or expired.</value>
+    <comment>Title of the 401 problem the Sign-up scheme challenges with.</comment>
+  </data>
+  <data name="registration-token-invalid" xml:space="preserve">
+    <value>The registration token is invalid or expired.</value>
+    <comment>Title of the 401 problem the Registration scheme challenges with.</comment>
+  </data>
+  <data name="session-invalid" xml:space="preserve">
+    <value>The session token is invalid or expired.</value>
+    <comment>Title of the 401 problem the bearer scheme challenges with.</comment>
+  </data>
 </root>

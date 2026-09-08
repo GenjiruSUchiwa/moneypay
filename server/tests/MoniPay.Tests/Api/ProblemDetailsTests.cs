@@ -135,14 +135,13 @@ public sealed class ProblemDetailsTests(MoniPayApi api) : MoniPayApiTest(api)
     }
 
     [Fact]
-    public async Task A_bare_401_gets_a_stable_type_and_keeps_the_challenge_header()
+    public async Task A_bearer_challenge_names_the_session_credential_and_keeps_the_header()
     {
         using HttpResponseMessage response = await Client.GetAsync("/test/secure", Cancellation);
 
         ProblemDetails problem = await response.ReadProblemAsync(HttpStatusCode.Unauthorized, requireNoStore: false);
 
-        Assert.Equal(MoniPayErrorTypes.Unauthorized.Urn, problem.Type);
-        Assert.Equal("Une authentification est requise.", problem.Title);
+        Assert.Equal(MoniPayErrorTypes.SessionInvalid.Urn, problem.Type);
         Assert.Equal("Bearer", response.Headers.WwwAuthenticate.ToString());
     }
 

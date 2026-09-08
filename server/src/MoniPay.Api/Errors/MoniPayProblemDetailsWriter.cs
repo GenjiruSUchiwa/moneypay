@@ -81,7 +81,8 @@ internal sealed class MoniPayProblemDetailsWriter(MoniPayProblemText text) : IPr
         if (string.IsNullOrEmpty(problem.Type)
             || problem.Type.StartsWith(FrameworkDefaultType, StringComparison.Ordinal))
         {
-            ProblemType? fallback = MoniPayErrorTypes.ForStatus((HttpStatusCode)status);
+            ProblemType? fallback = AuthenticationCode(http, status)
+                ?? MoniPayErrorTypes.ForStatus((HttpStatusCode)status);
             problem.Type = fallback?.Urn ?? "about:blank";
         }
 
@@ -116,5 +117,17 @@ internal sealed class MoniPayProblemDetailsWriter(MoniPayProblemText text) : IPr
         {
             problem.Detail = text.Detail(code);
         }
+    }
+
+    private static ProblemType? AuthenticationCode(HttpContext http, int status)
+    {
+        if (status != StatusCodes.Status401Unauthorized)
+        {
+            return null;
+        }
+
+        return http.Items[MoniPayHttpContextItems.AuthenticationProblemCode] is string code
+            ? new ProblemType(code, HttpStatusCode.Unauthorized)
+            : null;
     }
 }
