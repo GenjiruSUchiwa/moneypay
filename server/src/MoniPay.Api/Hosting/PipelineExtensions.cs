@@ -1,3 +1,5 @@
+using MoniPay.Api.Http;
+
 namespace MoniPay.Api.Hosting;
 
 /// <summary>
@@ -5,7 +7,8 @@ namespace MoniPay.Api.Hosting;
 /// run first so the rate limiter partitions by the client IP and not by the edge's; localization
 /// runs before anything that can produce text a user reads; and the exception handler runs
 /// before the endpoints it protects. Rate limiting and authentication come after, so a rejected
-/// or refused request is answered without ever reaching a handler.
+/// or refused request is answered without ever reaching a handler. The JSON:API transport check
+/// comes last, after authentication, so the security middleware still short-circuits first.
 /// </summary>
 public static class PipelineExtensions
 {
@@ -32,6 +35,8 @@ public static class PipelineExtensions
         app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.UseMiddleware<JsonApiTransportMiddleware>();
 
         return app;
     }

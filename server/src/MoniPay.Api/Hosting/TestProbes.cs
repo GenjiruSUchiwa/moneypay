@@ -1,4 +1,6 @@
+using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -29,6 +31,9 @@ internal static class TestProbes
     private const string LimitedStartRoute = "/test/limited/start";
     private const string LimitedRefreshRoute = "/test/limited/refresh";
     private const string ErrorRoute = "/test/errors/{kind}";
+    private const string WidgetRoute = "/test/jsonapi/widgets";
+    private const string WidgetReadRoute = "/test/jsonapi/widgets/read";
+    private const string WidgetResourceType = "widgets";
 
     /// <summary>The endpoint name the error probe logs under.</summary>
     public const string ErrorProbeName = nameof(TestProbes) + ".Errors";
@@ -62,6 +67,33 @@ internal static class TestProbes
         app.MapGet(ErrorRoute, ThrowProbe)
             .WithName(ErrorProbeName)
             .WithMetadata(MoniPayConventions.NoStore);
+
+        app.MapPost(WidgetRoute, AcceptWidget)
+            .WithMetadata(MoniPayConventions.JsonApi)
+            .WithMetadata(new JsonApiResourceType(WidgetResourceType))
+            .WithMetadata(MoniPayConventions.NoStore);
+
+        app.MapGet(WidgetReadRoute, () => Results.Ok())
+            .WithMetadata(MoniPayConventions.JsonApi)
+            .WithMetadata(MoniPayConventions.NoStore);
+    }
+
+    /// <summary>
+    /// The test-only strict records that prove the slice integration: the expected resource type
+    /// travels as endpoint metadata, and the attribute record rejects its own unknown members
+    /// because the envelope's annotation is not recursive.
+    /// </summary>
+    [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+    internal sealed record WidgetAttributes
+    {
+        public required string Name { get; init; }
+    }
+
+    private static IResult AcceptWidget(JsonApiRequest<JsonApiRequestResource<WidgetAttributes>> request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return Results.Ok();
     }
 
     private static IResult ThrowProbe(string kind) => throw ErrorFor(kind);
@@ -74,7 +106,7 @@ internal static class TestProbes
             TimeSpan.FromSeconds(1.5),
             ["/data/attributes/phone"]),
         "refusal-no-pointers" => new RefusalException(MoniPayErrorTypes.SignUpStateInvalid),
-        "unknown" => new RefusalException(new ProblemType("mystery", System.Net.HttpStatusCode.BadRequest)),
+        "unknown" => new RefusalException(new ProblemType("mystery", HttpStatusCode.BadRequest)),
         "provider" => new ProviderUnavailableException("campay", "E123"),
         "concurrency" => new DbUpdateConcurrencyException("lost update"),
         "json" => new JsonException("syntax"),

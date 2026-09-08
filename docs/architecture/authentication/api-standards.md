@@ -38,7 +38,7 @@ A request with a body must use `application/vnd.api+json`. Return `415 Unsupport
 
 Return `415` if the JSON:API media type has unsupported parameters. JSON:API permits only `ext` and `profile` parameters.
 
-Return `406 Not Acceptable` when the client accepts neither supported response media type.
+Return `406 Not Acceptable` when the client accepts no JSON:API success representation. A client that accepts only `application/problem+json` is refused before the endpoint runs; the error body is still Problem Details, because the error format is not negotiated.
 
 Do not append a `charset` parameter to `application/vnd.api+json`.
 

@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +38,7 @@ internal sealed class MoniPayExceptionHandler(
             context.Response.Headers.RetryAfter = RetryAfterHeader.Format(delay);
         }
 
-        Log(context, exception);
+        Log(context, exception, MoniPayErrorTypes.CodeFromUrn(problem.Type) ?? MoniPayErrorTypes.Internal.Code);
 
         await problemDetails.WriteAsync(new ProblemDetailsContext
         {
@@ -54,6 +55,8 @@ internal sealed class MoniPayExceptionHandler(
         RefusalException refusal => Refusal(refusal),
         ProviderUnavailableException => MoniPay(MoniPayErrorTypes.VerificationDeliveryUnavailable),
         DbUpdateConcurrencyException => MoniPay(MoniPayErrorTypes.ConcurrentModification),
+        BadHttpRequestException badRequest => MoniPay(
+            MoniPayErrorTypes.ForStatus((HttpStatusCode)badRequest.StatusCode) ?? MoniPayErrorTypes.Internal),
         OperationCanceledException when context.RequestAborted.IsCancellationRequested => null,
         _ => MoniPay(MoniPayErrorTypes.Internal),
     };
@@ -96,7 +99,7 @@ internal sealed class MoniPayExceptionHandler(
         Status = (int)type.Status,
     };
 
-    private void Log(HttpContext context, Exception exception)
+    private void Log(HttpContext context, Exception exception, string code)
     {
         string route = RouteOf(context);
 
@@ -108,9 +111,6 @@ internal sealed class MoniPayExceptionHandler(
                     route,
                     string.Join(',', validation.Failures.Select(failure => failure.Code)));
                 break;
-            case RefusalException refusal:
-                MoniPayErrorLog.RequestRefused(logger, route, refusal.Type.Code);
-                break;
             case ProviderUnavailableException provider:
                 MoniPayErrorLog.ProviderUnavailable(logger, provider.ProviderName, provider.ResultCode);
                 break;
@@ -119,6 +119,10 @@ internal sealed class MoniPayExceptionHandler(
                     logger,
                     route,
                     concurrency.Entries.FirstOrDefault()?.Metadata.Name ?? "unknown");
+                break;
+            case RefusalException:
+            case BadHttpRequestException:
+                MoniPayErrorLog.RequestRefused(logger, route, code);
                 break;
             default:
                 MoniPayErrorLog.UnhandledException(logger, exception, route);

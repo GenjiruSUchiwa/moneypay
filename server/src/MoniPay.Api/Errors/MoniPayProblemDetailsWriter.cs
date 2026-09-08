@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using MoniPay.Api.Http;
 using MoniPay.Kernel.Errors;
 using MoniPay.Kernel.Http;
 
@@ -56,6 +57,11 @@ internal sealed class MoniPayProblemDetailsWriter(MoniPayProblemText text) : IPr
 
         ApplyFields(problem, http, status);
 
+        if (NoStoreConvention.AppliesTo(http))
+        {
+            NoStoreConvention.Apply(http.Response);
+        }
+
         byte[] body = JsonSerializer.SerializeToUtf8Bytes(problem, SerializerOptions);
         http.Response.ContentType = MoniPayMediaTypes.ProblemJson;
         http.Response.ContentLength = body.Length;
@@ -85,12 +91,11 @@ internal sealed class MoniPayProblemDetailsWriter(MoniPayProblemText text) : IPr
             return;
         }
 
-        ApplyText(problem, CodeOf(problem.Type));
+        ApplyText(problem, MoniPayErrorTypes.CodeFromUrn(problem.Type));
     }
 
     private void ApplyInternal(ProblemDetails problem)
     {
-        // Exactly type, status, title, instance and traceId: no detail and no errors.
         problem.Detail = null;
         problem.Extensions.Remove(ErrorsExtension);
         problem.Title = string.IsNullOrEmpty(problem.Title)
@@ -112,9 +117,4 @@ internal sealed class MoniPayProblemDetailsWriter(MoniPayProblemText text) : IPr
             problem.Detail = text.Detail(code);
         }
     }
-
-    private static string? CodeOf(string? type) =>
-        type is not null && type.StartsWith(MoniPayErrorTypes.Prefix, StringComparison.Ordinal)
-            ? type[MoniPayErrorTypes.Prefix.Length..]
-            : null;
 }
