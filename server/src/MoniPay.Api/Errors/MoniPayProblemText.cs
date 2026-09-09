@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Localization;
 using MoniPay.Kernel.Errors;
+using MoniPay.Kernel.Validation;
 using MoniPay.Sessions;
 using MoniPay.Users;
 
@@ -31,6 +32,18 @@ internal sealed class MoniPayProblemText(IStringLocalizerFactory factory)
             [MoniPayErrorTypes.SessionInvalid.Code] = typeof(SessionMessages),
             [MoniPayErrorTypes.RefreshTokenReused.Code] = typeof(SessionMessages),
             [MoniPayErrorTypes.VerificationDeliveryUnavailable.Code] = typeof(SessionMessages),
+
+            // Sessions owns the sign-up request attributes, which are the only producers of the
+            // validation codes today; a Users-owned endpoint that starts producing one moves its
+            // entry and its resource there.
+            [ValidationCodes.PhoneFormatInvalid] = typeof(SessionMessages),
+            [ValidationCodes.PhoneCountryUnsupported] = typeof(SessionMessages),
+            [ValidationCodes.LegalVersionOutdated] = typeof(SessionMessages),
+            [ValidationCodes.VerificationCodeFormatInvalid] = typeof(SessionMessages),
+            [ValidationCodes.PersonNameInvalid] = typeof(SessionMessages),
+            [ValidationCodes.EmailInvalid] = typeof(SessionMessages),
+            [ValidationCodes.DeviceIdRequired] = typeof(SessionMessages),
+            [ValidationCodes.RefreshTokenFormatInvalid] = typeof(SessionMessages),
 
             // Users owns the registration uniqueness refusals.
             [MoniPayErrorTypes.PhoneAlreadyRegistered.Code] = typeof(UserMessages),

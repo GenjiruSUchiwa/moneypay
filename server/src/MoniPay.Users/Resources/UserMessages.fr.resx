@@ -66,4 +66,12 @@
     <value>Bonjour {0}, votre compte MoniPay est prêt.</value>
     <comment>Welcome email body. {0} is the user's validated first name. Plain text, never HTML.</comment>
   </data>
+  <data name="phone-already-registered" xml:space="preserve">
+    <value>Ce numéro de téléphone est déjà enregistré.</value>
+    <comment>Title of the 409 problem a duplicate verified phone refuses with.</comment>
+  </data>
+  <data name="email-already-registered" xml:space="preserve">
+    <value>Cette adresse e-mail est déjà enregistrée.</value>
+    <comment>Title of the 409 problem a duplicate normalized email refuses with.</comment>
+  </data>
 </root>
