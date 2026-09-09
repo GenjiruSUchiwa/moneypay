@@ -65,6 +65,8 @@ public sealed class MoniPayApi : IAsyncLifetime
             builder.UseSetting(SessionsOptions.Keys.MaximumVerificationAttempts, "3");
             builder.UseSetting(SessionsOptions.Keys.VerificationCodeLifetime, "00:02:00");
             builder.UseSetting(SessionsOptions.Keys.MaximumStartsPerWindow, "3");
+            builder.UseSetting(SessionsOptions.Keys.LegalTermsVersion, SignUpFlow.TermsVersion);
+            builder.UseSetting(SessionsOptions.Keys.LegalPrivacyVersion, SignUpFlow.PrivacyVersion);
             builder.UseSetting(SessionsOptions.Keys.CleanupEnabled, "false");
             builder.UseSetting(SessionsOptions.Keys.CleanupBatchSize, "5");
             builder.UseSetting(MoniPayConfiguration.ForwardedHeadersKnownProxies, "127.0.0.1,::1");
@@ -94,6 +96,8 @@ public sealed class MoniPayApi : IAsyncLifetime
             builder.UseEnvironment(MoniPayEnvironments.Testing);
             builder.UseSetting("ConnectionStrings:MoniPay", ConnectionString);
             builder.UseTestKeys();
+            builder.UseSetting(SessionsOptions.Keys.LegalTermsVersion, SignUpFlow.TermsVersion);
+            builder.UseSetting(SessionsOptions.Keys.LegalPrivacyVersion, SignUpFlow.PrivacyVersion);
             customize?.Invoke(builder);
             builder.ConfigureServices(UseSessionQueryCounter);
         });

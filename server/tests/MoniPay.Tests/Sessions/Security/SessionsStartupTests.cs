@@ -67,6 +67,16 @@ public sealed class SessionsStartupTests(MoniPayApi api)
         Assert.Contains("MoniPay:Sessions bounds", exception.Message, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(SessionsOptions.Keys.LegalTermsVersion)]
+    [InlineData(SessionsOptions.Keys.LegalPrivacyVersion)]
+    public void The_host_refuses_to_start_without_published_legal_versions(string keyName)
+    {
+        OptionsValidationException exception = StartWithKey(keyName, "");
+
+        Assert.Contains("MoniPay:Sessions bounds", exception.Message, StringComparison.Ordinal);
+    }
+
     private OptionsValidationException StartWithKey(string keyName, string keyBase64)
     {
         using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>()

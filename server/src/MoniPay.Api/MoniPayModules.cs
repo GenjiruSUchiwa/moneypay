@@ -56,6 +56,7 @@ internal static class MoniPayModules
     {
         ArgumentNullException.ThrowIfNull(app);
 
+        app.MapSessionsModule();
         app.MapWalletEndpoints();
 
         return app;

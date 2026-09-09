@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,6 +16,8 @@ using MoniPay.Kernel.Security;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
+using MoniPay.Sessions.Features.SignUps.Get;
+using MoniPay.Sessions.Features.SignUps.Start;
 using MoniPay.Sessions.Persistence;
 using MoniPay.Sessions.Providers;
 using MoniPay.Sessions.Security;
@@ -21,10 +26,8 @@ namespace MoniPay.Sessions;
 
 /// <summary>
 /// The composition of the sign-up and session machinery: the module's own services, registered
-/// by the module itself. It maps no route yet; the endpoints arrive with their slices, and the
-/// sign-up handlers are registered with them, once the host also provides the two ports they
-/// depend on (<c>IVerificationCodeSender</c>, <c>IRegisteredPhoneLookup</c>). Registering the
-/// handlers before their ports would fail a Development host at startup.
+/// by the module itself. The start and read slices are registered here because the host provides
+/// the delivery port they need; the remaining slices stay test-only until their routes land.
 /// </summary>
 public static class SessionsModule
 {
@@ -40,7 +43,7 @@ public static class SessionsModule
             .Validate(
                 options => options.IsWithinBounds(),
                 "The MoniPay:Sessions bounds are invalid: check the country rules, the code length, "
-                + "the lifetimes, the attempt and resend limits and the cleanup bounds.")
+                + "the lifetimes, the attempt and resend limits, the legal versions and the cleanup bounds.")
             .Validate(
                 options => options.HasWorkableTokenIssuer(),
                 $"The MoniPay:Sessions token issuer is invalid: {SessionsOptions.Keys.Issuer} "
@@ -66,6 +69,11 @@ public static class SessionsModule
         // Holds request state: the context it saves through.
         services.AddScoped<SessionTokenService>();
         services.AddSingleton<VerificationCodeRenderer>();
+
+        // The slices the routes need. The host provides their ports, so they resolve here;
+        // the remaining slices stay registered by the tests until their routes land.
+        services.AddScoped<StartSignUpHandler>();
+        services.AddScoped<GetSignUpHandler>();
 
         services.AddSingleton<ExpiredCredentialCleanupService>();
         services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<ExpiredCredentialCleanupService>());
@@ -170,5 +178,22 @@ public static class SessionsModule
 
         services.AddScoped<IAuthorizationHandler, SessionsAuthorizationHandler>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, PolicyFailureResultHandler>();
+    }
+
+    /// <summary>The sign-up routes. The group carries the JSON:API and no-store markers; the start owns its IP limit.</summary>
+    public static IEndpointRouteBuilder MapSessionsModule(this IEndpointRouteBuilder routes)
+    {
+        ArgumentNullException.ThrowIfNull(routes);
+
+        RouteGroupBuilder signUps = routes
+            .MapGroup(SignUpRoutes.Group)
+            .WithTags(SignUpTags.SignUps)
+            .WithMetadata(MoniPayConventions.JsonApi)
+            .WithMetadata(MoniPayConventions.NoStore);
+
+        signUps.MapStartSignUp();
+        signUps.MapGetSignUp();
+
+        return routes;
     }
 }

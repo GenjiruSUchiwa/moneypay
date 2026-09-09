@@ -100,6 +100,9 @@ internal sealed class SessionsOptions
     /// <summary>How the expired-credential sweep runs.</summary>
     public CleanupOptions Cleanup { get; set; } = new();
 
+    /// <summary>The published legal document versions a start must accept.</summary>
+    public LegalOptions Legal { get; set; } = new();
+
     /// <summary>The 32-byte HMAC key hashing verification codes and workflow tokens, base64-encoded.</summary>
     public string VerificationCodeKeyBase64 { get; set; } = string.Empty;
 
@@ -124,6 +127,7 @@ internal sealed class SessionsOptions
         HasWorkableVerificationBounds()
         && HasWorkableSignUpBounds()
         && HasWorkableTokenLifetimes()
+        && Legal.IsWithinBounds()
         && Cleanup.IsWithinBounds();
 
     private bool HasWorkableVerificationBounds() =>
@@ -149,10 +153,31 @@ internal sealed class SessionsOptions
     public bool HasWorkableTokenIssuer() =>
         Issuer.Length > 0 && Audience.Length > 0;
 
+    /// <summary>The published legal document versions a start must accept.</summary>
+    public sealed class LegalOptions
+    {
+        /// <summary>The longest version identifier a legal document may carry.</summary>
+        public const int MaximumVersionLength = 64;
+
+        /// <summary>The current terms version the client must have shown.</summary>
+        public string TermsVersion { get; set; } = string.Empty;
+
+        /// <summary>The current privacy version the client must have shown.</summary>
+        public string PrivacyVersion { get; set; } = string.Empty;
+
+        /// <summary>Reports whether both configured versions are present and bounded.</summary>
+        public bool IsWithinBounds() =>
+            IsVersion(TermsVersion) && IsVersion(PrivacyVersion);
+
+        private static bool IsVersion(string value) =>
+            value.Length is > 0 and <= MaximumVersionLength;
+    }
+
     /// <summary>The configuration keys, declared so a mistyped key is a compile error.</summary>
     public static class Keys
     {
         private const string Cleanup = $"{SectionName}:{nameof(SessionsOptions.Cleanup)}";
+        private const string Legal = $"{SectionName}:{nameof(SessionsOptions.Legal)}";
 
         public const string SupportedCountries = $"{SectionName}:{nameof(SupportedCountries)}";
         public const string VerificationCodeLength = $"{SectionName}:{nameof(VerificationCodeLength)}";
@@ -175,5 +200,7 @@ internal sealed class SessionsOptions
         public const string CleanupEnabled = $"{Cleanup}:{nameof(CleanupOptions.Enabled)}";
         public const string CleanupInterval = $"{Cleanup}:{nameof(CleanupOptions.Interval)}";
         public const string CleanupBatchSize = $"{Cleanup}:{nameof(CleanupOptions.BatchSize)}";
+        public const string LegalTermsVersion = $"{Legal}:{nameof(LegalOptions.TermsVersion)}";
+        public const string LegalPrivacyVersion = $"{Legal}:{nameof(LegalOptions.PrivacyVersion)}";
     }
 }

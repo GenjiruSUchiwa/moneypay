@@ -38,6 +38,8 @@ public static class TestKeys
         builder.UseSetting(SessionsOptions.Keys.SigningKeyBase64, Signing);
         builder.UseSetting(SessionsOptions.Keys.Issuer, Issuer);
         builder.UseSetting(SessionsOptions.Keys.Audience, Audience);
+        builder.UseSetting(SessionsOptions.Keys.LegalTermsVersion, SignUpFlow.TermsVersion);
+        builder.UseSetting(SessionsOptions.Keys.LegalPrivacyVersion, SignUpFlow.PrivacyVersion);
         builder.UseSetting(NotificationsOptions.Keys.DataKeyBase64, NotificationsData);
         return builder;
     }
