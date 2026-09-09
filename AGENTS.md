@@ -5,7 +5,7 @@ CEMAC zone (FCFA wallet, MTN MoMo / Orange Money top-ups, USD virtual cards), wi
 in `ios/` and an ASP.NET Core modular monolith in `server/`. You target **iOS 26 / Swift 6.3**
 under strict concurrency and **.NET 10 / C#** with nullable enabled and warnings as errors. You
 never represent money as a floating-point number, and you ship small, reviewable diffs.
-**Write project content in English** — identifiers, comments, tests, logs, commits, PR titles, and documentation.
+**Write project content in English** — identifiers, tests, logs, commits, PR titles, and documentation.
 The app speaks French to its users through localization catalogs keyed by English source strings.
 
 **Agent chat conversations are exempt from the English-only rule.** Respond in the language the user requests, including French.
@@ -20,7 +20,7 @@ they are the two halves of one API contract change.
 
 - Model money as integer minor units in Swift (`Int` FCFA — XAF has **0** decimals — and `Int` cents for USD) and as `decimal` + an ISO currency code in C#, stored in minor units — see [data-money-representation](agents/rules/data-money-representation.md)
 - Use `Decimal` / `decimal` (never `Double` / `double`) for FX rates, margins and any value that gets rounded into money
-- Write everything in English — code, comments, tests, logs, commits, PR titles, documentation — and put user-facing copy in the localization catalogs with English source keys — see [quality-english-only-code](agents/rules/quality-english-only-code.md)
+- Write everything in English — code, tests, logs, commits, PR titles, documentation — and put user-facing copy in the localization catalogs with English source keys — see [quality-english-only-code](agents/rules/quality-english-only-code.md)
 - Localize at the edge: translations are data, and money, dates and numbers are formatted against the user's locale, never assembled by hand — see [Internationalization](#internationalization), [quality-localization](agents/rules/quality-localization.md), [api-localization](agents/rules/api-localization.md)
 - Use conventional commits with a component scope: `feat(api): …`, `feat(ios): …` — enforced by the husky `commit-msg` hook and the `pr-title` workflow
 - Regenerate and commit the OpenAPI document when you change an endpoint or a contract — see [monorepo-openapi-contract](agents/rules/monorepo-openapi-contract.md)
@@ -43,7 +43,7 @@ they are the two halves of one API contract change.
 - Add a `#Preview` for every new view, using in-memory sample data
 - Run `swiftlint` before pushing; run `xcodegen generate` from `ios/` after adding a package or a file the app target references
 - Open PRs in draft by default — see [ci-git-workflow](agents/rules/ci-git-workflow.md)
-- Only add comments that explain **why**, not **what** — see [quality-code-comments](agents/rules/quality-code-comments.md)
+- Never add a docstring or an inline comment — see [quality-code-comments](agents/rules/quality-code-comments.md)
 - Prefer deleting code to adding an abstraction — see [quality-simplicity](agents/rules/quality-simplicity.md)
 
 ### C# / .NET
@@ -62,13 +62,14 @@ they are the two halves of one API contract change.
 ## Don't
 
 - **Never bypass a linter or a compiler diagnostic.** No `// swiftlint:disable`, no `#pragma warning disable`, no `[SuppressMessage]`, no `<NoWarn>`, no `.editorconfig` or `.swiftlint.yml` carve-out, no raised complexity threshold, no lenient flag. Fix the root cause; if the rule itself is wrong, change the shared config in its own PR and say why. Warnings are errors on both sides — iOS (`SWIFT_TREAT_WARNINGS_AS_ERRORS`, `swiftlint --strict`) and backend (`TreatWarningsAsErrors`, `dotnet format --verify-no-changes`). See [quality-zero-warnings](agents/rules/quality-zero-warnings.md) and [quality-cyclomatic-complexity](agents/rules/quality-cyclomatic-complexity.md)
+- Never add a docstring (`///`, `/// <summary>`) or an inline comment (`//`, `/* … */`) in shipped code. If one feels necessary, the name, the type or the structure is wrong — rename, split or reshape instead of explaining. See [quality-code-comments](agents/rules/quality-code-comments.md)
 - Never use `Double` or `Float` for a balance, an amount, a fee or a limit
 - Never force unwrap (`!`), force try (`try!`) or force cast (`as!`) in shipped code
 - Never use `ObservableObject` / `@StateObject` / `@Published` — this codebase is `@Observable` only
 - Never use `@unchecked Sendable` to silence a concurrency error; fix the ownership instead
 - Never block the main actor: no `DispatchSemaphore`, no synchronous network call, no `Thread.sleep`
 - Never put networking, `URLSession` or provider-specific JSON in a `View`
-- **Never write French in code.** Identifiers, comments, doc comments, commit messages, PR titles, test names, log messages, error messages and API contracts are English. User-facing copy lives in `Localizable.xcstrings` — English source keys, French translation, `defaultLocalization` / `developmentLanguage: en` — and in the server's resource files. See [quality-english-only-code](agents/rules/quality-english-only-code.md)
+- **Never write French in code.** Identifiers, commit messages, PR titles, test names, log messages, error messages and API contracts are English. User-facing copy lives in `Localizable.xcstrings` — English source keys, French translation, `defaultLocalization` / `developmentLanguage: en` — and in the server's resource files. See [quality-english-only-code](agents/rules/quality-english-only-code.md)
 - Never put user-facing copy of any language in `Money` or `Platform` — domain and capability packages stay presentation-free
 - Never format money, a date or a number by hand, and never concatenate a sentence from fragments — use a `FormatStyle` with the caller's `Locale`, and one interpolated key per sentence
 - Never return pre-formatted or pre-translated values from an API endpoint — send the amount with its currency code, the timestamp as ISO-8601 UTC, and a stable machine code; the client formats
@@ -313,7 +314,7 @@ Every component must have:
 - variants expressed as enums (`Tone`, `Size`), never as a pile of boolean flags
 - an accessibility label and the right traits
 - a `#Preview` showing **all** variants side by side
-- a `///` doc comment stating when to use it — and when to use a different component instead
+- a name that states when to use it — `StatusPill` for a state label versus `Chip` for an interactive filter must read unambiguously at the call site
 
 **Rule of promotion**: a visual pattern that appears in a second feature moves into
 `DesignSystem` *before* that second use ships. Two near-identical row styles in two features is a
@@ -584,7 +585,6 @@ and [api-localization](agents/rules/api-localization.md).
   are formatted at the edge:
 
   ```swift
-  // The currency code carries the fraction digits: XAF has none, USD has two.
   amountXAF.formatted(.currency(code: "XAF").locale(.current))
   date.formatted(.dateTime.day().month().year())
   ```
@@ -715,14 +715,13 @@ Domain types are `Sendable` value types with no SwiftUI import and no user-facin
 
 ```swift
 // ios/Packages/Money/Sources/Money/TopUpRequest.swift
-/// A MoMo collection request. FCFA has no minor unit, so `amountXAF` is whole francs.
 struct TopUpRequest: Sendable, Hashable {
     let amountXAF: Int
     let method: TopUpMethod.ID
     let phone: PhoneNumber
 
     init?(amountXAF: Int, method: TopUpMethod.ID, phone: PhoneNumber) {
-        guard amountXAF > 0 else { return nil }   // an invalid amount cannot be constructed
+        guard amountXAF > 0 else { return nil }
         self.amountXAF = amountXAF
         self.method = method
         self.phone = phone
@@ -750,14 +749,11 @@ public protocol TopUpCollecting: Sendable {
     func collect(_ request: TopUpRequest) async throws(TopUpError) -> TopUpReceipt
 }
 
-/// Talks to poc/server.js (`POST /topup`). Swapping in the production issuer must not
-/// require touching a single view.
 public struct HTTPTopUpClient: TopUpCollecting {
-    let baseURL: URL          // from AppConfiguration / APIBaseURL
+    let baseURL: URL
     let session: URLSession
 
     public func collect(_ request: TopUpRequest) async throws(TopUpError) -> TopUpReceipt {
-        // encode, POST, decode; map transport and provider failures onto TopUpError
     }
 }
 ```
@@ -771,20 +767,19 @@ import Money
 import SwiftUI
 import WalletStore
 
-// internal: only TopUpRoot is public
 struct TopUpAmountView: View {
     @Environment(Store.self) private var store
     @State private var amountXAF = 0
 
     var body: some View {
         VStack(spacing: .spacingLarge) {
-            MoneyText(amountXAF, currency: .xaf, size: .display)   // DesignSystem
-            Keypad(value: $amountXAF)                              // DesignSystem
-            MPButton("Continue", tone: .primary) { /* advance the flow */ }   // English source key
+            MoneyText(amountXAF, currency: .xaf, size: .display)
+            Keypad(value: $amountXAF)
+            MPButton("Continue", tone: .primary) { }
                 .disabled(amountXAF < TopUpRules.minimumXAF)
         }
         .padding(.spacingMedium)
-        .background(Color.surface)      // semantic token, never a literal
+        .background(Color.surface)
     }
 }
 
@@ -800,14 +795,14 @@ inside a view.
 ### Add a design-system component
 
 A component earns its place when a second feature needs it. Add it under the right family, one
-file, with variants as an enum and a preview covering them:
+file, with variants as an enum and a preview covering them. Name it so the call site reads
+unambiguously — `StatusPill` for a state label, `Chip` for an interactive filter — since no doc
+comment may explain the choice:
 
 ```swift
 // ios/Packages/DesignSystem/Sources/DesignSystem/Components/Feedback/StatusPill.swift
 import SwiftUI
 
-/// A short status label — use it for a transaction or card state.
-/// For an interactive filter, use `Chip` instead.
 public struct StatusPill: View {
     public enum Tone: Sendable { case success, pending, failure, neutral }
 
@@ -833,9 +828,9 @@ public struct StatusPill: View {
 
 #Preview("StatusPill — all tones") {
     HStack(spacing: .spacingSmall) {
-        StatusPill("Approved", tone: .success)      // source keys are English;
-        StatusPill("Pending", tone: .pending)       // the French copy lives in
-        StatusPill("Declined", tone: .failure)      // Localizable.xcstrings
+        StatusPill("Approved", tone: .success)
+        StatusPill("Pending", tone: .pending)
+        StatusPill("Declined", tone: .failure)
         StatusPill("Refunded", tone: .neutral)
     }
     .padding()
@@ -885,6 +880,7 @@ func authorizationIsIdempotent() async {
 - [ ] No floating-point type introduced for a monetary amount
 - [ ] No force unwrap / force try / force cast (Swift), no `null!`, `!` or `.Result` (C#)
 - [ ] No suppression anywhere: no `swiftlint:disable`, `#pragma warning disable`, `[SuppressMessage]`, `<NoWarn>`, raised threshold, lenient flag or `--no-verify` (see [quality-zero-warnings](agents/rules/quality-zero-warnings.md))
+- [ ] No docstring or inline comment added — if one felt necessary, rename, split or reshape instead (see [quality-code-comments](agents/rules/quality-code-comments.md))
 - [ ] No function pushed past the complexity threshold — the fix is a smaller function, not a bigger limit (see [quality-cyclomatic-complexity](agents/rules/quality-cyclomatic-complexity.md))
 - [ ] Diff is small and focused (<500 lines, <10 code files), and touches one component
 - [ ] No secrets, connection strings, PAN, CVV or OTP committed or logged

@@ -22,7 +22,7 @@
 
 ### Code Quality
 
-- [quality-code-comments](rules/quality-code-comments.md) - Comments Explain Why; Doc Comments Document the Contract (MEDIUM)
+- [quality-code-comments](rules/quality-code-comments.md) - No Docstrings, No Inline Comments (MEDIUM)
 - [quality-csharp-style](rules/quality-csharp-style.md) - C# Style — Nullable On, Warnings Fatal, Sealed by Default (HIGH)
 - [quality-cyclomatic-complexity](rules/quality-cyclomatic-complexity.md) - Keep Cyclomatic Complexity Under the Threshold (HIGH)
 - [quality-english-only-code](rules/quality-english-only-code.md) - Code Is English; French Lives Only in the Catalog (CRITICAL)
