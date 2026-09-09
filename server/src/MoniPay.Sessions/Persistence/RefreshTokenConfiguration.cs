@@ -4,7 +4,6 @@ using MoniPay.Sessions.Domain;
 
 namespace MoniPay.Sessions.Persistence;
 
-/// <summary>Maps <see cref="RefreshToken"/> onto the <c>refresh_tokens</c> table.</summary>
 internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 {
     public void Configure(EntityTypeBuilder<RefreshToken> builder)

@@ -4,7 +4,6 @@ using MoniPay.Users.Domain;
 
 namespace MoniPay.Users.Persistence;
 
-/// <summary>Maps <see cref="UserConsent"/> onto the <c>user_consents</c> table.</summary>
 internal sealed class UserConsentConfiguration : IEntityTypeConfiguration<UserConsent>
 {
     public void Configure(EntityTypeBuilder<UserConsent> builder)

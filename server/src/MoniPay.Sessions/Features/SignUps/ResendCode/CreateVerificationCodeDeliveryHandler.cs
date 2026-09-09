@@ -9,10 +9,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Features.SignUps.ResendCode;
 
-/// <summary>
-/// Replaces the verification code of a locked sign-up row and queues the new one in the same
-/// transaction. The limits are the aggregate's; the handler only coordinates I/O.
-/// </summary>
 internal sealed class CreateVerificationCodeDeliveryHandler(
     MoniPayDbContext database,
     IVerificationCodeSender sender,

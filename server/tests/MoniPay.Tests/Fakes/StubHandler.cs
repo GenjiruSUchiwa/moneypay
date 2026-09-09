@@ -4,7 +4,6 @@ using System.Text;
 
 namespace MoniPay.Tests.Fakes;
 
-/// <summary>A branch-free HTTP handler that records requests and returns one canned response.</summary>
 public sealed class StubHandler(HttpStatusCode statusCode, string body) : HttpMessageHandler
 {
     private readonly ConcurrentQueue<HttpRequestMessage> requests = new();

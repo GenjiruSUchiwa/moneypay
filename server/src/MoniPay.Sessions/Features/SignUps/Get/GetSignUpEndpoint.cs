@@ -9,7 +9,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Features.SignUps.Get;
 
-/// <summary>Reads one sign-up. Accepts either workflow credential bound to the route; never returns a token.</summary>
 internal static class GetSignUpEndpoint
 {
     public static IEndpointRouteBuilder MapGetSignUp(this IEndpointRouteBuilder routes)

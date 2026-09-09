@@ -2,11 +2,6 @@ using Microsoft.Extensions.Time.Testing;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>
-/// A replaceable fake clock for deterministic time-dependent tests. It starts at the real
-/// current time, not at the fake provider's epoch: JWT lifetime validation runs on the system
-/// clock, so a token the fake clock issued must not look years old to it.
-/// </summary>
 public sealed class TestTimeProvider : TimeProvider
 {
     private FakeTimeProvider provider = new(DateTimeOffset.UtcNow);

@@ -21,9 +21,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>
-/// The shared HTTP test host backed by one PostgreSQL container for the whole test assembly.
-/// </summary>
 public sealed class MoniPayApi : IAsyncLifetime
 {
     private readonly PostgreSqlContainer container = new PostgreSqlBuilder("postgres:17-alpine")
@@ -36,10 +33,8 @@ public sealed class MoniPayApi : IAsyncLifetime
 
     public TestTimeProvider Time { get; } = new();
 
-    /// <summary>Counts the sessions-table queries the test host runs, for the active-session check.</summary>
     public SessionQueryCounter Queries { get; } = new();
 
-    /// <summary>The channels the delivery worker sends through; tests read what was sent from here.</summary>
     public RecordingChannel Sms { get; } = new("sms-ref");
 
     public RecordingChannel Email { get; } = new("email-ref");
@@ -84,11 +79,6 @@ public sealed class MoniPayApi : IAsyncLifetime
         });
     }
 
-    /// <summary>
-    /// A second host over the same database, for a scenario the shared host cannot be
-    /// reconfigured for: a signing-key rotation in flight, or an edge nobody trusts. Disposed
-    /// with the fixture.
-    /// </summary>
     public WebApplicationFactory<Program> CreateHost(Action<IWebHostBuilder>? customize = null)
     {
         WebApplicationFactory<Program> secondary = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -120,9 +110,6 @@ public sealed class MoniPayApi : IAsyncLifetime
         return client;
     }
 
-    /// <summary>
-    /// The worker and the purge are off in the test host; both are driven one cycle at a time.
-    /// </summary>
     public static IWebHostBuilder UseNotificationTestSettings(IWebHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -131,21 +118,18 @@ public sealed class MoniPayApi : IAsyncLifetime
         return builder;
     }
 
-    /// <summary>One delivery cycle in a fresh scope, exactly as the worker runs it.</summary>
     public async Task<int> RunNotificationCycleAsync(CancellationToken cancellationToken = default)
     {
         await using AsyncServiceScope scope = Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<NotificationProcessor>().RunCycleAsync(cancellationToken);
     }
 
-    /// <summary>One purge sweep in a fresh scope, exactly as the worker runs it; returns how many rows it deleted.</summary>
     public async Task<int> RunNotificationPurgeAsync(CancellationToken cancellationToken = default)
     {
         await using AsyncServiceScope scope = Services.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<NotificationPurger>().RunAsync(cancellationToken);
     }
 
-    /// <summary>One expired-credential sweep, exactly as the worker runs it; returns how many rows it deleted.</summary>
     public Task<int> RunCleanupCycleAsync(CancellationToken cancellationToken = default) =>
         Services.GetRequiredService<ExpiredCredentialCleanupService>().RunCycleAsync(cancellationToken);
 

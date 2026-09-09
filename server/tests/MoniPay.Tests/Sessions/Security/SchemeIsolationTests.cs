@@ -10,11 +10,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// The three schemes never accept each other's credentials: the scheme named in the
-/// <c>Authorization</c> header and the purpose baked into the digest both have to match, and a
-/// workflow credential is bound to the one sign-up its route names.
-/// </summary>
 public sealed class SchemeIsolationTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -66,7 +61,6 @@ public sealed class SchemeIsolationTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(HttpStatusCode.Unauthorized, await SendAsync(client, "Bearer", TestTokens.Bearer(issued.UserId, issued.SessionId), $"/test/registrations/{Guid.CreateVersion7()}"));
         Assert.Equal(HttpStatusCode.OK, await SendAsync(client, "Bearer", TestTokens.Bearer(issued.UserId, issued.SessionId), "/test/secure"));
 
-        // A refresh token is not a bearer credential either, whatever its shape.
         Assert.Equal(HttpStatusCode.Unauthorized, await SendAsync(client, "Bearer", issued.RefreshToken, "/test/secure"));
     }
 

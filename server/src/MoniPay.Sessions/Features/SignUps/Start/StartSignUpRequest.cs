@@ -4,7 +4,6 @@ using MoniPay.Kernel.Validation;
 
 namespace MoniPay.Sessions.Features.SignUps.Start;
 
-/// <summary>The JSON pointers the start validation reports, as the HTTP contract names them.</summary>
 internal static class StartSignUpPointers
 {
     public const string Phone = "/data/attributes/phone";
@@ -14,12 +13,6 @@ internal static class StartSignUpPointers
     public const string PrivacyVersion = "/data/attributes/privacyVersion";
 }
 
-/// <summary>
-/// The attributes a start request carries. Validation runs at the edge before the handler.
-/// <c>required</c> only checks presence, so an explicit JSON null still reaches these members;
-/// <see cref="Validate"/> is their only reader and answers it with a 422 at the pointer. They stay
-/// non-nullable so the published contract keeps saying "string", which is what the client may send.
-/// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 internal sealed record StartSignUpAttributes
 {
@@ -29,11 +22,6 @@ internal sealed record StartSignUpAttributes
 
     public required string PrivacyVersion { get; init; }
 
-    /// <summary>
-    /// Validates and normalizes the request attributes. A phone needs its configured country rules;
-    /// legal versions must equal the published ones. An outdated legal version is a validation
-    /// failure, not a conflict: the client must show the new document and send the new version.
-    /// </summary>
     public StartSignUpCommand Validate(SessionsOptions options, Locale locale)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -60,7 +48,6 @@ internal sealed record StartSignUpAttributes
             throw new ValidationException(failures);
         }
 
-        // Validation proved both versions equal the published ones, so the command carries those.
         return new(phone, locale, options.Legal.TermsVersion, options.Legal.PrivacyVersion);
     }
 

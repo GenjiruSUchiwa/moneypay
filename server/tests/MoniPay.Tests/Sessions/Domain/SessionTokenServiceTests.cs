@@ -11,11 +11,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Domain;
 
-/// <summary>
-/// The token service against PostgreSQL: rotation consumes the presented link, a replay revokes
-/// the whole family, and every refused refresh is answered with one problem type whatever the
-/// reason the log carries.
-/// </summary>
 public sealed class SessionTokenServiceTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private async Task<SessionTokenResult> CreateSessionAsync(UserId? userId = null, Guid? deviceId = null)

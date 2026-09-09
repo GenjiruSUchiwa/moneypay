@@ -2,7 +2,6 @@ using Microsoft.Extensions.Logging;
 
 namespace MoniPay.Sessions;
 
-/// <summary>The module's log events. None carries a phone, a code or a token.</summary>
 internal static partial class SessionsLog
 {
     [LoggerMessage(EventId = 1, Level = LogLevel.Information,
@@ -24,11 +23,6 @@ internal static partial class SessionsLog
         Message = "The {Scheme} credential was refused: {Reason}")]
     public static partial void WorkflowCredentialRefused(ILogger logger, string scheme, string reason);
 
-    /// <summary>
-    /// The only surviving diagnostic for a rejected access JWT. The framework logs its own token
-    /// failures at Information, which production filters out, and its exception text can echo
-    /// token material, so the cause is a bounded word and nothing else is recorded.
-    /// </summary>
     [LoggerMessage(EventId = 6, Level = LogLevel.Warning,
         Message = "The bearer token was refused: {Cause}")]
     public static partial void BearerTokenRefused(ILogger logger, string cause);

@@ -1,10 +1,5 @@
 namespace MoniPay.Users.Persistence;
 
-/// <summary>
-/// The names PostgreSQL knows this module's tables, keys and indexes by. A unique violation is
-/// mapped back to a refusal by name, so each name is a constant here rather than a literal at
-/// the mapping site: a renamed index breaks the build instead of a running client.
-/// </summary>
 internal static class UsersSchema
 {
     public const string UsersTable = "users";

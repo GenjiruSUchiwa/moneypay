@@ -46,7 +46,6 @@ public sealed class PersonalDataProtectionTests
     {
         Ciphertext ciphertext = Protector(TestKeys.UsersPersonalData).Protect("Aristide");
 
-        // A re-encryption migration finds rows by this byte; changing it is a migration, not an edit.
         Assert.Equal(1, Convert.FromBase64String(ciphertext.Value)[0]);
     }
 

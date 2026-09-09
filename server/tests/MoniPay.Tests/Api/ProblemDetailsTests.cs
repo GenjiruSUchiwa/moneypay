@@ -15,12 +15,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Api;
 
-/// <summary>
-/// The exception-to-problem contract, driven through the real host so the registered writer, the
-/// middleware order and the response lifecycle all take part. The testing-only probe throws one
-/// exception per case; the assertions read the observable HTTP response, not the handler's
-/// internals.
-/// </summary>
 public sealed class ProblemDetailsTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private const string ErrorProbe = "/test/errors/";
@@ -112,8 +106,6 @@ public sealed class ProblemDetailsTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task A_cancellation_the_client_did_not_cause_is_a_500()
     {
-        // Only a request the client abandoned is the framework's own case; any other cancellation
-        // is an application failure and keeps the 500 mapping.
         using HttpResponseMessage response = await Client.GetAsync($"{ErrorProbe}cancelled", Cancellation);
 
         ProblemDetails problem = await response.ReadProblemAsync(HttpStatusCode.InternalServerError);

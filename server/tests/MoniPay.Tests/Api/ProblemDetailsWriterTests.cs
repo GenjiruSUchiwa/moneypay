@@ -9,11 +9,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Api;
 
-/// <summary>
-/// The two 401 rules of the writer, proven on the writer itself because no route can produce both
-/// shapes: the code a scheme selected is only a fallback for a problem that carries no type, and a
-/// 401 with no selected code keeps the generic type a client can switch on.
-/// </summary>
 public sealed class ProblemDetailsWriterTests(MoniPayApi api)
 {
     private const int Unauthorized = StatusCodes.Status401Unauthorized;

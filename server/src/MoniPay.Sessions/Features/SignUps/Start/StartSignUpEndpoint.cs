@@ -9,7 +9,6 @@ using MoniPay.Kernel.Http;
 
 namespace MoniPay.Sessions.Features.SignUps.Start;
 
-/// <summary>The anonymous start of a sign-up. Validates the request at the edge, then hands one command to one handler.</summary>
 internal static class StartSignUpEndpoint
 {
     public static IEndpointRouteBuilder MapStartSignUp(this IEndpointRouteBuilder routes)

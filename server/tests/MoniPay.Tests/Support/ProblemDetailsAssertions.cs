@@ -7,7 +7,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>Shared assertions for RFC 9457 Problem Details responses.</summary>
 public static class ProblemDetailsAssertions
 {
     public static Task<ProblemDetails> ReadProblemAsync(this HttpResponseMessage response) =>

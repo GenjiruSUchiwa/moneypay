@@ -6,11 +6,6 @@ using MoniPay.Sessions.Domain;
 
 namespace MoniPay.Sessions.Features.Sessions.Refresh;
 
-/// <summary>
-/// The anonymous rotation of one session's credentials: the refresh token in the body is the
-/// credential that authorizes the call, so no <c>Authorization</c> header is read and OpenAPI
-/// attaches no security scheme. It hangs off the root, outside the authenticated session group.
-/// </summary>
 internal static class CreateSessionRefreshEndpoint
 {
     public static IEndpointRouteBuilder MapCreateSessionRefresh(this IEndpointRouteBuilder routes)

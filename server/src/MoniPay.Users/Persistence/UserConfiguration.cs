@@ -4,7 +4,6 @@ using MoniPay.Users.Domain;
 
 namespace MoniPay.Users.Persistence;
 
-/// <summary>Maps <see cref="User"/> onto the <c>users</c> table.</summary>
 internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
@@ -35,10 +34,6 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Navigation(user => user.Consents).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 
-    /// <summary>
-    /// A contact is one value in the domain and two columns on the owner's table: the
-    /// ciphertext to read back, the keyed hash to look up and keep unique.
-    /// </summary>
     private static void MapContact(
         OwnedNavigationBuilder<User, ProtectedContact> contact,
         string column,

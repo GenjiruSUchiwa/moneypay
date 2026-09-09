@@ -3,10 +3,8 @@ using System.Text;
 
 namespace MoniPay.Kernel;
 
-/// <summary>An immutable normalized person's name.</summary>
 public readonly record struct PersonName(string Value)
 {
-    /// <summary>Trims, collapses whitespace, and validates a person's name.</summary>
     public static bool TryNormalize(string? input, out PersonName name)
     {
         name = default;
@@ -51,7 +49,6 @@ public readonly record struct PersonName(string Value)
         return true;
     }
 
-    /// <summary>Reports whether a person's name can be normalized.</summary>
     public static bool IsValid(string? input) => TryNormalize(input, out _);
 
     private static bool IsAllowed(Rune rune) =>

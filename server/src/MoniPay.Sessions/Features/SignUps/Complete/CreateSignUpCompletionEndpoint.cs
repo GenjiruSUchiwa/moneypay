@@ -12,11 +12,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Features.SignUps.Complete;
 
-/// <summary>
-/// Completes a sign-up: the registration credential in the header authorizes it, the profile in
-/// the body names the user, and the response is the first session. A safe retry with the same
-/// credential returns a replacement session instead of a second user.
-/// </summary>
 internal static class CreateSignUpCompletionEndpoint
 {
     public static IEndpointRouteBuilder MapCreateSignUpCompletion(this IEndpointRouteBuilder routes)
@@ -78,7 +73,6 @@ internal static class CreateSignUpCompletionEndpoint
         return result.Created ? Created(result.Session, http) : Replaced(result.Session);
     }
 
-    /// <summary>The credential is the header the scheme authenticated. A body never carries it.</summary>
     private static string RegistrationCredential(HttpContext http)
     {
         ArgumentNullException.ThrowIfNull(http);

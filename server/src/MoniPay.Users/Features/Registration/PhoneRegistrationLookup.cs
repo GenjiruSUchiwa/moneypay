@@ -6,10 +6,6 @@ using MoniPay.Users.Security;
 
 namespace MoniPay.Users.Features.Registration;
 
-/// <summary>
-/// Answers whether a verified phone already belongs to a user; the host adapter exposes this to
-/// Sessions, which hashes under its own key and so cannot ask directly.
-/// </summary>
 public sealed class PhoneRegistrationLookup
 {
     private readonly MoniPayDbContext database;

@@ -2,7 +2,6 @@ using MoniPay.Api.OpenApi;
 
 namespace MoniPay.Api.Hosting;
 
-/// <summary>The generated contract: what the iOS client is built from.</summary>
 public static class OpenApiExtensions
 {
     public static IServiceCollection AddMoniPayOpenApi(this IServiceCollection services)

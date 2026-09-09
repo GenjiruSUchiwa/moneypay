@@ -12,11 +12,6 @@ using MoniPay.Sessions.Persistence;
 
 namespace MoniPay.Sessions.Security;
 
-/// <summary>
-/// The <see cref="SessionsSchemes.SignUp"/> scheme: the credential a start hands out, usable
-/// until the phone is verified. Verification publishes the registration credential and destroys
-/// the sign-up digest, so the token refuses for good from that moment.
-/// </summary>
 internal sealed class SignUpAuthenticationHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,
     ILoggerFactory logger,

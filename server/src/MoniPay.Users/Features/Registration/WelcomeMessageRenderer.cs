@@ -4,20 +4,10 @@ using MoniPay.Users.Providers;
 
 namespace MoniPay.Users.Features.Registration;
 
-/// <summary>
-/// Renders the welcome email from the validated registration, once, before enqueue. Users owns
-/// the text, so the host adapter never formats it: the adapter only carries the already
-/// localized <see cref="WelcomeMessage.Subject"/> and <see cref="WelcomeMessage.Body"/>.
-/// </summary>
 internal sealed class WelcomeMessageRenderer(IStringLocalizer<UserMessages> messages)
 {
     private const string IdempotencyKeyPrefix = "welcome";
 
-    /// <summary>
-    /// The welcome for a user, in the locale the registration was validated with — the same
-    /// value stored on the user, never the request or worker culture. The key is stable and
-    /// culture-independent: one delivery per user, and it names neither the recipient nor the name.
-    /// </summary>
     public WelcomeMessage Render(UserId userId, EmailAddress recipient, PersonName firstName, Locale locale)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(userId, default);

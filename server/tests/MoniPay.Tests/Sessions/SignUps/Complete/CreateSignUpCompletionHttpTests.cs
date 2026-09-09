@@ -14,11 +14,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.Complete;
 
-/// <summary>
-/// The completion route: the registration credential authorizes it, the profile names the user,
-/// and the response is the first session with its credentials. A retry replaces the session
-/// instead of provisioning a second user.
-/// </summary>
 public sealed class CreateSignUpCompletionHttpTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -54,7 +49,6 @@ public sealed class CreateSignUpCompletionHttpTests(MoniPayApi api) : MoniPayApi
         Assert.Equal(usersBefore + 1, await Api.CountUsersAsync());
         Assert.Equal(sessionsBefore + 1, await Api.CountActiveSessionsAsync());
 
-        // The credentials travel in the body once; nothing the host logged may carry them.
         string accessToken = document.GetProperty("data").GetProperty("attributes").GetProperty("accessToken").GetString()
             ?? throw new Xunit.Sdk.XunitException("The access token was not a JSON string.");
         Assert.DoesNotContain(
@@ -169,7 +163,6 @@ public sealed class CreateSignUpCompletionHttpTests(MoniPayApi api) : MoniPayApi
         Assert.Equal(usersBefore + 1, await Api.CountUsersAsync());
         Assert.Equal(sessionsBefore + 1, await Api.CountActiveSessionsAsync());
 
-        // A corrected profile still completes: the credential is not spent by the conflict.
         using HttpResponseMessage corrected = await CompletionFlow.PostCompleteAsync(
             Client,
             second.SignUpId,

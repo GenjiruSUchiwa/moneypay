@@ -3,11 +3,6 @@ using Microsoft.OpenApi;
 
 namespace MoniPay.Api.OpenApi;
 
-/// <summary>
-/// Sorts the paths and the component schemas by name. ASP.NET Core emits them in discovery
-/// order, so an unrelated edit reshuffles the committed document and the generated Swift
-/// client, which turns every contract diff into noise.
-/// </summary>
 internal sealed class SortedOpenApiDocumentTransformer : IOpenApiDocumentTransformer
 {
     public Task TransformAsync(

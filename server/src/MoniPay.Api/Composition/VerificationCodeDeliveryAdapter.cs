@@ -5,9 +5,6 @@ using MoniPay.Sessions.Providers;
 
 namespace MoniPay.Api.Composition;
 
-/// <summary>
-/// Maps the Sessions delivery port onto the Notifications outbox.
-/// </summary>
 internal sealed class VerificationCodeDeliveryAdapter(NotificationOutbox outbox) : IVerificationCodeSender
 {
     private const string VerificationCodeKind = "VerificationCode";

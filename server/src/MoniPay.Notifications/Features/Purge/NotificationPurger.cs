@@ -6,11 +6,6 @@ using MoniPay.Persistence;
 
 namespace MoniPay.Notifications.Features.Purge;
 
-/// <summary>
-/// One purge sweep: removes terminal rows — Sent, Failed, Expired — older than <c>Retention</c>,
-/// in batches so one sweep never locks the table for long. A Pending row is never touched,
-/// however old. Scoped: the worker and the test host each resolve one per sweep.
-/// </summary>
 internal sealed class NotificationPurger(
     MoniPayDbContext database,
     IOptions<NotificationsOptions> options,
@@ -26,7 +21,6 @@ internal sealed class NotificationPurger(
             LIMIT {4})
         """;
 
-    /// <summary>Deletes every eligible row, one batch at a time; returns how many.</summary>
     public async Task<int> RunAsync(CancellationToken cancellationToken)
     {
         DateTimeOffset cutoff = timeProvider.GetUtcNow() - options.Value.Retention;

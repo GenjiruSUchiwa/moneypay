@@ -15,10 +15,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.VerifyPhone;
 
-/// <summary>
-/// The phone-verification route: the one place the registration credential is handed out, and the
-/// place the attempt budget is spent.
-/// </summary>
 public sealed class CreatePhoneVerificationHttpTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private const int MaximumAttempts = 3;

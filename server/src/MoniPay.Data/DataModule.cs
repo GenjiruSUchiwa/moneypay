@@ -7,11 +7,6 @@ using MoniPay.Kernel;
 
 namespace MoniPay.Persistence;
 
-/// <summary>
-/// The composition of the database. It owns the connection and the context; the entity
-/// configurations come from the module assemblies the host passes in, so this project never
-/// references a module and a module never registers its own tables.
-/// </summary>
 public static class DataModule
 {
     public const string ConnectionStringName = "MoniPay";

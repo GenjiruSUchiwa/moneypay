@@ -13,10 +13,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Sessions.Refresh;
 
-/// <summary>
-/// The refresh route: an anonymous rotation whose credential travels in the body. A token is
-/// returned once, consumed by the rotation, and a second use of it revokes the whole family.
-/// </summary>
 public sealed class CreateSessionRefreshTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -64,8 +60,6 @@ public sealed class CreateSessionRefreshTests(MoniPayApi api) : MoniPayApiTest(a
             await replay.ReadProblemAsync(HttpStatusCode.Unauthorized);
         Assert.Equal(MoniPayErrorTypes.RefreshTokenReused.Urn, problem.Type);
 
-        // The family is revoked, so the credentials the successful refresh just handed out are
-        // refused too: a replay closes the door, it does not mint a third token.
         using HttpResponseMessage afterReplay = await SignUpFlow.PostRefreshAsync(
             Client,
             replacement,
@@ -161,7 +155,6 @@ public sealed class CreateSessionRefreshTests(MoniPayApi api) : MoniPayApiTest(a
             await response.ReadProblemAsync(HttpStatusCode.UnprocessableEntity);
         Assert.Equal(CreateSessionRefreshPointers.DeviceId, Assert.Single(problem.Pointers()));
 
-        // A refused refresh consumes nothing: the token still works from the right device.
         Assert.NotEmpty(await RefreshTokenOfAsync(issued));
     }
 

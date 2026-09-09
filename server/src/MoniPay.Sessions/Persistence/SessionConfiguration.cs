@@ -4,7 +4,6 @@ using MoniPay.Sessions.Domain;
 
 namespace MoniPay.Sessions.Persistence;
 
-/// <summary>Maps <see cref="Session"/> onto the <c>sessions</c> table.</summary>
 internal sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
 {
     public void Configure(EntityTypeBuilder<Session> builder)

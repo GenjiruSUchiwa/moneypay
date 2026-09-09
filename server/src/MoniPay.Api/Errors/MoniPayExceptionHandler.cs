@@ -10,18 +10,11 @@ using MoniPay.Kernel.Validation;
 
 namespace MoniPay.Api.Errors;
 
-/// <summary>
-/// The single exception-to-problem mapping. It never copies an exception message into the
-/// response: the writer resolves localized text from the stable code. It never sees a client
-/// abort: the framework's exception-handler middleware answers an <c>OperationCanceledException</c>
-/// whose request was aborted itself, so no body and no Error event are written for it.
-/// </summary>
 internal sealed class MoniPayExceptionHandler(
     IProblemDetailsService problemDetails,
     MoniPayProblemText text,
     ILogger<MoniPayExceptionHandler> logger) : IExceptionHandler
 {
-    /// <inheritdoc />
     public async ValueTask<bool> TryHandleAsync(
         HttpContext context,
         Exception exception,
@@ -37,9 +30,6 @@ internal sealed class MoniPayExceptionHandler(
             context.Response.Headers.RetryAfter = RetryAfterHeader.Format(delay);
         }
 
-        // A refused credential is a challenge wherever it is decided. A route that only discovers
-        // the credential names nothing once it is past the policy must answer the same 401 the
-        // challenge path answers, so the client drops the credential instead of retrying it.
         if (exception is RefusalException refused
             && refused.Type.Code == MoniPayErrorTypes.SessionInvalid.Code)
         {
@@ -137,11 +127,6 @@ internal sealed class MoniPayExceptionHandler(
         }
     }
 
-    /// <summary>
-    /// The endpoint name of the route that threw, or its path when it has none. The framework
-    /// clears the current endpoint before it calls a handler, so the original one is read from
-    /// the feature it saved for exactly this purpose.
-    /// </summary>
     private static string RouteOf(HttpContext context) =>
         context.Features.Get<IExceptionHandlerFeature>()?.Endpoint?.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName
         ?? context.Request.Path.Value

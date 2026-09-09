@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MoniPay.Kernel;
 
-/// <summary>The composition of the primitives every other module builds on.</summary>
 public static class KernelModule
 {
     public static IServiceCollection AddKernelModule(
@@ -13,7 +12,6 @@ public static class KernelModule
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        // A module never reads the clock directly: tests substitute a FakeTimeProvider.
         services.TryAddSingletonTimeProvider();
 
         return services;

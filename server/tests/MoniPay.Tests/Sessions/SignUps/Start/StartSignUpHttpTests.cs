@@ -79,7 +79,6 @@ public sealed class StartSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
 
         using HttpResponseMessage response = await SignUpFlow.PostStartAsync(Client, body);
 
-        // The code never reaches the wire; its localized detail does, so the mapping is asserted through it.
         string detail = ExpectedDetail(code);
         Microsoft.AspNetCore.Mvc.ProblemDetails problem = await AssertValidationAsync(response, StartSignUpPointers.Phone);
         Assert.Contains(
@@ -324,7 +323,6 @@ public sealed class StartSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
                 && error.GetProperty("pointer").GetString() == StartSignUpPointers.Phone);
     }
 
-    /// <summary>The detail the API answers for a validation code in its default culture, French.</summary>
     private string ExpectedDetail(string code)
     {
         CultureInfo previous = CultureInfo.CurrentUICulture;

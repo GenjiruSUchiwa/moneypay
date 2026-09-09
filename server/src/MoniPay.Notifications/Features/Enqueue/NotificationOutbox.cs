@@ -6,22 +6,12 @@ using MoniPay.Persistence;
 
 namespace MoniPay.Notifications;
 
-/// <summary>
-/// The outbox a producing module enqueues into. Adding a row is part of the producer's own
-/// transaction: <see cref="Enqueue"/> only adds to the caller's <c>MoniPayDbContext</c> and
-/// never saves, so the domain change and its notification commit together or not at all. The
-/// worker is woken after the commit by the module's interceptors, never from here.
-/// </summary>
 public sealed class NotificationOutbox
 {
     private readonly MoniPayDbContext database;
     private readonly RecipientProtector protector;
     private readonly TimeProvider timeProvider;
 
-    /// <summary>
-    /// Internal because its parameters are the module's internals: the host resolves this
-    /// class, it never constructs one, and the public surface stays the five documented types.
-    /// </summary>
     internal NotificationOutbox(
         MoniPayDbContext database,
         RecipientProtector protector,
@@ -36,13 +26,6 @@ public sealed class NotificationOutbox
         this.timeProvider = timeProvider;
     }
 
-    /// <summary>
-    /// Adds a <see cref="NotificationStatus.Pending"/> row for <paramref name="message"/>,
-    /// validating the whole contract first — so a producer error is an argument exception at
-    /// the call site, never a database error at its save — and encrypting the recipient, the
-    /// subject and the body with the module's data key. Does not save: the producer's
-    /// <c>SaveChangesAsync</c> commits the notification alongside its domain change.
-    /// </summary>
     public void Enqueue(OutboundMessage message)
     {
         ArgumentNullException.ThrowIfNull(message);
@@ -76,10 +59,6 @@ public sealed class NotificationOutbox
             now: timeProvider.GetUtcNow()));
     }
 
-    /// <summary>
-    /// The delivery state of the newest message queued for a correlation and kind — the read
-    /// behind the <c>codeDelivery</c> attribute. <c>null</c> when nothing was ever enqueued.
-    /// </summary>
     public async Task<NotificationStatus?> FindLatestStatusAsync(
         Guid correlationId,
         string kind,

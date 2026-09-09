@@ -7,10 +7,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// The workflow tokens' shape, uniqueness and purpose separation. The uniqueness sample is large
-/// enough that two colliding raw values would mean the randomness is broken, not unlucky.
-/// </summary>
 public sealed class WorkflowTokenTests
 {
     private const int SampleCount = 10_000;

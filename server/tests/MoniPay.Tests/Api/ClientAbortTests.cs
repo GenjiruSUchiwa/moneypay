@@ -8,12 +8,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Api;
 
-/// <summary>
-/// A client that leaves mid-request is answered by the framework's exception-handler middleware,
-/// which never calls the host's handler for an aborted request: no body is written and no Error
-/// event is logged. The handler no longer carries a branch for that case, so this pins the
-/// guarantee where it now lives, with the host's own services and no timing.
-/// </summary>
 public sealed class ClientAbortTests(MoniPayApi api)
 {
     [Fact]

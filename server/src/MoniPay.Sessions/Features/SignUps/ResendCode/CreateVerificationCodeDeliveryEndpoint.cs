@@ -8,11 +8,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Features.SignUps.ResendCode;
 
-/// <summary>
-/// Asks for another verification code. The route names the sign-up and its credential authorizes
-/// it, so the command takes no body at all: a client that sends one is answered with a 415 before
-/// it is read.
-/// </summary>
 internal static class CreateVerificationCodeDeliveryEndpoint
 {
     public static IEndpointRouteBuilder MapCreateVerificationCodeDelivery(this IEndpointRouteBuilder routes)

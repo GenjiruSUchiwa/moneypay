@@ -6,12 +6,6 @@ using MoniPay.Users;
 
 namespace MoniPay.Api.Errors;
 
-/// <summary>
-/// Resolves the localized title and detail of a stable problem code in the request culture. A code
-/// names its owner explicitly: a prefix cannot tell <c>phone-already-registered</c> apart from the
-/// module that produced it, and a module owns its own translations. An unknown code or a missing
-/// resource falls back to the code itself, so a gap never throws a second exception.
-/// </summary>
 internal sealed class MoniPayProblemText(IStringLocalizerFactory factory)
 {
     private const string DetailSuffix = "-detail";
@@ -19,7 +13,6 @@ internal sealed class MoniPayProblemText(IStringLocalizerFactory factory)
     private static readonly IReadOnlyDictionary<string, Type> ModuleOwners =
         new Dictionary<string, Type>(StringComparer.Ordinal)
         {
-            // Sessions owns the sign-up and session refusals.
             [MoniPayErrorTypes.SignUpStateInvalid.Code] = typeof(SessionMessages),
             [MoniPayErrorTypes.VerificationCodeInvalid.Code] = typeof(SessionMessages),
             [MoniPayErrorTypes.VerificationCodeExpired.Code] = typeof(SessionMessages),
@@ -33,9 +26,6 @@ internal sealed class MoniPayProblemText(IStringLocalizerFactory factory)
             [MoniPayErrorTypes.RefreshTokenReused.Code] = typeof(SessionMessages),
             [MoniPayErrorTypes.VerificationDeliveryUnavailable.Code] = typeof(SessionMessages),
 
-            // Sessions owns the sign-up request attributes, which are the only producers of the
-            // validation codes today; a Users-owned endpoint that starts producing one moves its
-            // entry and its resource there.
             [ValidationCodes.PhoneFormatInvalid] = typeof(SessionMessages),
             [ValidationCodes.PhoneCountryUnsupported] = typeof(SessionMessages),
             [ValidationCodes.LegalVersionOutdated] = typeof(SessionMessages),
@@ -45,18 +35,14 @@ internal sealed class MoniPayProblemText(IStringLocalizerFactory factory)
             [ValidationCodes.DeviceIdRequired] = typeof(SessionMessages),
             [ValidationCodes.RefreshTokenFormatInvalid] = typeof(SessionMessages),
 
-            // Users owns the registration uniqueness refusals.
             [MoniPayErrorTypes.PhoneAlreadyRegistered.Code] = typeof(UserMessages),
             [MoniPayErrorTypes.EmailAlreadyRegistered.Code] = typeof(UserMessages),
         };
 
-    /// <summary>The localized title, or the code itself when no resource exists.</summary>
     public string Title(string code) => Lookup(code, code) ?? code;
 
-    /// <summary>The localized detail, or <c>null</c> when the code carries none.</summary>
     public string? Detail(string code) => Lookup(code, code + DetailSuffix);
 
-    /// <summary>The localized text of a validation failure, or the code itself when none exists.</summary>
     public string FailureDetail(string code) => Lookup(code, code) ?? code;
 
     private string? Lookup(string code, string key)

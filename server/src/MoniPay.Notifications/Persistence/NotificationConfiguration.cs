@@ -4,7 +4,6 @@ using MoniPay.Notifications.Domain;
 
 namespace MoniPay.Notifications.Persistence;
 
-/// <summary>Maps <see cref="Notification"/> onto the <c>notifications</c> table.</summary>
 internal sealed class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 {
     public void Configure(EntityTypeBuilder<Notification> builder)

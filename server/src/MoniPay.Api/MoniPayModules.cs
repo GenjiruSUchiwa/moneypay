@@ -14,19 +14,8 @@ using MoniPay.Wallet.Endpoints;
 
 namespace MoniPay;
 
-/// <summary>
-/// The composition of the monolith, one call per module. Each module registers its own services
-/// in its <c>&lt;Module&gt;Module.cs</c> and maps its own routes from its <c>Endpoints/</c>
-/// folder, so adding a module means a line in the assembly list and in the composition chain
-/// below — plus a route mapping when it has endpoints — never an edit inside another module.
-/// </summary>
 internal static class MoniPayModules
 {
-    /// <summary>
-    /// The assemblies whose entity configurations compose the model: every module, whether or
-    /// not it maps an entity today. A module missing from this list is a silently missing table
-    /// the day it gains its first configuration.
-    /// </summary>
     internal static readonly Assembly[] ModuleAssemblies =
     [
         typeof(SessionsModule).Assembly,
@@ -35,7 +24,6 @@ internal static class MoniPayModules
         typeof(NotificationsModule).Assembly,
     ];
 
-    /// <summary>The services, in dependency order.</summary>
     public static IServiceCollection AddMoniPayModules(
         this IServiceCollection services,
         IConfiguration configuration) =>
@@ -46,12 +34,10 @@ internal static class MoniPayModules
             .AddUsersModule(configuration)
             .AddWalletModule(configuration)
             .AddNotificationsModule(configuration)
-            // The cross-module composition the modules cannot do themselves: the only host code naming two modules.
             .AddScoped<IUserProvisioning, UserProvisioningAdapter>()
             .AddScoped<IRegisteredPhoneLookup, RegisteredPhoneLookupAdapter>()
             .AddScoped<IVerificationCodeSender, VerificationCodeDeliveryAdapter>()
             .AddScoped<IWelcomeMessageSender, WelcomeMessageDeliveryAdapter>();
-    /// <summary>The routes. Health belongs to the host; everything else to its module.</summary>
     public static WebApplication MapMoniPayModules(this WebApplication app)
     {
         ArgumentNullException.ThrowIfNull(app);

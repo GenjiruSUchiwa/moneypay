@@ -9,11 +9,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Features.SignUps.VerifyPhone;
 
-/// <summary>
-/// Proves control of the phone and hands out the registration credential. The sign-up credential
-/// authorizes the call, the route names the sign-up, and the response is the only place the
-/// registration token ever appears.
-/// </summary>
 internal static class CreatePhoneVerificationEndpoint
 {
     public static IEndpointRouteBuilder MapCreatePhoneVerification(this IEndpointRouteBuilder routes)

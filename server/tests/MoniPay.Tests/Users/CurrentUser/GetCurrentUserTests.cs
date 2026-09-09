@@ -13,10 +13,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Users.CurrentUser;
 
-/// <summary>
-/// The current-user read: a bearer route that names no identifier of its own, so the ticket is
-/// the only thing that can select the profile it describes.
-/// </summary>
 public sealed class GetCurrentUserTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -156,8 +152,6 @@ public sealed class GetCurrentUserTests(MoniPayApi api) : MoniPayApiTest(api)
         using HttpResponseMessage first = await SignUpFlow.GetCurrentUserAsync(Client, AccessToken(session));
         using HttpResponseMessage second = await SignUpFlow.GetCurrentUserAsync(Client, AccessToken(session));
 
-        // A read has no side effects: both answers describe the same stored row. The comparison
-        // is on the parsed representation, never on the serialized bytes.
         JsonElement firstData = (await JsonApiAssertions.ReadJsonApiAsync(first)).GetProperty("data");
         JsonElement secondData = (await JsonApiAssertions.ReadJsonApiAsync(second)).GetProperty("data");
 
@@ -265,8 +259,6 @@ public sealed class GetCurrentUserTests(MoniPayApi api) : MoniPayApiTest(api)
 
         using HttpResponseMessage response = await SignUpFlow.GetCurrentUserAsync(Client, AccessToken(orphan));
 
-        // The session is still valid, so the ticket names a user that is gone: the credential is
-        // refused and the client drops it, rather than being told the server broke.
         Microsoft.AspNetCore.Mvc.ProblemDetails problem =
             await response.ReadProblemAsync(HttpStatusCode.Unauthorized);
         Assert.Equal(MoniPayErrorTypes.SessionInvalid.Urn, problem.Type);
@@ -366,7 +358,6 @@ public sealed class GetCurrentUserTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal("Le jeton de session est invalide ou expiré.", problem.Title);
     }
 
-    /// <summary>Completes a sign-up over HTTP and returns what the profile read must repeat.</summary>
     private async Task<(Profile Profile, string Phone, string UserId, string AccessToken)> CompleteViaHttpAsync()
     {
         StartedAndVerified verified = await Api.StartAndVerifyAsync(Client);

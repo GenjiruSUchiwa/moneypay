@@ -6,11 +6,6 @@ using MoniPay.Kernel.Security;
 
 namespace MoniPay.Sessions.Security;
 
-/// <summary>
-/// Signs the short-lived access JWT that authenticates one session. It carries identity claims
-/// only — subject, session, token id — so a leaked token reveals nothing beyond who is in and
-/// until when; every profile fact is fetched from the API, never stamped into the token.
-/// </summary>
 internal sealed class AccessTokenIssuer(IOptions<SessionsOptions> options)
 {
     private readonly SessionsOptions settings = options.Value;

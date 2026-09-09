@@ -3,7 +3,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Notifications.Security;
 
-/// <summary>The hint is all a log or a support screen may see of a recipient.</summary>
 public sealed class RecipientProtectorTests
 {
     [Theory]

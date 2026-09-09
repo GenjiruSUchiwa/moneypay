@@ -11,17 +11,10 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// A rejected access JWT keeps a generic public challenge and leaves its cause in the module's own
-/// log. The framework's token diagnostics are Information level, which production filters out, so
-/// the module records the cause itself at Warning — as a bounded word, never the token, the
-/// credentials or the validation exception's message.
-/// </summary>
 public sealed class BearerTokenDiagnosticsTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private const string SecureRoute = "/test/secure";
 
-    /// <summary>The framework category the bearer handler logs its own diagnostics under.</summary>
     private const string JwtBearerCategory = "Microsoft.AspNetCore.Authentication.JwtBearer";
 
     [Fact]
@@ -52,7 +45,6 @@ public sealed class BearerTokenDiagnosticsTests(MoniPayApi api) : MoniPayApiTest
 
         using HttpResponseMessage response = await SendAsync(token);
 
-        // The public answer stays generic, and it never echoes the credential.
         ProblemDetails problem = await response.ReadProblemAsync(HttpStatusCode.Unauthorized, requireNoStore: false);
         Assert.Equal(MoniPayErrorTypes.SessionInvalid.Urn, problem.Type);
         Assert.Equal("Bearer", response.Headers.WwwAuthenticate.ToString());
@@ -62,7 +54,6 @@ public sealed class BearerTokenDiagnosticsTests(MoniPayApi api) : MoniPayApiTest
         Assert.DoesNotContain(token, body, StringComparison.Ordinal);
         Assert.DoesNotContain(token, response.Headers.WwwAuthenticate.ToString(), StringComparison.Ordinal);
 
-        // The cause survives the production filtering, as a bounded category.
         RecordingLoggerProvider.LogEntry entry = Assert.Single(Api.Logs.Entries.Skip(before), IsBearerRefusal);
         Assert.Equal(LogLevel.Warning, entry.Level);
         Assert.Equal(cause, Cause(entry));
@@ -70,9 +61,6 @@ public sealed class BearerTokenDiagnosticsTests(MoniPayApi api) : MoniPayApiTest
         Assert.DoesNotContain(token, entry.Message, StringComparison.Ordinal);
         Assert.DoesNotContain(token, Values(entry), StringComparison.Ordinal);
 
-        // The framework's own bearer diagnostics are Information level under
-        // Microsoft.AspNetCore, which the production configuration filters out; nothing may
-        // depend on them. The module's Warning event above is what survives that filter.
         Assert.DoesNotContain(
             Api.Logs.Entries.Skip(before),
             log => log.Category.StartsWith(JwtBearerCategory, StringComparison.Ordinal));

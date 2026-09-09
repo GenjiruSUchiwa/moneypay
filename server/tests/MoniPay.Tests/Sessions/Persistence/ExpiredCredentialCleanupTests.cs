@@ -13,10 +13,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Persistence;
 
-/// <summary>
-/// The credential store's invariants against PostgreSQL: the partial index, the concurrency
-/// token, replay detection and every rule the cleanup sweep must respect.
-/// </summary>
 public sealed class ExpiredCredentialCleanupTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -118,7 +114,6 @@ public sealed class ExpiredCredentialCleanupTests(MoniPayApi api) : MoniPayApiTe
             previous = next;
         }
 
-        // The newest token of the active session is consumed and old, yet must survive.
         RefreshToken newestOfActive = previous;
         newestOfActive.Consume(Guid.CreateVersion7(), stale + TimeSpan.FromDays(1));
         RefreshToken newestOfRevoked = RefreshToken.Issue(revokedSession.Id, Digest(), stale, expiredLifetime);
@@ -143,7 +138,7 @@ public sealed class ExpiredCredentialCleanupTests(MoniPayApi api) : MoniPayApiTe
             await database.SaveChangesAsync(Cancellation);
         }
 
-        int expected = batchSize + 1 + 1 + 1; // stale non-newest tokens, the revoked session's token, the stale open sign-up
+        int expected = batchSize + 1 + 1 + 1;
         int firstBatch;
         await using (AsyncServiceScope batch = Api.Services.CreateAsyncScope())
         {
@@ -152,7 +147,6 @@ public sealed class ExpiredCredentialCleanupTests(MoniPayApi api) : MoniPayApiTe
             firstBatch = await cleanup.DeleteBatchAsync(database, now - options.StartWindow, Cancellation);
         }
 
-        // Rows other tests left behind may be swept too, so the cycle count is a floor, not an equality.
         Assert.InRange(firstBatch, 1, 2 * batchSize);
         Assert.InRange(await Api.RunCleanupCycleAsync(Cancellation), expected - firstBatch, int.MaxValue);
         Assert.Equal(0, await Api.RunCleanupCycleAsync(Cancellation));

@@ -2,10 +2,6 @@ using Microsoft.Extensions.Logging;
 
 namespace MoniPay.Api.Errors;
 
-/// <summary>
-/// The host's outcome events: one per mapped failure, never one per exception that produced no
-/// response. None carries an exception message, a credential, or any request value.
-/// </summary>
 internal static partial class MoniPayErrorLog
 {
     [LoggerMessage(EventId = 1, Level = LogLevel.Information,

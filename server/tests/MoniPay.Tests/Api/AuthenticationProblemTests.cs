@@ -8,11 +8,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Api;
 
-/// <summary>
-/// The challenge body names the credential the scheme refused, server-side: a token presented to
-/// the wrong workflow scheme, and a bearer token the JWT handler rejects, each get their own
-/// stable type and their own localized title. The submitted authorization scheme never decides it.
-/// </summary>
 public sealed class AuthenticationProblemTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Theory]

@@ -8,12 +8,6 @@ using MoniPay.Sessions.Domain;
 
 namespace MoniPay.Sessions.Persistence;
 
-/// <summary>
-/// Removes closed sign-ups and expired refresh tokens in bounded batches, one sweep per
-/// <c>Cleanup:Interval</c>. Consumed digests remain until expiry for replay detection. It never
-/// deletes a <c>sessions</c> row, and never an active session's newest token, however old:
-/// that token is what a replay of the previous one is detected against.
-/// </summary>
 internal sealed class ExpiredCredentialCleanupService(
     IServiceScopeFactory scopeFactory,
     TimeProvider timeProvider,
@@ -28,8 +22,6 @@ internal sealed class ExpiredCredentialCleanupService(
             LIMIT {2})
         """;
 
-    // ponytail: correlated "newest token" subquery per candidate; add a (session_id, created_at)
-    // index if the sweep ever shows up in pg_stat_statements.
     private const string DeleteRefreshTokensSql = $$"""
         DELETE FROM {{SessionsSchema.RefreshTokensTable}}
         WHERE id IN (
@@ -68,10 +60,6 @@ internal sealed class ExpiredCredentialCleanupService(
         }
     }
 
-    /// <summary>
-    /// One sweep in a fresh scope. The cutoff keeps a closed sign-up until it has left the
-    /// per-phone start window: the start limit counts rows by <c>created_at</c>.
-    /// </summary>
     internal async Task<int> RunCycleAsync(CancellationToken cancellationToken)
     {
         SessionsOptions current = options.Value;
@@ -93,7 +81,6 @@ internal sealed class ExpiredCredentialCleanupService(
         return total;
     }
 
-    /// <summary>Deletes at most one batch of each kind; returns how many rows went.</summary>
     internal async Task<int> DeleteBatchAsync(
         MoniPayDbContext database,
         DateTimeOffset cutoff,

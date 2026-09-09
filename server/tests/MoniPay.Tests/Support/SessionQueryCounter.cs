@@ -4,11 +4,6 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>
-/// Counts the queries the authorization handler runs against the sessions table, so a test can
-/// assert the active-session check hits the database exactly once per request — and never from
-/// a cache.
-/// </summary>
 public sealed class SessionQueryCounter : DbCommandInterceptor
 {
     private int sessionQueries;

@@ -18,11 +18,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.Complete;
 
-/// <summary>
-/// What a completion may write at all: the registration credential, the state the sign-up is in,
-/// and the two lifetimes that bound a retry — the sign-up's and the registration token's. Every
-/// rule is read again under the row lock, so a request that had to wait cannot outlive its window.
-/// </summary>
 public sealed class CompletionEligibilityTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private static readonly TimeSpan RegistrationLifetime = TimeSpan.FromMinutes(10);

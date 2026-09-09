@@ -14,9 +14,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.Delivery;
 
-/// <summary>
-/// Get-sign-up reports the latest verification notification or nothing.
-/// </summary>
 public sealed class VerificationCodeProjectionTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(2);

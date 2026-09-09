@@ -4,9 +4,6 @@ using Microsoft.Extensions.Options;
 
 namespace MoniPay.Api.Hosting;
 
-/// <summary>
-/// Trusts only explicitly configured proxy addresses for client IP and protocol forwarding.
-/// </summary>
 internal sealed class ForwardedHeadersOptionsSetup(IConfiguration configuration) : IConfigureOptions<ForwardedHeadersOptions>
 {
     public void Configure(ForwardedHeadersOptions options)
@@ -33,7 +30,6 @@ internal sealed class ForwardedHeadersOptionsSetup(IConfiguration configuration)
             options.KnownProxies.Add(IPAddress.Parse(proxy));
         }
 
-        // Empty trust lists allow every peer, so forwarding must be disabled without named edges.
         options.ForwardedHeaders = proxies.Length == 0
             ? ForwardedHeaders.None
             : ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;

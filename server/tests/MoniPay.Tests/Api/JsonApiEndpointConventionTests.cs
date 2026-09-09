@@ -8,13 +8,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Api;
 
-/// <summary>
-/// The convention every JSON:API endpoint must carry: the host's transport check is the only
-/// owner of the request media-type decision, so no marked endpoint may leave the routing matcher
-/// with a specific content type to police. A slice that forgets the wildcard would get a
-/// framework 415 that bypasses the security middleware, the no-store headers and the outcome
-/// event, so this test fails instead of shipping that.
-/// </summary>
 public sealed class JsonApiEndpointConventionTests(MoniPayApi api)
 {
     [Fact]

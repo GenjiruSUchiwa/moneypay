@@ -41,7 +41,6 @@ public sealed class SessionTokenConcurrencyTests(MoniPayApi api) : MoniPayApiTes
             session.Touch(Api.Time.GetUtcNow());
         }
 
-        // Hold the same versioned update lock as refresh/revoke until the competing request is blocked.
         await database.SaveChangesAsync(cancellationToken);
         NpgsqlConnection holder = Assert.IsType<NpgsqlConnection>(database.Database.GetDbConnection());
         await using AsyncServiceScope second = Api.Services.CreateAsyncScope();

@@ -4,18 +4,6 @@ using MoniPay.Kernel;
 
 namespace MoniPay.Notifications.Persistence;
 
-/// <summary>
-/// The commit signal of the outbox: it raises <see cref="DeliverySignal"/> exactly when a
-/// committed change set carried a new notification. Raised earlier, the worker would wake to
-/// find nothing; raised while a transaction is still open, it would wake before the row is
-/// visible to anyone else.
-/// </summary>
-/// <remarks>
-/// <c>MoniPay.Data</c> builds the shared options from every registered
-/// <see cref="IDbContextOptionsContributor"/>, so the data project never references this
-/// module. The interceptors are singletons, so the "this save carried a notification" fact
-/// lives in <see cref="CarryingContexts"/> rather than in a field.
-/// </remarks>
 internal sealed class NotificationCommitInterceptor(DeliverySignal signal)
     : SaveChangesInterceptor, IDbContextOptionsContributor
 {

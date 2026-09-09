@@ -13,9 +13,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.Delivery;
 
-/// <summary>
-/// The host adapter carries the rendered message and reports the latest status.
-/// </summary>
 public sealed class VerificationCodeDeliveryAdapterTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]

@@ -7,9 +7,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Users.CurrentUser;
 
-/// <summary>
-/// The current-user handler on its own: what a missing row and a canceled read do, without HTTP.
-/// </summary>
 public sealed class GetCurrentUserHandlerTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]

@@ -14,11 +14,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Api;
 
-/// <summary>
-/// The published contract for a JSON:API endpoint. The endpoint declares the wildcard content
-/// type so routing never answers the media-type rejection itself; the document the iOS client is
-/// built from must name <c>application/vnd.api+json</c> alone.
-/// </summary>
 public sealed class OpenApiContractTests(MoniPayApi api)
 {
     [Fact]
@@ -46,7 +41,6 @@ public sealed class OpenApiContractTests(MoniPayApi api)
         JsonElement document = await ReadOpenApiDocumentAsync();
         JsonElement signUps = document.GetProperty("paths");
         JsonElement start = signUps.GetProperty(SignUpRoutes.Group).GetProperty("post");
-        // OpenAPI paths carry no route constraint, so the by-id template is rebuilt without ":guid".
         JsonElement read = signUps.GetProperty(SignUpRoutes.Group + "/{signUpId}").GetProperty("get");
 
         Assert.False(start.TryGetProperty("security", out _));
@@ -70,7 +64,6 @@ public sealed class OpenApiContractTests(MoniPayApi api)
         JsonElement document = await ReadOpenApiDocumentAsync();
         JsonElement refresh = document.GetProperty("paths").GetProperty(SessionRoutes.Refreshes).GetProperty("post");
 
-        // The refresh credential travels in the body, so no scheme authorizes the operation.
         Assert.False(refresh.TryGetProperty("security", out _));
         Assert.Equal(
             [MoniPayMediaTypes.JsonApi],

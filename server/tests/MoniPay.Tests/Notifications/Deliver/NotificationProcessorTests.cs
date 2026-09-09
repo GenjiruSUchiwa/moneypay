@@ -17,11 +17,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Notifications.Deliver;
 
-/// <summary>
-/// The delivery contract: one claim per row across replicas, the documented retry schedule, the
-/// body cleared on acceptance, expired rows never sent, leases that outlive a dead cycle, one
-/// linked token to the channel, and log events that carry codes but never content.
-/// </summary>
 public sealed class NotificationProcessorTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private const string Body = "Your MoniPay code is 482913, valid 5 minutes.";
@@ -275,7 +270,6 @@ public sealed class NotificationProcessorTests(MoniPayApi api) : MoniPayApiTest(
             Assert.Null(row.LeaseUntil);
         });
 
-        // Delete them so the shared host, which has channels, never claims them in a later test.
         await database.Notifications.Where(row => ids.Contains(row.Id)).ExecuteDeleteAsync(Cancellation);
     }
 

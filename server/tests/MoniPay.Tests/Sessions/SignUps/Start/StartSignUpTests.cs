@@ -117,7 +117,6 @@ public sealed class StartSignUpTests(MoniPayApi api) : MoniPayApiTest(api)
     public async Task A_start_past_the_per_phone_limit_is_refused_with_the_delay_to_the_oldest_start()
     {
         PhoneNumber phone = new(TestPhones.Next());
-        // Each start waits out the previous sign-up, so every one opens a row and counts.
         TimeSpan spacing = SignUpLifetime + TimeSpan.FromMinutes(1);
         for (int start = 0; start < MaximumStartsPerWindow; start++)
         {
@@ -235,14 +234,11 @@ public sealed class StartSignUpTests(MoniPayApi api) : MoniPayApiTest(api)
         string code = await Api.DeliveredCodeAsync(phone);
         Api.Time.Advance(ResendCooldown);
 
-        // A concurrency failure is not a refusal, so it would fail the test instead of being collected.
         RefusalException?[] outcomes = await Task.WhenAll(
             Enumerable.Range(0, 8).Select(attempt => attempt % 2 == 0
                 ? SignUpFlow.RefusalOfAsync(Api.StartSignUpAsync(phone))
                 : SignUpFlow.RefusalOfAsync(Api.VerifyPhoneAsync(started.SignUpId, code))));
 
-        // Whichever side won the row lock, the loser saw its committed state: a rotated code
-        // (mismatches, then the lock) or a verified phone (state conflicts).
         ProblemType[] expected =
         [
             MoniPayErrorTypes.SignUpResendTooSoon,

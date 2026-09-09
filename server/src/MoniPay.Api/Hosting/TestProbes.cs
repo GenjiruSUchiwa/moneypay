@@ -15,12 +15,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Api.Hosting;
 
-/// <summary>
-/// The throwaway endpoints the authentication schemes, the named policies, the IP rate limits
-/// and the no-store convention are proven on. They exist in the Testing environment only and
-/// vanish when the real routes land (#97 to #100): they answer 200 and the JSON:API widget route
-/// echoes what the binder produced, so a test proves the values the endpoint actually received.
-/// </summary>
 internal static class TestProbes
 {
     private const string SecureRoute = "/test/secure";
@@ -37,7 +31,6 @@ internal static class TestProbes
     private const string WidgetLimitedRoute = "/test/jsonapi/widgets/limited";
     private const string WidgetResourceType = "widgets";
 
-    /// <summary>The endpoint name the error probe logs under.</summary>
     public const string ErrorProbeName = nameof(TestProbes) + ".Errors";
 
     public static void MapTestProbes(this WebApplication app)
@@ -80,8 +73,6 @@ internal static class TestProbes
             .WithMetadata(MoniPayConventions.JsonApi)
             .WithMetadata(MoniPayConventions.NoStore);
 
-        // The two routes that carry both the JSON:API transport metadata and a security
-        // metadata, so a test can prove the security middleware answers first.
         app.MapWidgetEndpoint(WidgetSecureRoute)
             .RequireAuthorization(MoniPayPolicies.AuthenticatedUser);
 
@@ -89,11 +80,6 @@ internal static class TestProbes
             .RequireRateLimiting(SignUpRateLimitPolicies.Start);
     }
 
-    /// <summary>
-    /// A JSON:API widget route, declared the way a slice declares one: the transport marker, the
-    /// expected resource type, the no-store convention, and the wildcard content type that keeps
-    /// the routing matcher from answering a media-type rejection of its own.
-    /// </summary>
     private static RouteHandlerBuilder MapWidgetEndpoint(this IEndpointRouteBuilder app, string route)
     {
         ArgumentNullException.ThrowIfNull(app);
@@ -107,18 +93,12 @@ internal static class TestProbes
             .WithMetadata(MoniPayConventions.NoStore);
     }
 
-    /// <summary>
-    /// The test-only strict records that prove the slice integration: the expected resource type
-    /// travels as endpoint metadata, and the attribute record rejects its own unknown members
-    /// because the envelope's annotation is not recursive.
-    /// </summary>
     [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
     internal sealed record WidgetAttributes
     {
         public required string Name { get; init; }
     }
 
-    /// <summary>What the endpoint received, so a test asserts the bound values and not just a status.</summary>
     internal sealed record ReceivedWidget(string Type, string Name);
 
     private static IResult AcceptWidget(JsonApiRequest<JsonApiRequestResource<WidgetAttributes>> request)

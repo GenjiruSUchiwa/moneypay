@@ -5,12 +5,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// The generator's shape and randomness. Both distribution bands are many standard deviations
-/// wide: the pooled two-percent band sits five sigmas out and the positional ten-percent band
-/// ten, so neither can flake, yet every bias the issue targets — modulo bias, a stripped zero,
-/// a position that never draws a digit — lands far outside one of them.
-/// </summary>
 public sealed class VerificationCodeGeneratorTests
 {
     private const int SampleCount = 100_000;
@@ -39,7 +33,6 @@ public sealed class VerificationCodeGeneratorTests
 
         string[] codes = Enumerable.Range(0, samples).Select(_ => Generator.Next()).ToArray();
 
-        // A leading zero in five hundred samples is a certainty; none would mean stripped zeros.
         Assert.Contains(codes, code => code[0] == '0');
         Assert.All(codes, code => Assert.Equal(6, code.Length));
     }

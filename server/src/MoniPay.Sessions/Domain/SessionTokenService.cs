@@ -10,12 +10,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Domain;
 
-/// <summary>
-/// The one place a session's credentials are created, replaced, refreshed and revoked; the
-/// completion, refresh and revocation slices all call it. Only a refresh token's digest is ever
-/// stored, and a refused refresh names its reason to the log alone, so a probe learns nothing
-/// about the token it presented.
-/// </summary>
 internal sealed class SessionTokenService(
     MoniPayDbContext database,
     AccessTokenIssuer accessTokens,
@@ -26,8 +20,6 @@ internal sealed class SessionTokenService(
 {
     private readonly SessionsOptions settings = options.Value;
 
-    /// <summary>Starts a session and its refresh-token family. Joins the completion's ambient
-    /// transaction when one is open; otherwise commits on its own.</summary>
     public async Task<SessionTokenResult> CreateAsync(
         UserId userId,
         Guid deviceId,
@@ -44,8 +36,6 @@ internal sealed class SessionTokenService(
         return Result(session, userId, rawRefresh, now);
     }
 
-    /// <summary>Ends a bootstrap session a retry replaced, and issues its replacement in a new
-    /// family. The revocation and the new session share one commit.</summary>
     public async Task<SessionTokenResult> ReplaceBootstrapAsync(
         UserId userId,
         Guid priorSessionId,
@@ -70,9 +60,6 @@ internal sealed class SessionTokenService(
         return result;
     }
 
-    /// <summary>Exchanges a refresh token for a new one, in one transaction: the token row is
-    /// locked by digest, so two parallel refreshes of one token serialize and the loser is
-    /// answered as a replay that revokes the family.</summary>
     public async Task<SessionTokenResult> RefreshAsync(
         string refreshToken,
         Guid deviceId,
@@ -119,8 +106,6 @@ internal sealed class SessionTokenService(
         return Result(session, session.UserId, rawRefresh, now);
     }
 
-    /// <summary>Ends a session at the user's request. Revoking a session that already ended, or
-    /// that never existed, changes nothing.</summary>
     public async Task RevokeAsync(Guid sessionId, CancellationToken cancellationToken)
     {
         await using IDbContextTransaction? transaction = database.Database.CurrentTransaction is null
@@ -143,7 +128,6 @@ internal sealed class SessionTokenService(
         }
     }
 
-    /// <summary>Rolls a refused refresh back. The reason goes to the log; the client gets one type.</summary>
     private async Task RefuseAsync(
         string reason,
         IDbContextTransaction transaction,
@@ -167,18 +151,12 @@ internal sealed class SessionTokenService(
         await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    // Constants, so no request value can reach the SQL text: the values travel as parameters.
     private static readonly string LockTokenSql =
         $"SELECT * FROM {SessionsSchema.RefreshTokensTable} WHERE token_digest = {{0}} FOR UPDATE";
 
     private static readonly string LockSessionSql =
         $"SELECT * FROM {SessionsSchema.SessionsTable} WHERE id = {{0}} FOR UPDATE";
 
-    /// <summary>
-    /// Loads a refresh token by digest under a row lock held until the transaction ends, so a
-    /// replay presenting the same token waits for the first refresh to commit and is then
-    /// answered by the consumed check.
-    /// </summary>
     private Task<RefreshToken?> LockTokenAsync(byte[] digest, CancellationToken cancellationToken) =>
         database.RefreshTokens
             .FromSqlRaw(LockTokenSql, digest)
