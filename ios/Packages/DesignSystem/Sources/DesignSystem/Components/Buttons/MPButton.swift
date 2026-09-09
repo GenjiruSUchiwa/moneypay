@@ -1,10 +1,7 @@
 import SwiftUI
 
-/// Button emphasis, as in the prototype: `.primary` is the action green, `.quiet` fills a
-/// well, `.outline` draws a border, `.ghost` is muted ink without either, `.danger` is destructive.
 public enum Tone { case primary, quiet, outline, ghost, danger }
 
-/// Full-width button with standard MoniPay emphasis and loading states.
 public struct MPButton: View {
     public init(
         title: Text,

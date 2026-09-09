@@ -1,14 +1,11 @@
 import DesignSystem
 import SwiftUI
 
-/// The supported-country sheet of the phone step. The system owns the sheet's material:
-/// nothing here sets a presentation background.
 struct CountryPickerView: View {
     let selected: Country
     let onSelect: (Country) -> Void
     @Environment(\.dismiss) private var dismiss
 
-    /// The prototype's 30 pt `.fl-flag`, composed from tokens.
     private static let flagSize = Metric.gutter + Metric.stack
 
     var body: some View {

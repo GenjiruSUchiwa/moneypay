@@ -3,8 +3,6 @@ import Money
 import SwiftUI
 import WalletStore
 
-// MARK: - List
-
 public struct TransactionsView: View {
     public init() {
     }

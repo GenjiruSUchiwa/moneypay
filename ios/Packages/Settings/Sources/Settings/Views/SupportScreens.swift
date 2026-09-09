@@ -3,8 +3,6 @@ import Foundation
 import SwiftUI
 import WalletStore
 
-// MARK: - Referrals
-
 public struct ReferralView: View {
     public init() {
     }
@@ -79,8 +77,6 @@ public struct ReferralView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
-
-// MARK: - Help
 
 public struct HelpView: View {
     public init() {
@@ -199,8 +195,6 @@ public struct HelpView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-// MARK: - Notifications
 
 public struct NotificationsView: View {
     public init() {

@@ -1,17 +1,8 @@
 import SwiftUI
 
-/// Progress across a small, fixed number of steps — a sign-up flow, a story-style carousel.
-/// `story` fills the current segment linearly over its dwell (the welcome deck);
-/// `steps` only marks the reached segments (sign-up). For an amount against a cap, use
-/// `ProgressView(value:)`.
 public struct SegmentedProgress: View {
-    /// How the current step is shown.
     public enum Style: Sendable, Equatable {
-        /// Segments up to and including `current` are full. Sign-up steps.
         case steps
-        /// Segments before `current` are full; `current` fills linearly from `since` over `dwell`.
-        /// The fill is computed from the clock, so it stays in step with whatever timer the
-        /// caller arms at `since`.
         case story(dwell: Duration, since: Date, pausedAt: Date? = nil)
     }
 
@@ -37,7 +28,6 @@ public struct SegmentedProgress: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Step \(current + 1) of \(count)", bundle: .module))
         .accessibilityAddTraits(style.isStory ? .updatesFrequently : [])
-        // The timeline already supplies each frame. A parent's spring would make the fill chase it.
         .transaction { if style.isStory { $0.animation = nil } }
     }
 

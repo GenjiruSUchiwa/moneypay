@@ -8,8 +8,6 @@ struct WelcomeDeckView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.locale) private var locale
     @State private var dragOffset: CGFloat = .zero
-    /// Reset by SwiftUI when the gesture ends *or* is cancelled (an alert, backgrounding,
-    /// a system gesture) — `onEnded` only covers the former, `pointercancel` in the prototype.
     @GestureState private var isDragging = false
     @State private var isFloating = false
 
@@ -20,8 +18,6 @@ struct WelcomeDeckView: View {
             }
         }
         .animation(reduceMotion ? nil : Motion.deck, value: model.index)
-        // The prototype listens on `.we-deck`, not on the card: the whole stage is the
-        // drag surface, and every card keeps one stable identity across depth changes.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(.rect)
         .gesture(dragGesture)
@@ -55,8 +51,6 @@ struct WelcomeDeckView: View {
         let pose = DeckPose.at(depth: depth)
         let drag = depth == 0 ? dragOffset : .zero
 
-        // Same order as CSS `translate() scale() rotate()` and `translateX() rotate()`:
-        // SwiftUI applies the innermost modifier first, so rotate, scale, then move.
         return VirtualCardView(card: slides[index].card(locale: locale))
             .frame(width: Metric.stage)
             .rotationEffect(pose.rotation)

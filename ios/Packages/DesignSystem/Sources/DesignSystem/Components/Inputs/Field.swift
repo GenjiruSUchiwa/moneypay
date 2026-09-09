@@ -1,8 +1,5 @@
 import SwiftUI
 
-/// A single-line text field with the app's inset focus treatment.
-/// Use `Field` for form input; use a dedicated component when the input needs a
-/// specialized layout such as a one-time code or numeric amount entry.
 public struct Field: View {
     public init(
         placeholder: Text,

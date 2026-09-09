@@ -1,11 +1,6 @@
 import SwiftUI
 
-/// The slots of a one-time code, as boxes.
-/// Pass a `Binding` to own the system keyboard and SMS autofill; pass a `String`
-/// for a display-only indicator (for example while a custom keypad still drives
-/// the digits). Use `Field` for free-form text.
 public struct OTPBoxes: View {
-    /// Display-only slots. No keyboard.
     public init(code: String, length: Int = 6) {
         self._code = .constant(Self.sanitize(code, length: length))
         self.length = max(0, length)
@@ -13,7 +8,6 @@ public struct OTPBoxes: View {
         self.editable = false
     }
 
-    /// Editable slots. Owns the system keyboard and one-time-code autofill.
     public init(code: Binding<String>, length: Int = 6, autofocus: Bool = true) {
         self._code = code
         self.length = max(0, length)

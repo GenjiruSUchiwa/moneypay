@@ -1,9 +1,5 @@
 import SwiftUI
 
-/// The monogram. Defaults mirror the prototype's `logoMark()`: the action green tile with
-/// the `onAction` glyph — the prototype hardcodes white, which fails contrast on the dark
-/// green. Pass `tint`/`glyph` only for a translucent variant on a coloured surface
-/// (splash, card art).
 public struct LogoMark: View {
     public init(size: CGFloat = 40, tint: Color = Brand.action, glyph: Color = Brand.onAction) {
         self.size = size

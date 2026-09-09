@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Trailing value of a row, in muted ink.
 public struct RowValue: View {
     public init(text: Text, tint: Color = Brand.inkMuted) {
         self.text = text

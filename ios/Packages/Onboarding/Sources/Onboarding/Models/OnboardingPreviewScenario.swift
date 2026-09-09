@@ -1,5 +1,4 @@
 extension OnboardingRoot {
-    /// UI-only scenarios for Gallery; none creates a session or calls a server.
     public enum PreviewScenario: String, CaseIterable, Sendable {
         case signInPhone = "signin-phone"
         case signInCode = "signin-code"

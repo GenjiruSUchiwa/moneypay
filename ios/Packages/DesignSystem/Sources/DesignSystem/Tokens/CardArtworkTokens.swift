@@ -41,7 +41,6 @@ enum CardArtworkTokens {
     static func pine(in size: CGSize) -> Path {
         guard size.width > 0, size.height > 0 else { return Path() }
         var path = Path()
-        // Exact circles and CSS offsets from guilloche() and .vc-guilloche in the prototype.
         let circles: [(CGFloat, CGFloat, CGFloat)] = [
             (100, 100, 28), (100, 100, 46), (100, 100, 64), (100, 100, 82),
             (82, 100, 55), (118, 100, 55), (100, 82, 55), (100, 118, 55),

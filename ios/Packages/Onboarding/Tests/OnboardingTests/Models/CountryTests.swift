@@ -14,8 +14,6 @@ struct CountryTests {
         #expect(Country.cameroon.grouped("") == "")
     }
 
-    /// Gabon's mask is eight characters long, so the prototype's grouping leaves a lone
-    /// trailing one: `X XX XX XX X`. The issue's table dropped it.
     @Test("The placeholder mask follows the country's digit count",
           arguments: [("CM", "6 XX XX XX XX"), ("CI", "X XX XX XX XXX"), ("GA", "X XX XX XX X")])
     func placeholderFollowsDigitCount(id: String, expected: String) throws {

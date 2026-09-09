@@ -1,9 +1,5 @@
 import SwiftUI
 
-// Light/dark resolution. Every colour token is declared as a light/dark pair
-// and resolved per trait collection, so a token is never a single hex that a
-// dark screen then has to fight.
-
 nonisolated public extension Color {
     static func adaptive(light: UInt32, dark: UInt32) -> Color {
         Color(uiColor: UIColor { $0.userInterfaceStyle == .dark ? UIColor(rgb: dark) : UIColor(rgb: light) })

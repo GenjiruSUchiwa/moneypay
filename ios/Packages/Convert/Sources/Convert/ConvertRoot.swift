@@ -30,7 +30,6 @@ public struct ConvertView: View {
             VStack(spacing: 0) {
                 leg(flag: "🇨🇲", code: "FCFA",
                     note: Text("Available: \(Fmt.xaf(store.balanceXAF))", bundle: .module)) {
-                    // The leg already names the currency on its left, so the entry carries none.
                     AmountEntry(digits: $digits, display: Fmt.group(xaf), currency: "", size: 26)
                 }
                 ZStack {
@@ -54,8 +53,6 @@ public struct ConvertView: View {
 
             Rule()
 
-            // The margin is shown, not buried in the rate. That is the whole
-            // argument against the apps that hide it.
             VStack(spacing: 0) {
                 kv(Text("Interbank rate", bundle: .module),
                    Text(verbatim: "1 USD = \(Fmt.xaf(Int(store.fx.usdToXAF)))"))

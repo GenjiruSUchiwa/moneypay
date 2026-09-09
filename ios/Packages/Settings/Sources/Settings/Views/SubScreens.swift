@@ -3,8 +3,6 @@ import Foundation
 import SwiftUI
 import WalletStore
 
-// MARK: - Personal details
-
 public struct ProfileView: View {
     public init() {
     }
@@ -90,8 +88,6 @@ public struct ProfileView: View {
         .padding(.vertical, Metric.rowVertical)
     }
 }
-
-// MARK: - Limits
 
 public struct LimitsView: View {
     public init() {
@@ -187,8 +183,6 @@ public struct LimitsView: View {
     }
 }
 
-// MARK: - Security
-
 public struct SecurityView: View {
     public init() {
     }
@@ -278,8 +272,6 @@ public struct SecurityView: View {
     }
 }
 
-// MARK: - Devices
-
 public struct DevicesView: View {
     public init() {
     }
@@ -316,8 +308,6 @@ public struct DevicesView: View {
 
     private static let lastSeen = Date.now.addingTimeInterval(-10 * 24 * 3600)
 }
-
-// MARK: - Documents
 
 public struct DocumentsView: View {
     public init() {

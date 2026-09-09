@@ -1,14 +1,8 @@
 import SwiftUI
 
-/// The progress dots for a passcode entry.
-/// Pass a `Binding` to own the system number pad; pass a count for a display-only
-/// indicator. Use `OTPBoxes` for a code that can be autofilled — a passcode never is,
-/// so this component deliberately offers no content type.
 public struct PasscodeDots: View {
-    /// Display-only dots. No keyboard.
     public init(filled: Int, total: Int = 4, error: Bool = false) {
         let slots = max(0, total)
-        // The dots draw a count and never a digit, so any digit stands in for a filled slot.
         self._code = .constant(String(repeating: "0", count: min(max(0, filled), slots)))
         self.total = slots
         self.error = error
@@ -16,8 +10,6 @@ public struct PasscodeDots: View {
         self.editable = false
     }
 
-    /// Editable dots. Owns the system number pad; the caller only holds the digits.
-    /// `code` is clamped to `total` digits and never contains a non-digit.
     public init(code: Binding<String>, total: Int = 4, error: Bool = false, autofocus: Bool = true) {
         self._code = code
         self.total = max(0, total)
@@ -51,7 +43,6 @@ public struct PasscodeDots: View {
             .accessibilityValue(progress)
     }
 
-    // VoiceOver activates the field to type, so the announcement lives on the field.
     private var editableBody: some View {
         dots
             .accessibilityHidden(true)

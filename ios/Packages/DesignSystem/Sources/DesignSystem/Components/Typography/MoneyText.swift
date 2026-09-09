@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// A number with superscript cents and tabular figures. That detail is what
-/// separates a typeset amount from one that is merely printed.
 public struct MoneyText: View {
     public init(
         whole: String,
@@ -37,8 +35,6 @@ public struct MoneyText: View {
                          size: size, weight: weight, color: color)
     }
 
-    /// `unit: false` in list columns: the currency is implicit there, and
-    /// repeating it on every row is noise.
     public static func xaf(_ amount: Int, size: CGFloat = 34, weight: Font.Weight = .semibold,
                            color: Color = Brand.ink, signed: Bool = false,
                            unit: Bool = true) -> MoneyText {

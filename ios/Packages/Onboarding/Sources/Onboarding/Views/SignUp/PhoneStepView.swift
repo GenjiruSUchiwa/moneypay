@@ -2,7 +2,6 @@ import ApiClient
 import DesignSystem
 import SwiftUI
 
-/// Step 0: the number every code and every Mobile Money top-up will use.
 struct PhoneStepView: View {
     let model: SignUpModel
     let onContinue: () -> Void

@@ -1,7 +1,5 @@
 import Foundation
 
-/// Key-value storage for non-sensitive preferences (theme, onboarding seen).
-/// Nothing sensitive here: no passcode, no token, no PAN. That is the Keychain.
 public protocol KeyValueStoring: Sendable {
     func string(forKey key: String) -> String?
     func bool(forKey key: String) -> Bool
@@ -10,9 +8,6 @@ public protocol KeyValueStoring: Sendable {
 }
 
 public struct UserDefaultsKeyValueStore: KeyValueStoring {
-    // UserDefaults is not Sendable but is thread-safe by contract (Apple
-    // documents it), so the annotation tells the compiler what the platform
-    // already guarantees.
     nonisolated(unsafe) private let defaults: UserDefaults
 
     public init(defaults: UserDefaults = .standard) {

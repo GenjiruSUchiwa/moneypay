@@ -86,7 +86,6 @@ public struct TransactionDetailView: View {
         .padding(.top, 22)
     }
 
-    /// The breakdown that shows where the money actually goes.
     private var breakdown: some View {
         VStack(alignment: .leading, spacing: 0) {
             Eyebrow(text: Text("Breakdown", bundle: .module)).gutter().padding(.top, 22).padding(.bottom, 6)
@@ -144,9 +143,6 @@ public struct TransactionDetailView: View {
     private func paidWith(_ card: VirtualCard) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Eyebrow(text: Text("Paid with", bundle: .module)).gutter().padding(.top, 22).padding(.bottom, 2)
-            // No link to CardDetailView: Cards depends on Transactions
-            // (CardDetailView lists a card's transactions), so the reverse
-            // would make a cycle between the two packages.
             Group {
                 HStack(spacing: 12) {
                     RoundedRectangle(cornerRadius: 5, style: .continuous)

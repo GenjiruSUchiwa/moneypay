@@ -1,10 +1,5 @@
 import SwiftUI
 
-/// One line of phone entry: a country button, a hairline, and the national digits
-/// (prototype `#signupPhone`). The country list, the dial codes and the digit grouping
-/// belong to the feature that owns them — this component only displays what it is given.
-///
-/// For any other kind of text, use `Field`.
 public struct PhoneField: View {
     public init(
         flag: FlagMark.Country,
@@ -75,7 +70,6 @@ public struct PhoneField: View {
         .accessibilityLabel(Text("Phone number", bundle: .module))
     }
 
-    // The caller groups; the caller must never get its own separators handed back.
     private var displayed: Binding<String> {
         Binding(get: { groupedDigits }, set: { digits = $0.filter(\.isNumber) })
     }

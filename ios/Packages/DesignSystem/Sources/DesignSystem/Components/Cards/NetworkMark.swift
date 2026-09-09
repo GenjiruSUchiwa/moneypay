@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Network mark. Mastercard as two discs, Visa as a wordmark.
 public struct NetworkMark: View {
     public init(network: CardNetwork, ink: Color, scale: CGFloat = 1) {
         self.network = network

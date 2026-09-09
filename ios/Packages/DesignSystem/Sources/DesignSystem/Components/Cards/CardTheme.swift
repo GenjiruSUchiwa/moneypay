@@ -4,8 +4,6 @@ public enum CardTheme: String, CaseIterable, Identifiable, Codable, Sendable {
     case ink, bone, pine, clay, slate, cobalt, ndop
     public var id: String { rawValue }
 
-    /// Fills and inks are the prototype's `CARD_THEMES` (`sapin`, `encre`, `ivoire`,
-    /// `terre`, `ardoise`, `cobalt`, `ndop`).
     public var fill: Color {
         switch self {
         case .ink:    Color(rgb: 0x15181B)
@@ -18,7 +16,6 @@ public enum CardTheme: String, CaseIterable, Identifiable, Codable, Sendable {
         }
     }
 
-    /// Ink that stays legible on this fill.
     public var ink: Color {
         switch self {
         case .ink:    Color(rgb: 0xF2F3F1)
@@ -31,13 +28,10 @@ public enum CardTheme: String, CaseIterable, Identifiable, Codable, Sendable {
         }
     }
 
-    /// The bright green the brand mark takes on the deep-green card; nil elsewhere.
     public var accent: Color? { self == .pine ? Color(rgb: 0x3CDD9B) : nil }
 
-    /// A light fill: the mark's tile darkens instead of lightening.
     public var isLight: Bool { self == .bone }
 
-    /// Design-token name, not user copy; rendered verbatim.
     public var label: String {
         switch self {
         case .ink: "Ink"; case .bone: "Bone"; case .pine: "Pine"

@@ -31,7 +31,6 @@ struct MainTabView: View {
             Tab("Profile", systemImage: "person.fill", value: 4) {
                 SettingsView()
             }
-            // Dev-only review tool: only the composition root may depend on Gallery.
             Tab("Gallery", systemImage: "square.grid.2x2", value: 5) {
                 GalleryView()
             }

@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Status pill. Always icon plus label: never colour on its own.
 public struct StatusPill: View {
     public init(text: Text, symbol: String, tint: Color, soft: Color) {
         self.text = text

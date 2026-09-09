@@ -12,8 +12,6 @@ struct RootView: View {
     @Environment(Store.self) private var store
     @State private var phase: AppPhase = .onboarding
 
-    /// `-screen <key>` opens one catalog view directly. Used for review
-    /// screenshots; no effect in normal use.
     private var directScreen: CatalogEntry? {
         let args = ProcessInfo.processInfo.arguments
         guard let i = args.firstIndex(of: "-screen"), i + 1 < args.count else { return nil }

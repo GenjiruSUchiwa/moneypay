@@ -2,7 +2,6 @@ import ApiClient
 import DesignSystem
 import SwiftUI
 
-/// Reuses the shipping screens with local state, without implying a successful authentication.
 struct AuthenticationPreviewFlow: View {
     init(scenario: OnboardingRoot.PreviewScenario, onClose: @escaping () -> Void) {
         let model = SignUpModel(accounts: PreviewAccountClient())

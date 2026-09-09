@@ -11,9 +11,6 @@ import TopUp
 import Transactions
 import WalletStore
 
-/// The single registry of every view in the mockup.
-/// It serves two uses: the in-app gallery, and launching straight into one
-/// screen (`-screen <key>`) to capture it without replaying the flows.
 public struct CatalogEntry: Identifiable {
     public init(
         key: String,
@@ -191,8 +188,6 @@ public enum ScreenCatalog {
         }
     }
 
-    /// Identity and presentation of one entry, grouped so the builder below
-    /// takes a value plus its view instead of six positional parameters.
     private struct EntryInfo {
         let key: String
         let title: String

@@ -28,7 +28,6 @@ public struct TransactionRow: View {
 
             VStack(alignment: .trailing, spacing: 2) {
                 if tx.status == .declined {
-                    // Nothing was debited: say so, rather than strike a zero.
                     Text(verbatim: "—").font(.bodyMed).foregroundStyle(Brand.inkFaint)
                 } else {
                     MoneyText.xaf(tx.amountXAF, size: 16, weight: .medium,

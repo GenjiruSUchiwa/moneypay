@@ -1,7 +1,6 @@
 import Foundation
 import SwiftUI
 
-/// Stacks rows separated by an inset hairline. No container.
 public struct RuledStack<Data: RandomAccessCollection, Content: View>: View where Data.Element: Identifiable {
     public init(data: Data, inset: CGFloat = 51, @ViewBuilder row: @escaping (Data.Element) -> Content) {
         self.data = data

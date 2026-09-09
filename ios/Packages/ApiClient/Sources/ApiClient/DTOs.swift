@@ -1,9 +1,5 @@
 import Foundation
 
-// An exact mirror of the `poc/server.js` contract (see poc/README.md).
-// Amounts travel as integer minor units, as everywhere else in this codebase:
-// XAF has no decimals, USD has two and travels in cents.
-
 public struct SignupRequest: Codable, Sendable, Hashable {
     public var name: String
     public var phone: String
@@ -91,8 +87,6 @@ public struct CardDTO: Codable, Sendable, Hashable {
 }
 
 public enum ApiError: Error, Sendable, Equatable {
-    /// The POC runs locally: out of coverage, or with the server down, the
-    /// app must stay usable in mock mode rather than show an error.
     case unreachable
     case status(Int, body: String)
     case decoding(String)

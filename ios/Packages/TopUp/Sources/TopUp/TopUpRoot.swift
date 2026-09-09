@@ -39,8 +39,6 @@ public struct TopUpFlow: View {
         .sensoryFeedback(.success, trigger: step) { _, new in new == .done }
     }
 
-    // MARK: Amount
-
     private var amountStep: some View {
         VStack(spacing: 0) {
             Spacer()
@@ -100,8 +98,6 @@ public struct TopUpFlow: View {
         }
     }
 
-    // MARK: Confirmation
-
     private var confirmStep: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -160,7 +156,6 @@ public struct TopUpFlow: View {
         }
     }
 
-    /// Operator code name, keyed on `id` so a translated name never changes the branch.
     private var codeName: String {
         method.id == "mtn" ? "MoMo" : String(localized: "carrier", bundle: .module)
     }
@@ -174,8 +169,6 @@ public struct TopUpFlow: View {
         }
         .padding(.vertical, Metric.rowVertical)
     }
-
-    // MARK: Receipt
 
     private var receipt: some View {
         VStack(alignment: .leading, spacing: 0) {

@@ -5,8 +5,6 @@ import Testing
 
 @testable import MoniPay
 
-/// No package test compiles the composition root, which is exactly where
-/// wiring mistakes hide.
 @Suite("Composition root")
 struct AppCompositionTests {
 

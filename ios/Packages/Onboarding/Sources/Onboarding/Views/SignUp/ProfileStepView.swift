@@ -3,16 +3,12 @@ import DesignSystem
 import Money
 import SwiftUI
 
-/// Step 4: the name and e-mail the account is created with. The fields write straight into
-/// the draft, so stepping back and forward keeps what was typed.
 struct ProfileStepView: View {
     @Bindable var model: SignUpModel
     let onFinish: (User) -> Void
     var feedback: AuthenticationFeedback?
     var onRecovery: () -> Void = {}
 
-    /// `Toast` dismisses itself after two seconds; the hand-off waits that long so the
-    /// warning is actually readable before KYC replaces this screen.
     private static let toastDwell: Duration = .seconds(2)
 
     private enum FieldKey: Hashable { case firstName, lastName, email }
@@ -96,8 +92,6 @@ struct ProfileStepView: View {
         guard feedback == nil else { onRecovery(); return }
         guard model.draft.isProfileValid else { return }
         focus = nil
-        // The package infers main-actor isolation by default, so this task stays on the main
-        // actor and `model.submit()` needs no hop of its own.
         Task {
             let user = await model.submit()
             if model.submissionFailed {

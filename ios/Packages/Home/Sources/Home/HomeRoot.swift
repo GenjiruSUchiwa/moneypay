@@ -47,8 +47,6 @@ public struct HomeView: View {
         }
     }
 
-    // MARK: Header
-
     private var topBar: some View {
         HStack(spacing: 10) {
             NavigationLink { SettingsView() } label: {
@@ -82,8 +80,6 @@ public struct HomeView: View {
         .frame(height: 46)
         .background(Brand.bg)
     }
-
-    // MARK: Balance
 
     private var balance: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -135,8 +131,6 @@ public struct HomeView: View {
         .padding(.top, 24)
     }
 
-    // MARK: This month
-
     private var monthRow: some View {
         HStack(alignment: .top, spacing: 0) {
             monthCell("In", store.monthCreditXAF, "arrow.down.left", Brand.credit)
@@ -161,8 +155,6 @@ public struct HomeView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-
-    // MARK: Cards
 
     private var cardsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -207,8 +199,6 @@ public struct HomeView: View {
         }
         .padding(.bottom, 24)
     }
-
-    // MARK: Activity
 
     private var activitySection: some View {
         VStack(alignment: .leading, spacing: 6) {

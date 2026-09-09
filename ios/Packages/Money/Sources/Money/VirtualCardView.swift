@@ -13,8 +13,6 @@ public struct VirtualCardView: View {
     public var compact = false
 
     private var ink: Color { card.theme.ink }
-    /// The mark's tile: the prototype's translucent accent, dark on a light card,
-    /// white elsewhere.
     private var markTint: Color {
         if let accent = card.theme.accent { return accent.opacity(0.16) }
         return card.theme.isLight ? ink.opacity(0.08) : Color.white.opacity(0.10)
@@ -30,7 +28,7 @@ public struct VirtualCardView: View {
 
             content.padding(pad)
         }
-        .aspectRatio(1.586, contentMode: .fit)          // ratio ISO/IEC 7810 ID-1
+        .aspectRatio(1.586, contentMode: .fit)
         .clipShape(.rect(cornerRadius: compact ? 12 : 16, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: compact ? 12 : 16, style: .continuous)

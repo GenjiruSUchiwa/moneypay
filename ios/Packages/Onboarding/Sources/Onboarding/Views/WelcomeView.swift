@@ -47,9 +47,6 @@ struct WelcomeView: View {
         }
         .page()
         .onAppear { appeared = true }
-        // One task per generation: a swipe, a tap or a release restarts the dwell
-        // instead of waiting out the previous one. VoiceOver users drive the deck
-        // with the adjustable action, so no auto-advance while it is on.
         .task(id: voiceOverEnabled ? nil : model.generation) {
             guard !voiceOverEnabled else { return }
             await model.autoAdvanceAfterDwell()
@@ -129,7 +126,6 @@ private struct WelcomeActions: View {
 }
 
 private extension View {
-    /// Cascaded entrance: element `index` rises in `Motion.stagger` after the one before it.
     func rise(_ index: Int, appeared: Bool) -> some View {
         modifier(Rise(index: index, appeared: appeared))
     }
