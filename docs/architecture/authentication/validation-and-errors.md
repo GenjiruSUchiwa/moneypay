@@ -39,26 +39,32 @@ The host owns transport validation. No slice repeats it.
 
 | Check | Implementation | Result |
 |---|---|---|
-| `Content-Type` is `application/vnd.api+json` for a request with a body | Endpoint filter on every JSON:API group | `415` |
-| Media-type parameters other than `ext` and `profile` | Same filter | `415` |
-| `Accept` includes a supported response type | Same filter | `406` |
-| Body parses as JSON | `System.Text.Json` through minimal-API binding | `400 malformed-json` |
-| Document has `data`, `data.type`, and `data.attributes` | `JsonApiRequest<TData>` binding | `400 jsonapi-document-invalid` |
-| `data.type` equals the slice resource type | Same binding | `400 jsonapi-document-invalid` |
+| `Content-Type` is `application/vnd.api+json` for a request with a body | `JsonApiTransportMiddleware` on every JSON:API group | `415` |
+| A `Content-Type` parameter other than `profile`, including `ext` | Same middleware | `415` |
+| `Accept` includes a supported response type | Same middleware, reading the ranges with the framework's media-type list parser | `406` |
+| Body parses as JSON | The same middleware, through `System.Text.Json` | `400 malformed-json` |
+| Document has `data`, `data.type`, and `data.attributes` | The same middleware, reading the envelope case-sensitively | `400 jsonapi-document-invalid` |
+| `data.type` equals the slice resource type | The same middleware, against the route's `JsonApiResourceType` metadata | `400 jsonapi-document-invalid` |
 | Unknown attribute member | `JsonUnmappedMemberHandling.Disallow` on request records | `400 jsonapi-document-invalid` |
-| Body over 8 KiB | Kestrel request-size limit on the sign-up and session groups | `413` |
+| Body over 8 KiB | The same middleware, buffering at most 8 KiB and refusing past it | `413` |
 
 Unknown attributes are rejected, not ignored. A misspelled `verificationCode` must not silently pass as an empty value.
 
 The transport check lives in `MoniPay.Api/Http/JsonApiTransportMiddleware.cs`. Modules mark a group through a Kernel-declared convention name, `MoniPayConventions.JsonApi`, so no module references the host.
 
+A marked endpoint also declares the wildcard content type: `.Accepts<TRequest>(MoniPayMediaTypes.JsonApi, MoniPayMediaTypes.AnyContentType)`. Minimal APIs otherwise infer `application/json`, and the routing matcher would answer a `415` of its own during routing — before the no-store convention, the security middleware and this check — through an endpoint that carries none of their metadata. The wildcard keeps the media-type decision here, where it belongs, and `JsonApiRequestBodyTransformer` publishes `application/vnd.api+json` alone in the OpenAPI document. `JsonApiEndpointConventionTests` fails if a marked endpoint forgets it.
+
 It runs after routing and authentication and before minimal-API binding reads the body, so a rejected request never reaches the endpoint. The documented order is: routing, the no-store convention, the IP rate limiter, authentication and authorization, the JSON:API transport check, binding, the endpoint. The limiter and authentication still short-circuit first, which preserves the security behavior from #92.
 
-The check reads the body once, bounded to 8 KiB, so the limit holds for a known and an unknown content length alike. It parses the body to tell invalid JSON syntax (`400 malformed-json`) from a valid JSON body with the wrong JSON:API shape (`400 jsonapi-document-invalid`), and it never matches framework exception text.
+The check reads the body once into a bounded buffer, so the limit holds for a known and an unknown content length alike and Kestrel is not asked to enforce it. It parses the body to tell invalid JSON syntax (`400 malformed-json`) from a valid JSON body with the wrong JSON:API shape (`400 jsonapi-document-invalid`), and it never matches framework exception text. A string the document cannot decode, such as a lone surrogate escape, is refused at this boundary too, so it never surfaces as a `500`.
 
 A slice supplies the expected `data.type` as `JsonApiResourceType` endpoint metadata, because the generic envelope cannot know which resource a route owns. Unknown members are rejected by `JsonUnmappedMemberHandling.Disallow` on the slice's attribute record, because the envelope's annotation is not recursive. Binding failures throw (`RouteHandlerOptions.ThrowOnBadRequest`) and map to `400 jsonapi-document-invalid`.
 
-`Accept` must allow a JSON:API success representation. A client that accepts only `application/problem+json` is refused with `406 not-acceptable` before the endpoint runs; the error body is still Problem Details, because the error format is not negotiated. An explicit `q=0` on the JSON:API type beats a wildcard. `ext` and `profile` are accepted as parameter names on the request `Content-Type` and ignored; no extension is implemented, and an `Accept` range that names one does not match.
+The middleware reads the envelope case-sensitively, and the minimal-API binding is configured the same way (`JsonOptions.SerializerOptions.PropertyNameCaseInsensitive = false`), because JSON:API member names are case sensitive. The two readers therefore agree: a `Type` member cannot pass validation as `type` and then bind as the resource type, and a trailing `Data: null` cannot blank a valid `data`.
+
+A request body must be `application/vnd.api+json`. A `profile` parameter is accepted and ignored, which is what JSON:API 1.1 requires of a profile the server does not recognize; every other parameter — `charset`, an unknown one, or `ext`, because no extension is implemented — is refused with `415 unsupported-media-type`.
+
+`Accept` must allow a JSON:API success representation. The middleware splits the header with `MediaTypeHeaderValue.TryParseList`, so a comma inside a quoted parameter (`text/plain;note=",application/vnd.api+json,"`) stays part of that parameter and never invents a range. JSON:API 1.1 decides the rest: an instance modified by a parameter other than `ext` or `profile` is ignored, a `profile` is ignored and still matches, and an instance asking for an extension does not match, because no extension is implemented. When every JSON:API instance in the header is one the server must ignore — all modified by a forbidden parameter, or all asking for an unsupported extension — the answer is `406 not-acceptable`, and a wildcard in the same header does not lift that rule. An explicit `q=0` on the JSON:API type beats a wildcard. A client that accepts only `application/problem+json` is refused before the endpoint runs; the error body is still Problem Details, because the error format is not negotiated.
 
 ## Layer 2: request attributes
 
@@ -316,9 +322,9 @@ internal sealed class MoniPayExceptionHandler(
   `HttpContext.TraceIdentifier`.
 - Preserves `WWW-Authenticate`, `Allow`, `Pragma` and an existing `Retry-After`. It does not
   replace a response whose body has started, and it skips the body for `HEAD`.
-- Adds `Retry-After` for a refusal that carries a delay. `no-store` stays the no-store
-  convention's job: `NoStoreMiddleware` already marks the credential routes before any
-  short-circuit, so the writer preserves that header instead of duplicating it.
+- Adds `Retry-After` for a refusal that carries a delay. The writer never touches `Cache-Control`
+  or `Pragma`: `NoStoreMiddleware` owns the `no-store` convention and marks a credential route
+  before any short-circuit, including the response an exception handler formats.
 
 The writer never copies `exception.Message` into the body. A `500` body has `type`, `status`,
 `title`, `instance`, and `traceId` only.
@@ -345,7 +351,9 @@ unchanged.
 
 ## Authentication failures
 
-Authentication handlers do not throw. They return `AuthenticateResult.Fail` and let the challenge produce a `401` through the Problem Details writer. The challenge stores its own scheme's stable code in `HttpContext.Items` (`MoniPayHttpContextItems.AuthenticationProblemCode`), and the writer reads it when it formats a bare `401`, so the body names the credential without trusting the submitted authorization scheme. The bearer handler clears the JWT error description, because the reason for the refusal stays in the log.
+Authentication handlers do not throw. They return `AuthenticateResult.Fail` and let the challenge produce a `401` through the Problem Details writer. The challenge stores its own scheme's stable code in `HttpContext.Items` (`MoniPayHttpContextItems.AuthenticationProblemCode`), and the writer reads it when it formats a bare `401`, so the body names the credential without trusting the submitted authorization scheme.
+
+The bearer handler clears the JWT error description and records the cause itself. The framework's own token diagnostics are `Information` level under `Microsoft.AspNetCore`, which the production configuration filters out, so `SessionsModule` logs one `SessionsLog.BearerTokenRefused` event at `Warning` with a bounded cause (`expired`, `not-yet-valid`, `invalid-signature`, `malformed`, `rejected`, `unknown`). Neither the token, the credentials, nor the validation exception's message is logged, and the challenge body stays generic.
 
 | Scheme | Header | Bound to | Failure type |
 |---|---|---|---|

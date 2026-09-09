@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MoniPay.Kernel;
@@ -91,7 +92,8 @@ public static class SessionsModule
             .AddJwtBearer();
 
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-            .Configure<IOptions<SessionsOptions>, TimeProvider>((bearer, sessions, clock) =>
+            .Configure<IOptions<SessionsOptions>, TimeProvider, ILogger<SessionMessages>>(
+                (bearer, sessions, clock, logger) =>
             {
                 SessionsOptions settings = sessions.Value;
                 bearer.TimeProvider = clock;
@@ -108,6 +110,12 @@ public static class SessionsModule
                 };
                 bearer.Events = new JwtBearerEvents
                 {
+                    // The challenge body stays generic; the cause stays in this module's log.
+                    OnAuthenticationFailed = failure =>
+                    {
+                        SessionsLog.BearerTokenRefused(logger, CauseOf(failure.Exception));
+                        return Task.CompletedTask;
+                    },
                     OnChallenge = challenge =>
                     {
                         challenge.HttpContext.Items[MoniPayHttpContextItems.AuthenticationProblemCode] =
@@ -119,6 +127,20 @@ public static class SessionsModule
                 };
             });
     }
+
+    /// <summary>
+    /// A bounded cause for a rejected access JWT. The framework's own diagnostic carries the
+    /// validation exception, whose message can quote token content, so it is never logged here.
+    /// </summary>
+    private static string CauseOf(Exception? exception) => exception switch
+    {
+        SecurityTokenExpiredException => "expired",
+        SecurityTokenNotYetValidException => "not-yet-valid",
+        SecurityTokenInvalidSignatureException => "invalid-signature",
+        SecurityTokenMalformedException => "malformed",
+        null => "unknown",
+        _ => "rejected",
+    };
 
     private static IEnumerable<SecurityKey> IssuerSigningKeys(SessionsOptions sessions)
     {
