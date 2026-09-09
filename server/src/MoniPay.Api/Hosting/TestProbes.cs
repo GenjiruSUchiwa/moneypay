@@ -18,8 +18,8 @@ namespace MoniPay.Api.Hosting;
 /// <summary>
 /// The throwaway endpoints the authentication schemes, the named policies, the IP rate limits
 /// and the no-store convention are proven on. They exist in the Testing environment only and
-/// vanish when the real routes land (#97 to #100): they answer 200 with no body semantics, and
-/// a test reads the status the host answers a credential with.
+/// vanish when the real routes land (#97 to #100): they answer 200 and the JSON:API widget route
+/// echoes what the binder produced, so a test proves the values the endpoint actually received.
 /// </summary>
 internal static class TestProbes
 {
@@ -33,6 +33,8 @@ internal static class TestProbes
     private const string ErrorRoute = "/test/errors/{kind}";
     private const string WidgetRoute = "/test/jsonapi/widgets";
     private const string WidgetReadRoute = "/test/jsonapi/widgets/read";
+    private const string WidgetSecureRoute = "/test/jsonapi/widgets/secure";
+    private const string WidgetLimitedRoute = "/test/jsonapi/widgets/limited";
     private const string WidgetResourceType = "widgets";
 
     /// <summary>The endpoint name the error probe logs under.</summary>
@@ -68,13 +70,36 @@ internal static class TestProbes
             .WithName(ErrorProbeName)
             .WithMetadata(MoniPayConventions.NoStore);
 
-        app.MapPost(WidgetRoute, AcceptWidget)
-            .WithMetadata(MoniPayConventions.JsonApi)
-            .WithMetadata(new JsonApiResourceType(WidgetResourceType))
-            .WithMetadata(MoniPayConventions.NoStore);
+        app.MapWidgetEndpoint(WidgetRoute);
 
         app.MapGet(WidgetReadRoute, () => Results.Ok())
             .WithMetadata(MoniPayConventions.JsonApi)
+            .WithMetadata(MoniPayConventions.NoStore);
+
+        // The two routes that carry both the JSON:API transport metadata and a security
+        // metadata, so a test can prove the security middleware answers first.
+        app.MapWidgetEndpoint(WidgetSecureRoute)
+            .RequireAuthorization(MoniPayPolicies.AuthenticatedUser);
+
+        app.MapWidgetEndpoint(WidgetLimitedRoute)
+            .RequireRateLimiting(SignUpRateLimitPolicies.Start);
+    }
+
+    /// <summary>
+    /// A JSON:API widget route, declared the way a slice declares one: the transport marker, the
+    /// expected resource type, the no-store convention, and the wildcard content type that keeps
+    /// the routing matcher from answering a media-type rejection of its own.
+    /// </summary>
+    private static RouteHandlerBuilder MapWidgetEndpoint(this IEndpointRouteBuilder app, string route)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        return app.MapPost(route, AcceptWidget)
+            .Accepts<JsonApiRequest<JsonApiRequestResource<WidgetAttributes>>>(
+                MoniPayMediaTypes.JsonApi,
+                MoniPayMediaTypes.AnyContentType)
+            .WithMetadata(MoniPayConventions.JsonApi)
+            .WithMetadata(new JsonApiResourceType(WidgetResourceType))
             .WithMetadata(MoniPayConventions.NoStore);
     }
 
@@ -89,11 +114,14 @@ internal static class TestProbes
         public required string Name { get; init; }
     }
 
+    /// <summary>What the endpoint received, so a test asserts the bound values and not just a status.</summary>
+    internal sealed record ReceivedWidget(string Type, string Name);
+
     private static IResult AcceptWidget(JsonApiRequest<JsonApiRequestResource<WidgetAttributes>> request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        return Results.Ok();
+        return Results.Ok(new ReceivedWidget(request.Data.Type, request.Data.Attributes.Name));
     }
 
     private static IResult ThrowProbe(string kind) => throw ErrorFor(kind);

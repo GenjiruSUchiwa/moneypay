@@ -12,6 +12,14 @@ public static class MoniPayMediaTypes
     /// <summary>RFC 9457 Problem Details error bodies.</summary>
     public const string ProblemJson = "application/problem+json";
 
+    /// <summary>
+    /// Every media type. A JSON:API endpoint declares it alongside <see cref="JsonApi"/> so the
+    /// routing matcher does not answer a <c>415</c> of its own before the host's transport check
+    /// runs; that check stays the only owner of the media-type decision, and the OpenAPI
+    /// transformer publishes <see cref="JsonApi"/> alone.
+    /// </summary>
+    public const string AnyContentType = "*/*";
+
     /// <summary>The <c>Accept</c> value clients send: JSON:API success and Problem Details errors.</summary>
     public const string Accept = $"{JsonApi}, {ProblemJson}";
 }
