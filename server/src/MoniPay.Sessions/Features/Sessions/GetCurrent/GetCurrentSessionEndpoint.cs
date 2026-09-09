@@ -1,7 +1,5 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Http;
@@ -10,7 +8,8 @@ namespace MoniPay.Sessions.Features.Sessions.GetCurrent;
 
 /// <summary>
 /// Reads the current session. The bearer credential is the only thing that names it: the route
-/// takes no identifier, so no body or query can select another user's session.
+/// takes no identifier, so no body or query can select another user's session. A client that
+/// sends a body is answered with a 415 before it is read.
 /// </summary>
 internal static class GetCurrentSessionEndpoint
 {
@@ -21,33 +20,36 @@ internal static class GetCurrentSessionEndpoint
         routes.MapGet(SessionRoutes.Current, GetAsync)
             .WithName(SessionEndpointNames.GetCurrentSession)
             .WithSummary(SessionSummaries.GetCurrentSession)
+            .WithMetadata(new JsonApiNoBody())
             .Produces<JsonApiResponse<JsonApiResponseResource<ReadSessionAttributes>>>(
                 StatusCodes.Status200OK,
                 MoniPayMediaTypes.JsonApi)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
-            .ProducesProblem(StatusCodes.Status406NotAcceptable);
+            .ProducesProblem(StatusCodes.Status406NotAcceptable)
+            .ProducesProblem(StatusCodes.Status415UnsupportedMediaType)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
         return routes;
     }
 
     private static async Task<IResult> GetAsync(
         GetCurrentSessionHandler handler,
-        ClaimsPrincipal principal,
+        HttpContext http,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(handler);
-        ArgumentNullException.ThrowIfNull(principal);
+        ArgumentNullException.ThrowIfNull(http);
 
-        (Guid sessionId, UserId userId) = SessionIdentity.Of(principal);
+        // The ticket the active-session policy already parsed and proved.
+        SessionTicket ticket = SessionIdentity.Published(http);
         CurrentSessionView view = await handler
-            .HandleAsync(sessionId, userId, SessionIdentity.AccessTokenExpiry(principal), cancellationToken)
+            .HandleAsync(
+                ticket.SessionId,
+                ticket.UserId,
+                SessionIdentity.AccessTokenExpiry(http.User),
+                cancellationToken)
             .ConfigureAwait(false);
 
-        JsonApiResponseResource<ReadSessionAttributes> resource = SessionResources.Read(view);
-
-        return TypedResults.Json(
-            JsonApiResponses.Document(resource),
-            contentType: MoniPayMediaTypes.JsonApi,
-            statusCode: StatusCodes.Status200OK);
+        return JsonApiResults.Json(SessionResources.Read(view));
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using MoniPay.Kernel.Errors;
+using MoniPay.Kernel.Http;
 using MoniPay.Kernel.Validation;
 
 namespace MoniPay.Api.Errors;
@@ -34,6 +35,15 @@ internal sealed class MoniPayExceptionHandler(
         if (exception is RefusalException { RetryAfter: { } delay })
         {
             context.Response.Headers.RetryAfter = RetryAfterHeader.Format(delay);
+        }
+
+        // A refused credential is a challenge wherever it is decided. A route that only discovers
+        // the credential names nothing once it is past the policy must answer the same 401 the
+        // challenge path answers, so the client drops the credential instead of retrying it.
+        if (exception is RefusalException refused
+            && refused.Type.Code == MoniPayErrorTypes.SessionInvalid.Code)
+        {
+            context.Response.Headers.WWWAuthenticate = MoniPayHeaders.Bearer;
         }
 
         Log(context, exception, MoniPayErrorTypes.CodeFromUrn(problem.Type) ?? MoniPayErrorTypes.Internal.Code);

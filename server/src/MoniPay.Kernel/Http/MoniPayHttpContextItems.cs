@@ -12,4 +12,11 @@ public static class MoniPayHttpContextItems
     /// the submitted authorization scheme never decides it.
     /// </summary>
     public const string AuthenticationProblemCode = "MoniPay.AuthenticationProblemCode";
+
+    /// <summary>
+    /// The <see cref="MoniPay.Kernel.SessionTicket"/> the active-session policy parsed and proved. Written once
+    /// by the authorization handler; every endpoint behind the policy reads it instead of parsing
+    /// the principal again.
+    /// </summary>
+    public const string SessionTicket = "MoniPay.SessionTicket";
 }

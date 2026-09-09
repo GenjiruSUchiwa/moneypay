@@ -40,11 +40,6 @@ internal static class GetSignUpEndpoint
         SignUpId id = new(signUpId);
         SignUpView view = await handler.HandleAsync(id, cancellationToken).ConfigureAwait(false);
 
-        JsonApiResponseResource<ReadSignUpResourceAttributes> resource = SignUpResources.FromView(id, view);
-
-        return TypedResults.Json(
-            JsonApiResponses.Document(resource),
-            contentType: MoniPayMediaTypes.JsonApi,
-            statusCode: StatusCodes.Status200OK);
+        return JsonApiResults.Json(SignUpResources.FromView(id, view));
     }
 }

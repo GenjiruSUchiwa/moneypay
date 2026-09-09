@@ -216,7 +216,8 @@ public static class SessionsModule
             .WithTags(SessionTags.Sessions)
             .WithMetadata(MoniPayConventions.JsonApi)
             .WithMetadata(MoniPayConventions.NoStore)
-            .RequireAuthorization(MoniPayPolicies.AuthenticatedUser);
+            .RequireAuthorization(MoniPayPolicies.AuthenticatedUser)
+            .RequireRateLimiting(MoniPayRateLimitPolicies.AuthenticatedRead);
 
         sessions.MapGetCurrentSession();
         sessions.MapDeleteCurrentSession();

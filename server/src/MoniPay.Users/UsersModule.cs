@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MoniPay.Kernel;
-using MoniPay.Kernel.Http;
 using MoniPay.Kernel.Security;
 using MoniPay.Persistence;
 using MoniPay.Users.Features.CurrentUser;
@@ -58,19 +56,16 @@ public static class UsersModule
         return services;
     }
 
-    /// <summary>The user routes. The group carries the JSON:API and no-store markers and the authenticated policy.</summary>
+    /// <summary>
+    /// The user routes. The module serves one, so it is mapped on the shared route constant
+    /// itself and carries its own markers: a group would only add a second place for the path to
+    /// live.
+    /// </summary>
     public static IEndpointRouteBuilder MapUsersModule(this IEndpointRouteBuilder routes)
     {
         ArgumentNullException.ThrowIfNull(routes);
 
-        RouteGroupBuilder users = routes
-            .MapGroup(UserRoutes.Group)
-            .WithTags(UserTags.Users)
-            .WithMetadata(MoniPayConventions.JsonApi)
-            .WithMetadata(MoniPayConventions.NoStore)
-            .RequireAuthorization(MoniPayPolicies.AuthenticatedUser);
-
-        users.MapGetCurrentUser();
+        routes.MapGetCurrentUser();
 
         return routes;
     }

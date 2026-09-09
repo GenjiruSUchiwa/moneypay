@@ -36,7 +36,7 @@ public sealed class StartSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
 
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Equal(MoniPayMediaTypes.JsonApi, response.Content.Headers.ContentType?.ToString());
-        AssertNoStore(response);
+        response.AssertNoStore();
 
         JsonElement document = await JsonApiAssertions.ReadJsonApiAsync(response);
         JsonElement data = document.GetProperty("data");
@@ -322,13 +322,6 @@ public sealed class StartSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
             errors.EnumerateArray(),
             error => error.GetProperty("detail").GetString() == detail
                 && error.GetProperty("pointer").GetString() == StartSignUpPointers.Phone);
-    }
-
-    private static void AssertNoStore(HttpResponseMessage response)
-    {
-        Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
-        Assert.True(response.Headers.TryGetValues("Pragma", out IEnumerable<string>? pragma));
-        Assert.Equal("no-cache", Assert.Single(pragma!));
     }
 
     /// <summary>The detail the API answers for a validation code in its default culture, French.</summary>

@@ -6,7 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MoniPay.Api;
 using MoniPay.Api.Hosting;
+using MoniPay.Kernel;
+using MoniPay.Kernel.Http;
 using MoniPay.Tests.Support;
+using MoniPay.Users.Features.Registration;
 using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
@@ -92,6 +95,37 @@ public sealed class RateLimitTests(MoniPayApi api) : MoniPayApiTest(api)
             builder.UseSetting(MoniPayConfiguration.ForwardedHeadersKnownProxies, proxies));
 
         Assert.Throws<OptionsValidationException>(() => host.CreateClient());
+    }
+
+    [Fact]
+    public async Task An_authenticated_read_burst_above_the_budget_is_rejected_per_session()
+    {
+        using WebApplicationFactory<Program> host = Api.CreateHost(builder =>
+            builder.UseSetting(RateLimitOptions.Keys.AuthenticatedReadPerHour, "2"));
+        using HttpClient client = host.CreateClient();
+        client.DefaultRequestHeaders.Accept.ParseAdd(MoniPayMediaTypes.Accept);
+        RegisteredUser user = await Api.RegisterUserAsync(new PhoneNumber(TestPhones.Next()));
+        OpenedSession session = await Api.CreateSessionAsync(user.Id);
+        string token = TestTokens.Bearer(session.Session.UserId, session.Session.SessionId);
+
+        for (int request = 0; request < 2; request++)
+        {
+            using HttpResponseMessage allowed = await SignUpFlow.GetCurrentUserAsync(client, token);
+            Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
+        }
+
+        using HttpResponseMessage rejected = await SignUpFlow.GetCurrentUserAsync(client, token);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
+        Assert.NotNull(rejected.Headers.RetryAfter);
+
+        // The budget belongs to the session, not to the address the two sessions share.
+        OpenedSession other = await Api.CreateSessionAsync(user.Id);
+        using HttpResponseMessage another = await SignUpFlow.GetCurrentUserAsync(
+            client,
+            TestTokens.Bearer(other.Session.UserId, other.Session.SessionId));
+
+        Assert.Equal(HttpStatusCode.OK, another.StatusCode);
     }
 
     private static async Task<HttpStatusCode> ProbeAsync(HttpClient client, string? forwardedFor = null)

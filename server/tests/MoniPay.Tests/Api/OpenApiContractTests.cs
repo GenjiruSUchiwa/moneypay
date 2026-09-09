@@ -112,12 +112,8 @@ public sealed class OpenApiContractTests(MoniPayApi api)
     [Fact]
     public async Task The_current_user_route_is_bearer_only_with_the_six_attribute_schema()
     {
-        // The shared link constant mirrors the route the Users module serves: a rename must move
-        // both, and this pins them together.
-        Assert.Equal(UserRoutes.Group + UserRoutes.Me, MoniPayRoutes.CurrentUser);
-
         JsonElement document = await ReadOpenApiDocumentAsync();
-        JsonElement current = document.GetProperty("paths").GetProperty(UserRoutes.Group + UserRoutes.Me).GetProperty("get");
+        JsonElement current = document.GetProperty("paths").GetProperty(MoniPayRoutes.CurrentUser).GetProperty("get");
 
         JsonElement requirement = Assert.Single(current.GetProperty("security").EnumerateArray());
         Assert.Equal(

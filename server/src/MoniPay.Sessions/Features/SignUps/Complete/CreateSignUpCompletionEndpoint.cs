@@ -90,31 +90,14 @@ internal static class CreateSignUpCompletionEndpoint
             : throw new RefusalException(MoniPayErrorTypes.RegistrationTokenInvalid);
     }
 
-    private static IResult Replaced(SessionTokenResult session) => TypedResults.Json(
-        SessionDocument(session),
-        contentType: MoniPayMediaTypes.JsonApi,
-        statusCode: StatusCodes.Status200OK);
+    private static IResult Replaced(SessionTokenResult session) =>
+        JsonApiResults.Json(SessionResources.Credentials(session));
 
     private static IResult Created(SessionTokenResult session, HttpContext http)
     {
         ArgumentNullException.ThrowIfNull(http);
         http.Response.Headers.Location = SessionResources.Self;
 
-        return TypedResults.Json(
-            SessionDocument(session),
-            contentType: MoniPayMediaTypes.JsonApi,
-            statusCode: StatusCodes.Status201Created);
-    }
-
-    private static JsonApiResponse<JsonApiResponseResource<SessionCredentialsAttributes>> SessionDocument(
-        SessionTokenResult session)
-    {
-        JsonApiResponseResource<SessionCredentialsAttributes> resource = SessionResources.Credentials(session);
-
-        return new()
-        {
-            Data = resource,
-            Links = new JsonApiLinks { Self = resource.Links?.Self },
-        };
+        return JsonApiResults.Json(SessionResources.Credentials(session), StatusCodes.Status201Created);
     }
 }

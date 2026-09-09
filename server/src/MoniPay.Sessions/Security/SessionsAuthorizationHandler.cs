@@ -35,27 +35,34 @@ internal sealed class SessionsAuthorizationHandler(MoniPayDbContext database) : 
 
     private async Task HandleActiveSessionAsync(AuthorizationHandlerContext context, IAuthorizationRequirement requirement)
     {
-        if (!Guid.TryParse(Find(context.User, MoniPayClaimTypes.Subject), out Guid userIdValue)
-            || !Guid.TryParse(Find(context.User, MoniPayClaimTypes.SessionId), out Guid sessionIdValue))
+        // One reader for the one credential: the ticket is parsed here and nowhere else.
+        if (!SessionIdentity.TryOf(context.User, out SessionTicket ticket))
         {
             return;
         }
 
-        CancellationToken cancellation = context.Resource is HttpContext http
-            ? http.RequestAborted
-            : CancellationToken.None;
+        HttpContext? http = context.Resource as HttpContext;
         bool active = await database.Sessions
             .AsNoTracking()
             .AnyAsync(
-                session => session.Id == sessionIdValue
-                    && session.UserId == new UserId(userIdValue)
+                session => session.Id == ticket.SessionId
+                    && session.UserId == ticket.UserId
                     && session.RevokedAt == null,
-                cancellation)
+                http?.RequestAborted ?? CancellationToken.None)
             .ConfigureAwait(false);
-        if (active)
+        if (!active)
         {
-            context.Succeed(requirement);
+            return;
         }
+
+        // Published only once the session is proven active, so an endpoint that reads it can
+        // never be reading a ticket the policy refused.
+        if (http is not null)
+        {
+            SessionIdentity.Publish(http, ticket);
+        }
+
+        context.Succeed(requirement);
     }
 
     private void HandleRegistrationRoute(AuthorizationHandlerContext context, IAuthorizationRequirement requirement)

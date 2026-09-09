@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using MoniPay.Kernel;
+using MoniPay.Kernel.Errors;
 using MoniPay.Tests.Support;
 using MoniPay.Users.Features.CurrentUser;
 using Xunit;
@@ -12,10 +13,13 @@ namespace MoniPay.Tests.Users.CurrentUser;
 public sealed class GetCurrentUserHandlerTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
-    public async Task The_handler_throws_for_a_missing_user_instead_of_returning_empty()
+    public async Task The_handler_refuses_the_credential_for_a_missing_user_instead_of_returning_empty()
     {
-        await Assert.ThrowsAsync<InvalidOperationException>(() => Api.InScopeAsync<GetCurrentUserHandler, CurrentUserView>(
-            (handler, cancellationToken) => handler.HandleAsync(UserId.New(), cancellationToken)));
+        RefusalException refusal = await Assert.ThrowsAsync<RefusalException>(
+            () => Api.InScopeAsync<GetCurrentUserHandler, CurrentUserView>(
+                (handler, cancellationToken) => handler.HandleAsync(UserId.New(), cancellationToken)));
+
+        Assert.Equal(MoniPayErrorTypes.SessionInvalid.Code, refusal.Type.Code);
     }
 
     [Fact]

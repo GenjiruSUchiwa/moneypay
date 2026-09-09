@@ -48,7 +48,7 @@ public sealed class CreateSignUpCompletionHttpTests(MoniPayApi api) : MoniPayApi
 
         JsonElement user = document.GetProperty("data").GetProperty("relationships").GetProperty("user");
         Assert.Equal(SessionResourceTypes.Users, user.GetProperty("data").GetProperty("type").GetString());
-        Assert.Equal(SessionResources.CurrentUser, user.GetProperty("links").GetProperty("related").GetString());
+        Assert.Equal(MoniPayRoutes.CurrentUser, user.GetProperty("links").GetProperty("related").GetString());
         Assert.Equal(SessionResources.Self, document.GetProperty("data").GetProperty("links").GetProperty("self").GetString());
 
         Assert.Equal(usersBefore + 1, await Api.CountUsersAsync());
