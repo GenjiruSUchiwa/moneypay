@@ -1,9 +1,15 @@
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
+using MoniPay.Kernel.Http;
+using MoniPay.Notifications.Persistence;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
+using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Features.SignUps.Complete;
 using MoniPay.Sessions.Features.SignUps.Get;
 using MoniPay.Sessions.Features.SignUps.ResendCode;
@@ -32,6 +38,8 @@ internal static class SignUpFlow
     public const string PrivacyVersion = "privacy-2026-07";
 
     private static int sequence;
+
+    private static int isolatedIpCounter;
 
     public static Task<TResult> InScopeAsync<TService, TResult>(
         this MoniPayApi api,
@@ -227,5 +235,92 @@ internal static class SignUpFlow
         RefusalException refusal = await Assert.ThrowsAsync<RefusalException>(() => attempt);
         Assert.Equal(problemType, refusal.Type);
         return refusal;
+    }
+
+    /// <summary>The start route, built from its constant so a rename breaks the test at compile time.</summary>
+    public static string StartUrl() => SignUpRoutes.Group;
+
+    /// <summary>The read route for one sign-up, built from the group and identifier constants.</summary>
+    public static string ReadUrl(SignUpId signUpId) => SignUpResources.Self(signUpId);
+
+    /// <summary>A valid start document for the given phone and legal versions.</summary>
+    public static StringContent StartBody(string phone, string? termsVersion = null, string? privacyVersion = null)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(phone);
+
+        string json = JsonSerializer.Serialize(new
+        {
+            data = new
+            {
+                type = SignUpResourceTypes.SignUps,
+                attributes = new
+                {
+                    phone,
+                    termsVersion = termsVersion ?? TermsVersion,
+                    privacyVersion = privacyVersion ?? PrivacyVersion,
+                },
+            },
+        });
+
+        StringContent body = new(json, Encoding.UTF8);
+        body.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse(MoniPayMediaTypes.JsonApi);
+
+        return body;
+    }
+
+    /// <summary>Posts a start document on the given client with default JSON:API headers.</summary>
+    public static Task<HttpResponseMessage> PostStartAsync(HttpClient client, HttpContent body)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(body);
+
+        HttpRequestMessage request = new(HttpMethod.Post, StartUrl())
+        {
+            Content = body,
+        };
+        request.Headers.Add("X-Forwarded-For", IsolatedIp());
+
+        return client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>Reads one sign-up with the given workflow credential.</summary>
+    public static Task<HttpResponseMessage> GetSignUpHttpAsync(
+        HttpClient client,
+        SignUpId signUpId,
+        string scheme,
+        string token)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentException.ThrowIfNullOrEmpty(scheme);
+        ArgumentException.ThrowIfNullOrEmpty(token);
+
+        HttpRequestMessage request = new(HttpMethod.Get, ReadUrl(signUpId));
+        request.Headers.Authorization = new(scheme, token);
+
+        return client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>The notification rows queued for one sign-up, oldest first.</summary>
+    public static async Task<IReadOnlyList<MoniPay.Notifications.Domain.Notification>> NotificationsForAsync(
+        MoniPayApi api,
+        SignUpId signUpId)
+    {
+        ArgumentNullException.ThrowIfNull(api);
+
+        return await api.InScopeAsync<MoniPayDbContext, List<MoniPay.Notifications.Domain.Notification>>(
+            async (database, cancellationToken) => await database.Notifications
+                .AsNoTracking()
+                .Where(notification => notification.CorrelationId == signUpId.Value)
+                .OrderBy(notification => notification.CreatedAt)
+                .ThenBy(notification => notification.Id)
+                .ToListAsync(cancellationToken));
+    }
+
+    /// <summary>A documentation-range address no other test uses, so each start owns its IP budget.</summary>
+    private static string IsolatedIp()
+    {
+        int unique = Interlocked.Increment(ref isolatedIpCounter);
+
+        return FormattableString.Invariant($"203.0.113.{unique % 250 + 1}");
     }
 }

@@ -19,6 +19,12 @@ MoniPay__ApplyMigrationsOnStartup=false \
 MoniPay__Users__PersonalDataKeyBase64="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
 MoniPay__Sessions__VerificationCodeKeyBase64="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
 MoniPay__Sessions__PersonalDataKeyBase64="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
+MoniPay__Sessions__SigningKeyBase64="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
+MoniPay__Sessions__Issuer="https://openapi.monipay.example" \
+MoniPay__Sessions__Audience="monipay-openapi" \
+MoniPay__Sessions__Legal__TermsVersion="terms-2026-08" \
+MoniPay__Sessions__Legal__PrivacyVersion="privacy-2026-08" \
+MoniPay__Notifications__DataKeyBase64="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
 dotnet build server/src/MoniPay.Api/MoniPay.Api.csproj -c Release -p:GenerateOpenApiDocs=true
 
 cp server/src/MoniPay.Api/obj/openapi/openapi.json docs/api/openapi.json
