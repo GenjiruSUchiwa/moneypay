@@ -24,6 +24,12 @@ public static class TestKeys
 
     public static readonly string NotificationsData = Encode("NotificationsDataKeyForTests0000");
 
+    public const string SmsBaseUrl = "https://sms-tests.monipay.example";
+
+    public const string SmsApiKey = "sms-tests-inert";
+
+    public const string SmsSenderId = "MoniPay";
+
     public static IWebHostBuilder UseTestKeys(this IWebHostBuilder builder)
     {
         builder.UseSetting(UsersOptions.Keys.PersonalDataKeyBase64, UsersPersonalData);
@@ -35,6 +41,9 @@ public static class TestKeys
         builder.UseSetting(SessionsOptions.Keys.LegalTermsVersion, SignUpFlow.TermsVersion);
         builder.UseSetting(SessionsOptions.Keys.LegalPrivacyVersion, SignUpFlow.PrivacyVersion);
         builder.UseSetting(NotificationsOptions.Keys.DataKeyBase64, NotificationsData);
+        builder.UseSetting(NotificationsOptions.Keys.SmsBaseUrl, SmsBaseUrl);
+        builder.UseSetting(NotificationsOptions.Keys.SmsApiKey, SmsApiKey);
+        builder.UseSetting(NotificationsOptions.Keys.SmsSenderId, SmsSenderId);
         return builder;
     }
 

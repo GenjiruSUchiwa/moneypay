@@ -28,7 +28,7 @@ The client learns the delivery result from `GET /signups/{signUpId}`, through th
 
 | Channel | First use | Provider | Status |
 |---|---|---|---|
-| SMS | Verification code | Not selected | Blocked by the provider decision |
+| SMS | Verification code | Bird | Selected, see `docs/adr/0004-sms-provider.md` |
 | Email | Welcome message, security alerts | Not selected | Blocked by the provider decision |
 | Push | Later: session alerts, transaction receipts | APNs through a provider or direct | Out of scope: needs device-token registration |
 | In-app | Later: the iOS `AppNotification` feed | MoniPay API | Out of scope: needs a notifications read route |
@@ -67,12 +67,12 @@ flowchart LR
     subgraph Notifications[MoniPay.Notifications]
         Enqueue[NotificationOutbox.Enqueue] --> Table[(notifications)]
         Table --> Worker[NotificationWorker]
-        Worker --> Sms[ISmsChannel]
+        Worker --> Sms[BirdSmsChannel]
         Worker --> Email[IEmailChannel]
     end
 
     Port --> Adapter --> Enqueue
-    Sms --> SmsProvider[SMS provider]
+    Sms --> Bird[Bird SMS API]
     Email --> EmailProvider[Email provider]
 ```
 
@@ -112,14 +112,13 @@ server/src/MoniPay.Notifications/
   Security/
     RecipientProtector.cs
   Channels/
-    ISmsChannel.cs
-    IEmailChannel.cs
+    INotificationChannel.cs
     ChannelResult.cs
-    <SelectedSmsProvider>SmsChannel.cs
+    BirdSmsChannel.cs
     <SelectedEmailProvider>EmailChannel.cs
 ```
 
-Do not create a provider channel before the provider is selected. The test suite uses `RecordingSmsChannel` and `RecordingEmailChannel` from `MoniPay.Tests/Fakes/`.
+Do not create the email channel before its provider is selected. The test suite uses `RecordingChannel` from `MoniPay.Tests/Fakes/`.
 
 ## Public interface
 
@@ -194,10 +193,11 @@ Several API replicas can run the worker. `SKIP LOCKED` and the lease prevent two
 ## Channel contract
 
 ```csharp
-public interface ISmsChannel
+internal interface INotificationChannel
 {
     Task<ChannelResult> SendAsync(
         string recipient,
+        string? subject,
         string body,
         string idempotencyKey,
         CancellationToken cancellationToken);
@@ -206,13 +206,13 @@ public interface ISmsChannel
 
 `ChannelResult` is `Accepted(providerReference)`, `Retry(code)`, or `Rejected(code)`. The channel maps every provider status to one of the three. The processor never reads a provider payload.
 
-A provider that supports an idempotency key receives `idempotencyKey`, so a retry after a lost response does not send twice.
+A provider that supports an idempotency key receives `idempotencyKey`, so a retry after a lost response does not send twice. Bird replays the retained response for the same key within its idempotency window; see `docs/adr/0004-sms-provider.md`.
 
-Each channel is a typed `HttpClient` registered with `AddHttpClient<ISmsChannel, SelectedSmsChannel>`, with the provider credentials from validated options and `ProviderTimeout` as the client timeout. Retries belong to the worker schedule, so no HTTP resilience package is added.
+Each channel is a typed `HttpClient` registered with `AddHttpClient<BirdSmsChannel>` plus a keyed transient `INotificationChannel` factory for `NotificationChannel.Sms`, with the provider credentials from validated options. The `HttpClient.Timeout` is infinite: the processor deadline from `NotificationsOptions.ProviderTimeout` stays authoritative through the linked token. Retries belong to the worker schedule, so no HTTP resilience package is added. Redirects are disabled so a provider redirect can neither forward credentials nor silently change submission semantics.
 
 A channel returns, it does not throw: a transport exception, a timeout or a malformed body becomes `Retry` or `Rejected` with a stable code. Caller cancellation propagates as `OperationCanceledException`.
 
-Before a provider is selected, the module registers **no** channel and no placeholder pretends to send. The processor resolves the channel with `GetService`; when none is registered it records `Retry` with the code `channel-not-configured`, logs one `Warning` per cycle, and the row waits in the outbox until a channel exists.
+The email channel is not registered yet and no placeholder pretends to send. The processor resolves the channel with `GetKeyedService`; when none is registered it records `Retry` with the code `channel-not-configured`, logs one `Warning` per cycle, and the row waits in the outbox until a channel exists.
 
 ## Persistence
 
@@ -283,7 +283,7 @@ Money and dates in a future receipt message are formatted with the recipient's c
 | Failure | Behavior |
 |---|---|
 | Enqueue fails | The adapter wraps the failure in `ProviderUnavailableException`; the whole sign-up transaction rolls back and the client receives `503 verification-delivery-unavailable`. |
-| No channel registered yet | The row stays `Pending` with `channel-not-configured`; delivery starts when the provider channel ships. |
+| No email channel registered yet | The row stays `Pending` with `channel-not-configured`; delivery starts when the email channel ships. |
 | Provider permanently rejects a verification code | Fail immediately. `codeDelivery` reports `failed`. Resend stays available. |
 | Provider transiently fails a verification code | Retry on the short schedule. `codeDelivery` reports `queued` between attempts and `failed` after exhaustion. Resend stays available. |
 | Provider accepts but the response is lost | The idempotency key prevents a duplicate on retry when the provider supports it. |
@@ -320,7 +320,7 @@ Sign-up tests use the real outbox through the host `VerificationCodeDeliveryAdap
 
 ## Provider decision gate
 
-Delivery cannot ship before an SMS provider and an email provider are selected. The gate in [Security and operations](security-and-operations.md#provider-decision-gate) lists what the decision must record.
+The SMS provider is Bird, decided in `docs/adr/0004-sms-provider.md`. The email provider is still open; the gate in [Security and operations](security-and-operations.md#provider-decision-gate) lists what that decision must record.
 
 For email, the decision must also cover the sending domain, DKIM and SPF setup, bounce handling, and a suppression list.
 
