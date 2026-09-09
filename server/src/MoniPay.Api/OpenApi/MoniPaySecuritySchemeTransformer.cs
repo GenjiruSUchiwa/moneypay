@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
+using MoniPay.Kernel;
 using MoniPay.Kernel.Http;
 using MoniPay.Sessions.Security;
 
@@ -88,13 +89,18 @@ internal sealed class MoniPaySecurityOperationTransformer : IOpenApiOperationTra
             .ToList();
         operation.Security ??= [];
 
-        // An authorized endpoint that names no workflow scheme is a bearer route: the access JWT
-        // is the only credential the remaining policies accept.
+        // An authorized endpoint that names no workflow scheme is either a registration route —
+        // the policy names the scheme, not the attribute — or a bearer route, whose access JWT is
+        // the only credential the remaining policies accept.
         if (schemes.Count == 0)
         {
+            string scheme = authorize.Any(attribute =>
+                string.Equals(attribute.Policy, MoniPayPolicies.Registration, StringComparison.Ordinal))
+                ? MoniPaySecuritySchemes.Registration
+                : MoniPaySecuritySchemes.Bearer;
             operation.Security.Add(new OpenApiSecurityRequirement
             {
-                [new OpenApiSecuritySchemeReference(MoniPaySecuritySchemes.Bearer, context.Document)] = [],
+                [new OpenApiSecuritySchemeReference(scheme, context.Document)] = [],
             });
 
             return Task.CompletedTask;
