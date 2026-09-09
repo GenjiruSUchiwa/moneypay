@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Http;
@@ -55,16 +54,8 @@ internal static class CreateVerificationCodeDeliveryEndpoint
             .ConfigureAwait(false);
 
         JsonApiResponseResource<ReadSignUpResourceAttributes> resource = SignUpResources.FromResend(id, result);
-        JsonApiResponse<JsonApiResponseResource<ReadSignUpResourceAttributes>> document = new()
-        {
-            Data = resource,
-            Links = new JsonApiLinks { Self = resource.Links?.Self },
-        };
         http.Response.Headers.Location = resource.Links?.Self;
 
-        return TypedResults.Json(
-            document,
-            contentType: MoniPayMediaTypes.JsonApi,
-            statusCode: StatusCodes.Status202Accepted);
+        return JsonApiResults.Json(resource, StatusCodes.Status202Accepted);
     }
 }

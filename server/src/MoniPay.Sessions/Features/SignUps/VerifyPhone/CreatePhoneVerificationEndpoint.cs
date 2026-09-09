@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 using MoniPay.Kernel;
@@ -66,15 +65,6 @@ internal static class CreatePhoneVerificationEndpoint
             .HandleAsync(id, code, cancellationToken)
             .ConfigureAwait(false);
 
-        JsonApiResponseResource<VerifiedSignUpResourceAttributes> resource = SignUpResources.FromVerification(result);
-
-        return TypedResults.Json(
-            new JsonApiResponse<JsonApiResponseResource<VerifiedSignUpResourceAttributes>>
-            {
-                Data = resource,
-                Links = new JsonApiLinks { Self = resource.Links?.Self },
-            },
-            contentType: MoniPayMediaTypes.JsonApi,
-            statusCode: StatusCodes.Status200OK);
+        return JsonApiResults.Json(SignUpResources.FromVerification(result));
     }
 }

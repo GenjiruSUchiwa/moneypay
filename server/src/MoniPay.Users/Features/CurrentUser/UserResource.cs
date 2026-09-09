@@ -36,9 +36,6 @@ internal sealed record CurrentUserView(
 /// <summary>Projects the current-user view onto the <c>users</c> resource and its self link.</summary>
 internal static class UserResources
 {
-    /// <summary>The canonical URI of the user of the calling credential.</summary>
-    public const string Self = MoniPayRoutes.CurrentUser;
-
     public static JsonApiResponseResource<UserAttributes> FromView(CurrentUserView view)
     {
         ArgumentNullException.ThrowIfNull(view);
@@ -56,7 +53,7 @@ internal static class UserResources
                 Locale = view.Locale.Value,
                 CreatedAt = view.CreatedAt,
             },
-            Links = new JsonApiLinks { Self = Self },
+            Links = new JsonApiLinks { Self = MoniPayRoutes.CurrentUser },
         };
     }
 }

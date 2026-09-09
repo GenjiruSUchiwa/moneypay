@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using MoniPay.Api.Errors;
+using MoniPay.Kernel;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
 
@@ -31,6 +32,9 @@ internal sealed class RateLimitOptions
     /// <summary>Refreshing a session, per client IP per hour.</summary>
     public int RefreshPerHour { get; set; } = 120;
 
+    /// <summary>Reading a resource the bearer credential names, per session per hour.</summary>
+    public int AuthenticatedReadPerHour { get; set; } = 600;
+
     /// <summary>The configuration keys, declared so a mistyped key is a compile error.</summary>
     internal static class Keys
     {
@@ -39,6 +43,7 @@ internal sealed class RateLimitOptions
         public const string VerifyPerHour = $"{SectionName}:{nameof(VerifyPerHour)}";
         public const string CompletePerHour = $"{SectionName}:{nameof(CompletePerHour)}";
         public const string RefreshPerHour = $"{SectionName}:{nameof(RefreshPerHour)}";
+        public const string AuthenticatedReadPerHour = $"{SectionName}:{nameof(AuthenticatedReadPerHour)}";
     }
 }
 
@@ -71,12 +76,32 @@ internal sealed class RateLimiterSetup(IOptions<RateLimitOptions> limits) : ICon
         AddPolicy(options, SignUpRateLimitPolicies.Verify, limits.Value.VerifyPerHour);
         AddPolicy(options, SignUpRateLimitPolicies.Complete, limits.Value.CompletePerHour);
         AddPolicy(options, SessionRateLimitPolicies.Refresh, limits.Value.RefreshPerHour);
+        AddPolicy(
+            options,
+            MoniPayRateLimitPolicies.AuthenticatedRead,
+            limits.Value.AuthenticatedReadPerHour,
+            PerSession);
     }
 
-    private static void AddPolicy(RateLimiterOptions options, string name, int limitPerHour) =>
+    /// <summary>
+    /// The session the presented ticket names, so one looping client spends its own budget and
+    /// not that of every caller sharing its address. A request with no readable session has not
+    /// authenticated yet and falls back to the client IP.
+    /// </summary>
+    private static string PerSession(HttpContext httpContext) =>
+        httpContext.User.FindFirst(MoniPayClaimTypes.SessionId)?.Value ?? PerClientIp(httpContext);
+
+    private static string PerClientIp(HttpContext httpContext) =>
+        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+    private static void AddPolicy(
+        RateLimiterOptions options,
+        string name,
+        int limitPerHour,
+        Func<HttpContext, string>? partition = null) =>
         options.AddPolicy(name, httpContext =>
             RateLimitPartition.GetFixedWindowLimiter(
-                httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                (partition ?? PerClientIp)(httpContext),
                 _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = limitPerHour,

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using MoniPay.Kernel.Http;
 using MoniPay.Sessions.Domain;
@@ -62,15 +61,6 @@ internal static class CreateSessionRefreshEndpoint
             .RefreshAsync(attributes.RefreshToken, attributes.DeviceId, cancellationToken)
             .ConfigureAwait(false);
 
-        JsonApiResponseResource<SessionCredentialsAttributes> resource = SessionResources.Credentials(session);
-
-        return TypedResults.Json(
-            new JsonApiResponse<JsonApiResponseResource<SessionCredentialsAttributes>>
-            {
-                Data = resource,
-                Links = new JsonApiLinks { Self = resource.Links?.Self },
-            },
-            contentType: MoniPayMediaTypes.JsonApi,
-            statusCode: StatusCodes.Status200OK);
+        return JsonApiResults.Json(SessionResources.Credentials(session));
     }
 }

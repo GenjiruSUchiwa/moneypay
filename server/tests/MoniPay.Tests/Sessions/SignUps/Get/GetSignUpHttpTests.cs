@@ -27,7 +27,7 @@ public sealed class GetSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(MoniPayMediaTypes.JsonApi, response.Content.Headers.ContentType?.ToString());
-        AssertNoStore(response);
+        response.AssertNoStore();
 
         JsonElement document = await JsonApiAssertions.ReadJsonApiAsync(response);
         JsonElement data = document.GetProperty("data");
@@ -173,13 +173,6 @@ public sealed class GetSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
             await response.ReadProblemAsync(HttpStatusCode.Unauthorized);
         Assert.Equal(MoniPayErrorTypes.SignUpTokenInvalid.Urn, problem.Type);
         Assert.Equal(title, problem.Title);
-    }
-
-    private static void AssertNoStore(HttpResponseMessage response)
-    {
-        Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
-        Assert.True(response.Headers.TryGetValues("Pragma", out IEnumerable<string>? pragma));
-        Assert.Equal("no-cache", Assert.Single(pragma!));
     }
 
     private static async Task<JsonElement> ReadSuccessAsync(HttpResponseMessage response)

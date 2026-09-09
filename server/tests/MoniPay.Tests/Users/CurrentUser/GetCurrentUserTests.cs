@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
@@ -28,7 +29,7 @@ public sealed class GetCurrentUserTests(MoniPayApi api) : MoniPayApiTest(api)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(MoniPayMediaTypes.JsonApi, response.Content.Headers.ContentType?.ToString());
-        AssertNoStore(response);
+        response.AssertNoStore();
 
         JsonElement document = await JsonApiAssertions.ReadJsonApiAsync(
             response,
@@ -45,7 +46,7 @@ public sealed class GetCurrentUserTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(Locale.FrenchTag, attributes.GetProperty("locale").GetString());
         Assert.Equal(TimeSpan.Zero, attributes.GetProperty("createdAt").GetDateTimeOffset().Offset);
         Assert.False(attributes.TryGetProperty("id", out _));
-        Assert.Equal(UserResources.Self, document.GetProperty("data").GetProperty("links").GetProperty("self").GetString());
+        Assert.Equal(MoniPayRoutes.CurrentUser, document.GetProperty("data").GetProperty("links").GetProperty("self").GetString());
 
         string raw = await response.Content.ReadAsStringAsync(Cancellation);
         Assert.DoesNotContain("ciphertext", raw, StringComparison.OrdinalIgnoreCase);
@@ -161,10 +162,7 @@ public sealed class GetCurrentUserTests(MoniPayApi api) : MoniPayApiTest(api)
         JsonElement secondData = (await JsonApiAssertions.ReadJsonApiAsync(second)).GetProperty("data");
 
         Assert.Equal(user.Id.Value.ToString(), secondData.GetProperty("id").GetString());
-        Assert.Equal(firstData.GetProperty("id").GetString(), secondData.GetProperty("id").GetString());
-        Assert.Equal(
-            firstData.GetProperty("attributes").GetRawText(),
-            secondData.GetProperty("attributes").GetRawText());
+        Assert.True(JsonElement.DeepEquals(firstData, secondData));
     }
 
     [Fact]
@@ -261,18 +259,42 @@ public sealed class GetCurrentUserTests(MoniPayApi api) : MoniPayApiTest(api)
     }
 
     [Fact]
-    public async Task A_user_missing_after_authentication_is_500_without_a_profile()
+    public async Task A_user_missing_after_authentication_is_401_with_the_bearer_challenge()
     {
         OpenedSession orphan = await Api.CreateSessionAsync(UserId.New());
 
         using HttpResponseMessage response = await SignUpFlow.GetCurrentUserAsync(Client, AccessToken(orphan));
 
+        // The session is still valid, so the ticket names a user that is gone: the credential is
+        // refused and the client drops it, rather than being told the server broke.
         Microsoft.AspNetCore.Mvc.ProblemDetails problem =
-            await response.ReadProblemAsync(HttpStatusCode.InternalServerError);
-        Assert.Equal(MoniPayErrorTypes.Internal.Urn, problem.Type);
-        Assert.Null(problem.Detail);
+            await response.ReadProblemAsync(HttpStatusCode.Unauthorized);
+        Assert.Equal(MoniPayErrorTypes.SessionInvalid.Urn, problem.Type);
+        Assert.Equal(MoniPayHeaders.Bearer, response.Headers.WwwAuthenticate.ToString());
         string raw = await response.Content.ReadAsStringAsync(Cancellation);
         Assert.DoesNotContain("firstName", raw, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_read_carrying_a_body_is_415_before_it_is_read()
+    {
+        (OpenedSession session, _, _, _) = await RegisteredSessionAsync();
+
+        using HttpRequestMessage request = new(HttpMethod.Get, SignUpFlow.CurrentUserUrl())
+        {
+            Content = new StringContent(
+                """{"data":{"type":"users","attributes":{"firstName":"Mallory"}}}""",
+                Encoding.UTF8,
+                MoniPayMediaTypes.JsonApi),
+        };
+        request.Headers.Authorization = new(MoniPayHeaders.Bearer, AccessToken(session));
+
+        using HttpResponseMessage response = await Client.SendAsync(request, Cancellation);
+
+        Microsoft.AspNetCore.Mvc.ProblemDetails problem =
+            await response.ReadProblemAsync(HttpStatusCode.UnsupportedMediaType);
+        Assert.Equal(MoniPayErrorTypes.UnsupportedMediaType.Urn, problem.Type);
+        Assert.DoesNotContain("Mallory", await response.Content.ReadAsStringAsync(Cancellation), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -373,13 +395,6 @@ public sealed class GetCurrentUserTests(MoniPayApi api) : MoniPayApiTest(api)
         OpenedSession session = await Api.CreateSessionAsync(user.Id);
 
         return (session, user, phone, email);
-    }
-
-    private static void AssertNoStore(HttpResponseMessage response)
-    {
-        Assert.Equal("no-store", response.Headers.CacheControl?.ToString());
-        Assert.True(response.Headers.TryGetValues("Pragma", out IEnumerable<string>? pragma));
-        Assert.Equal("no-cache", Assert.Single(pragma!));
     }
 
     private static string AccessToken(OpenedSession session) =>

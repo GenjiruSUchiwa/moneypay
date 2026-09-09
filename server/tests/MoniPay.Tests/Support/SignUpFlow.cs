@@ -267,7 +267,7 @@ internal static class SignUpFlow
         SendWithBearerAsync(client, HttpMethod.Delete, CurrentSessionUrl(), accessToken);
 
     /// <summary>The current-user route, built from the group and route constants.</summary>
-    public static string CurrentUserUrl() => UserRoutes.Group + UserRoutes.Me;
+    public static string CurrentUserUrl() => MoniPayRoutes.CurrentUser;
 
     /// <summary>Reads the current user with the given access credential.</summary>
     public static Task<HttpResponseMessage> GetCurrentUserAsync(HttpClient client, string accessToken) =>

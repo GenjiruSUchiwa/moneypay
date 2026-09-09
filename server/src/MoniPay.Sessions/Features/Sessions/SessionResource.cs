@@ -59,9 +59,6 @@ internal static class SessionResources
     /// <summary>The canonical URI of the session of the calling credential.</summary>
     public const string Self = SessionRoutes.Group + SessionRoutes.Current;
 
-    /// <summary>The URI of the user a session belongs to. The Users module owns that route.</summary>
-    public const string CurrentUser = MoniPayRoutes.CurrentUser;
-
     public static JsonApiResponseResource<SessionCredentialsAttributes> Credentials(SessionTokenResult session)
     {
         ArgumentNullException.ThrowIfNull(session);
@@ -116,7 +113,7 @@ internal static class SessionResources
                     Type = SessionResourceTypes.Users,
                     Id = userId.Value.ToString(),
                 },
-                Links = new JsonApiLinks { Related = CurrentUser },
+                Links = new JsonApiLinks { Related = MoniPayRoutes.CurrentUser },
             },
         };
 }

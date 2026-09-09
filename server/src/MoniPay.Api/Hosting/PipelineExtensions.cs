@@ -32,8 +32,13 @@ public static class PipelineExtensions
 
         app.UseRouting();
         app.UseMiddleware<NoStoreMiddleware>();
-        app.UseRateLimiter();
+
+        // The limiter runs after authentication so an authenticated policy can partition on the
+        // session the ticket names rather than on the client IP every caller behind one NAT
+        // shares. The anonymous routes it also guards present no credential, so nothing is
+        // validated before their budget is checked.
         app.UseAuthentication();
+        app.UseRateLimiter();
         app.UseAuthorization();
 
         app.UseMiddleware<JsonApiTransportMiddleware>();

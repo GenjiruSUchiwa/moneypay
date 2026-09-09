@@ -54,14 +54,9 @@ internal static class StartSignUpEndpoint
         StartSignUpResult result = await handler.HandleAsync(command, cancellationToken).ConfigureAwait(false);
 
         JsonApiResponseResource<StartSignUpResourceAttributes> resource = SignUpResources.FromStart(result);
-        JsonApiResponse<JsonApiResponseResource<StartSignUpResourceAttributes>> document = new()
-        {
-            Data = resource,
-            Links = new JsonApiLinks { Self = resource.Links?.Self },
-        };
         http.Response.Headers.Location = resource.Links?.Self;
 
-        return TypedResults.Json(document, contentType: MoniPayMediaTypes.JsonApi, statusCode: StatusCodes.Status202Accepted);
+        return JsonApiResults.Json(resource, StatusCodes.Status202Accepted);
     }
 
     private static Locale CurrentLocale()
