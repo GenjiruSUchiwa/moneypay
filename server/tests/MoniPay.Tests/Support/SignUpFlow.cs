@@ -9,6 +9,7 @@ using MoniPay.Kernel.Http;
 using MoniPay.Notifications.Persistence;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Domain;
+using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Features.SignUps.Complete;
 using MoniPay.Sessions.Features.SignUps.Get;
@@ -27,6 +28,9 @@ internal sealed record VerifiedSignUp(
     StartSignUpResult Started,
     CreatePhoneVerificationResult Verified,
     PhoneNumber Phone);
+
+/// <summary>A session the tests opened, and the device label it was opened for: a refresh is refused without it.</summary>
+internal sealed record OpenedSession(SessionTokenResult Session, Guid DeviceId);
 
 /// <summary>
 /// Drives the sign-up slices through their handlers, each call in a fresh scope of the test host,
@@ -235,6 +239,62 @@ internal static class SignUpFlow
         RefusalException refusal = await Assert.ThrowsAsync<RefusalException>(() => attempt);
         Assert.Equal(problemType, refusal.Type);
         return refusal;
+    }
+
+    /// <summary>
+    /// A live session with its credentials, opened the way the completion route will once #98 lands.
+    /// </summary>
+    public static Task<OpenedSession> CreateSessionAsync(this MoniPayApi api)
+    {
+        Guid deviceId = Guid.CreateVersion7();
+
+        return api.InScopeAsync<SessionTokenService, OpenedSession>(async (sessions, cancellationToken) =>
+            new OpenedSession(await sessions.CreateAsync(UserId.New(), deviceId, cancellationToken), deviceId));
+    }
+
+    /// <summary>The refresh route, built from its constant so a rename breaks the test at compile time.</summary>
+    public static string RefreshUrl() => SessionRoutes.Refreshes;
+
+    /// <summary>A refresh document for the given credential and device.</summary>
+    public static StringContent RefreshBody(string refreshToken, Guid deviceId)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(refreshToken);
+
+        string json = JsonSerializer.Serialize(new
+        {
+            data = new
+            {
+                type = SessionResourceTypes.SessionRefreshes,
+                attributes = new
+                {
+                    refreshToken,
+                    deviceId,
+                },
+            },
+        });
+
+        StringContent body = new(json, Encoding.UTF8);
+        body.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse(MoniPayMediaTypes.JsonApi);
+
+        return body;
+    }
+
+    /// <summary>Posts a refresh document for the session the tests opened.</summary>
+    public static Task<HttpResponseMessage> PostRefreshAsync(HttpClient client, OpenedSession session) =>
+        PostRefreshAsync(client, session.Session.RefreshToken, session.DeviceId);
+
+    /// <summary>Posts a refresh document on the given client with default JSON:API headers.</summary>
+    public static Task<HttpResponseMessage> PostRefreshAsync(HttpClient client, string refreshToken, Guid deviceId)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+
+        HttpRequestMessage request = new(HttpMethod.Post, RefreshUrl())
+        {
+            Content = RefreshBody(refreshToken, deviceId),
+        };
+        request.Headers.Add("X-Forwarded-For", IsolatedIp());
+
+        return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
     /// <summary>The start route, built from its constant so a rename breaks the test at compile time.</summary>

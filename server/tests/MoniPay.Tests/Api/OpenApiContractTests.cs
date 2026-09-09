@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MoniPay.Api;
 using MoniPay.Kernel.Http;
+using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Security;
 using MoniPay.Tests.Support;
@@ -58,6 +59,27 @@ public sealed class OpenApiContractTests(MoniPayApi api)
             new[] { SessionsSchemes.Registration, SessionsSchemes.SignUp }
                 .OrderBy(name => name, StringComparer.Ordinal),
             schemes);
+    }
+
+    [Fact]
+    public async Task The_refresh_route_is_anonymous_and_documents_both_sessions_schemas()
+    {
+        JsonElement document = await ReadOpenApiDocumentAsync();
+        JsonElement refresh = document.GetProperty("paths").GetProperty(SessionRoutes.Refreshes).GetProperty("post");
+
+        // The refresh credential travels in the body, so no scheme authorizes the operation.
+        Assert.False(refresh.TryGetProperty("security", out _));
+        Assert.Equal(
+            [MoniPayMediaTypes.JsonApi],
+            refresh.GetProperty("requestBody").GetProperty("content").EnumerateObject().Select(entry => entry.Name));
+        Assert.Equal(
+            "#/components/schemas/JsonApiRequestOfJsonApiRequestResourceOfCreateSessionRefreshAttributes",
+            refresh.GetProperty("requestBody").GetProperty("content")
+                .GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
+        Assert.Equal(
+            "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfSessionCredentialsAttributes",
+            refresh.GetProperty("responses").GetProperty("200").GetProperty("content")
+                .GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
     }
 
     [Theory]
