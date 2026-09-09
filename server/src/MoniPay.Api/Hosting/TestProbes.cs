@@ -110,6 +110,7 @@ internal static class TestProbes
         "provider" => new ProviderUnavailableException("campay", "E123"),
         "concurrency" => new DbUpdateConcurrencyException("lost update"),
         "json" => new JsonException("syntax"),
+        "cancelled" => new OperationCanceledException("an application cancellation"),
         _ => new InvalidOperationException("boom"),
     };
 

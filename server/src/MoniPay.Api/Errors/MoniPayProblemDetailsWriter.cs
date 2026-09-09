@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using MoniPay.Api.Http;
 using MoniPay.Kernel.Errors;
 using MoniPay.Kernel.Http;
 
@@ -56,11 +55,6 @@ internal sealed class MoniPayProblemDetailsWriter(MoniPayProblemText text) : IPr
         http.Response.StatusCode = status;
 
         ApplyFields(problem, http, status);
-
-        if (NoStoreConvention.AppliesTo(http))
-        {
-            NoStoreConvention.Apply(http.Response);
-        }
 
         byte[] body = JsonSerializer.SerializeToUtf8Bytes(problem, SerializerOptions);
         http.Response.ContentType = MoniPayMediaTypes.ProblemJson;
