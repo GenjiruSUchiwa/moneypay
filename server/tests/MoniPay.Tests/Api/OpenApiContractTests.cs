@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MoniPay.Api;
+using MoniPay.Api.OpenApi;
 using MoniPay.Kernel.Http;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
@@ -80,6 +81,24 @@ public sealed class OpenApiContractTests(MoniPayApi api)
             "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfSessionCredentialsAttributes",
             refresh.GetProperty("responses").GetProperty("200").GetProperty("content")
                 .GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
+    }
+
+    [Fact]
+    public async Task The_current_session_route_is_bearer_only_and_documents_the_read_form()
+    {
+        JsonElement document = await ReadOpenApiDocumentAsync();
+        JsonElement current = document.GetProperty("paths").GetProperty(SessionRoutes.Group + SessionRoutes.Current);
+
+        JsonElement requirement = Assert.Single(
+            current.GetProperty("get").GetProperty("security").EnumerateArray());
+        Assert.Equal(
+            MoniPaySecuritySchemes.Bearer,
+            Assert.Single(requirement.EnumerateObject()).Name);
+
+        JsonElement read = current.GetProperty("get").GetProperty("responses").GetProperty("200").GetProperty("content");
+        Assert.Equal(
+            "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfReadSessionAttributes",
+            read.GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
     }
 
     [Theory]
