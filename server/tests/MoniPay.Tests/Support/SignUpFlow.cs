@@ -321,6 +321,30 @@ internal static class SignUpFlow
         return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
+    /// <summary>The resend route for one sign-up, built from its constant.</summary>
+    public static string ResendUrl(SignUpId signUpId) =>
+        FormattableString.Invariant($"{SignUpResources.Self(signUpId)}/verification-code-deliveries");
+
+    /// <summary>Posts a resend on the given client. The route takes no body, so none is sent unless a test supplies one.</summary>
+    public static Task<HttpResponseMessage> PostResendAsync(
+        HttpClient client,
+        SignUpId signUpId,
+        string signUpToken,
+        HttpContent? body = null)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentException.ThrowIfNullOrEmpty(signUpToken);
+
+        HttpRequestMessage request = new(HttpMethod.Post, ResendUrl(signUpId))
+        {
+            Content = body,
+        };
+        request.Headers.Authorization = new(SessionsSchemes.SignUp, signUpToken);
+        request.Headers.Add("X-Forwarded-For", IsolatedIp());
+
+        return client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
     /// <summary>The start route, built from its constant so a rename breaks the test at compile time.</summary>
     public static string StartUrl() => SignUpRoutes.Group;
 

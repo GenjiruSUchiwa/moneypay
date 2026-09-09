@@ -29,6 +29,14 @@ internal sealed class JsonApiTransportMiddleware(RequestDelegate next)
             JsonApiTransport.ValidateContentType(context.Request);
         }
 
+        // A route that takes no body is named by its path and its credential alone: a body, even a
+        // valid JSON:API one, is an unsupported representation of this command and is refused
+        // before it is read, so nothing in it is ever parsed.
+        if (hasBody && context.GetEndpoint()?.Metadata.GetMetadata<JsonApiNoBody>() is not null)
+        {
+            throw new RefusalException(MoniPayErrorTypes.UnsupportedMediaType);
+        }
+
         JsonApiTransport.ValidateAccept(context.Request);
 
         if (hasBody)

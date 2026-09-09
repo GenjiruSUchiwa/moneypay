@@ -14,4 +14,13 @@ internal static class SignUpRoutes
 
     /// <summary>One sign-up, addressed by its identifier.</summary>
     public const string ById = "/{signUpId:guid}";
+
+    /// <summary>Asking for another verification code: <c>POST /signups/{id}/verification-code-deliveries</c>.</summary>
+    public const string VerificationCodeDeliveries = "/{signUpId:guid}/verification-code-deliveries";
+
+    /// <summary>Proving control of the phone: <c>POST /signups/{id}/phone-verifications</c>.</summary>
+    public const string PhoneVerifications = "/{signUpId:guid}/phone-verifications";
+
+    /// <summary>Completing a sign-up: <c>POST /signups/{id}/completions</c>.</summary>
+    public const string Completions = "/{signUpId:guid}/completions";
 }
