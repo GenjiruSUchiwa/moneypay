@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using MoniPay.Kernel.Errors;
 using MoniPay.Kernel.Validation;
@@ -10,8 +11,9 @@ namespace MoniPay.Api.Errors;
 
 /// <summary>
 /// The single exception-to-problem mapping. It never copies an exception message into the
-/// response: the writer resolves localized text from the stable code. A client abort writes no
-/// body and logs nothing at Error level, because the client, not the server, ended the request.
+/// response: the writer resolves localized text from the stable code. It never sees a client
+/// abort: the framework's exception-handler middleware answers an <c>OperationCanceledException</c>
+/// whose request was aborted itself, so no body and no Error event are written for it.
 /// </summary>
 internal sealed class MoniPayExceptionHandler(
     IProblemDetailsService problemDetails,
@@ -27,11 +29,7 @@ internal sealed class MoniPayExceptionHandler(
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(exception);
 
-        ProblemDetails? problem = Map(context, exception);
-        if (problem is null)
-        {
-            return true;
-        }
+        ProblemDetails problem = Map(exception);
 
         if (exception is RefusalException { RetryAfter: { } delay })
         {
@@ -49,7 +47,7 @@ internal sealed class MoniPayExceptionHandler(
         return true;
     }
 
-    private ProblemDetails? Map(HttpContext context, Exception exception) => exception switch
+    private ProblemDetails Map(Exception exception) => exception switch
     {
         ValidationException validation => Validation(validation),
         RefusalException refusal => Refusal(refusal),
@@ -57,7 +55,6 @@ internal sealed class MoniPayExceptionHandler(
         DbUpdateConcurrencyException => MoniPay(MoniPayErrorTypes.ConcurrentModification),
         BadHttpRequestException badRequest => MoniPay(
             MoniPayErrorTypes.ForStatus((HttpStatusCode)badRequest.StatusCode) ?? MoniPayErrorTypes.Internal),
-        OperationCanceledException when context.RequestAborted.IsCancellationRequested => null,
         _ => MoniPay(MoniPayErrorTypes.Internal),
     };
 
@@ -130,8 +127,13 @@ internal sealed class MoniPayExceptionHandler(
         }
     }
 
+    /// <summary>
+    /// The endpoint name of the route that threw, or its path when it has none. The framework
+    /// clears the current endpoint before it calls a handler, so the original one is read from
+    /// the feature it saved for exactly this purpose.
+    /// </summary>
     private static string RouteOf(HttpContext context) =>
-        context.GetEndpoint()?.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName
+        context.Features.Get<IExceptionHandlerFeature>()?.Endpoint?.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName
         ?? context.Request.Path.Value
         ?? "unknown";
 }

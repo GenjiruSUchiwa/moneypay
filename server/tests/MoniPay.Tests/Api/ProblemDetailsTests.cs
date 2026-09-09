@@ -110,6 +110,19 @@ public sealed class ProblemDetailsTests(MoniPayApi api) : MoniPayApiTest(api)
     }
 
     [Fact]
+    public async Task A_cancellation_the_client_did_not_cause_is_a_500()
+    {
+        // Only a request the client abandoned is the framework's own case; any other cancellation
+        // is an application failure and keeps the 500 mapping.
+        using HttpResponseMessage response = await Client.GetAsync($"{ErrorProbe}cancelled", Cancellation);
+
+        ProblemDetails problem = await response.ReadProblemAsync(HttpStatusCode.InternalServerError);
+
+        Assert.Equal(MoniPayErrorTypes.Internal.Urn, problem.Type);
+        Assert.Null(problem.Detail);
+    }
+
+    [Fact]
     public async Task An_unknown_problem_code_falls_back_to_the_code_as_title()
     {
         using HttpResponseMessage response = await Client.GetAsync($"{ErrorProbe}unknown", Cancellation);
@@ -215,6 +228,22 @@ public sealed class ProblemDetailsTests(MoniPayApi api) : MoniPayApiTest(api)
     }
 
     [Fact]
+    public async Task An_outcome_event_names_the_endpoint_and_not_the_request_path()
+    {
+        int before = Api.Logs.Entries.Count;
+
+        using HttpResponseMessage response = await Client.GetAsync($"{ErrorProbe}validation", Cancellation);
+        await response.ReadProblemAsync(HttpStatusCode.UnprocessableEntity);
+
+        RecordingLoggerProvider.LogEntry entry = Assert.Single(
+            Api.Logs.Entries.Skip(before),
+            IsOutcomeEvent);
+
+        Assert.Equal(TestProbes.ErrorProbeName, Route(entry));
+        Assert.DoesNotContain($"{ErrorProbe}validation", entry.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task An_unhandled_exception_writes_one_error_event()
     {
         int before = Api.Logs.Entries.Count;
@@ -230,6 +259,10 @@ public sealed class ProblemDetailsTests(MoniPayApi api) : MoniPayApiTest(api)
 
     private static bool IsOutcomeEvent(RecordingLoggerProvider.LogEntry entry) =>
         entry.Category == typeof(MoniPayExceptionHandler).FullName;
+
+    private static string Route(RecordingLoggerProvider.LogEntry entry) =>
+        entry.State.First(pair => pair.Key == "Route").Value as string
+        ?? throw new Xunit.Sdk.XunitException("The outcome event carries no Route property.");
 
     private static IReadOnlyList<(string Detail, string Pointer)> Errors(ProblemDetails problem)
     {
