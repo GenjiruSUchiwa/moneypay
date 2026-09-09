@@ -104,7 +104,7 @@ public sealed class GetCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task A_missing_credential_is_401_with_the_bearer_challenge()
     {
-        using HttpResponseMessage response = await Client.GetAsync(SignUpFlow.CurrentUrl(), Cancellation);
+        using HttpResponseMessage response = await Client.GetAsync(SignUpFlow.CurrentSessionUrl(), Cancellation);
 
         Microsoft.AspNetCore.Mvc.ProblemDetails problem =
             await response.ReadProblemAsync(HttpStatusCode.Unauthorized);
@@ -133,7 +133,7 @@ public sealed class GetCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(api)
     {
         OpenedSession issued = await Api.CreateSessionAsync();
 
-        using HttpRequestMessage request = new(HttpMethod.Get, SignUpFlow.CurrentUrl());
+        using HttpRequestMessage request = new(HttpMethod.Get, SignUpFlow.CurrentSessionUrl());
         request.Headers.Authorization = new(MoniPayHeaders.SignUp, "not-a-token");
         using HttpResponseMessage response = await Client.SendAsync(request, Cancellation);
 
@@ -178,7 +178,7 @@ public sealed class GetCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(api)
         using HttpClient client = Api.CreateClient();
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(culture);
 
-        using HttpResponseMessage response = await client.GetAsync(SignUpFlow.CurrentUrl(), Cancellation);
+        using HttpResponseMessage response = await client.GetAsync(SignUpFlow.CurrentSessionUrl(), Cancellation);
 
         Microsoft.AspNetCore.Mvc.ProblemDetails problem =
             await response.ReadProblemAsync(HttpStatusCode.Unauthorized);

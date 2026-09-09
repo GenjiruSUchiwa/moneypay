@@ -46,11 +46,7 @@ internal static class GetCurrentSessionEndpoint
         JsonApiResponseResource<ReadSessionAttributes> resource = SessionResources.Read(view);
 
         return TypedResults.Json(
-            new JsonApiResponse<JsonApiResponseResource<ReadSessionAttributes>>
-            {
-                Data = resource,
-                Links = new JsonApiLinks { Self = resource.Links?.Self },
-            },
+            JsonApiResponses.Document(resource),
             contentType: MoniPayMediaTypes.JsonApi,
             statusCode: StatusCodes.Status200OK);
     }

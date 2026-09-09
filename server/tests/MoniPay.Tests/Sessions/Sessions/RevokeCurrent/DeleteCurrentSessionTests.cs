@@ -77,7 +77,7 @@ public sealed class DeleteCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(a
     [Fact]
     public async Task A_missing_credential_is_401_with_the_bearer_challenge()
     {
-        using HttpRequestMessage request = new(HttpMethod.Delete, SignUpFlow.CurrentUrl());
+        using HttpRequestMessage request = new(HttpMethod.Delete, SignUpFlow.CurrentSessionUrl());
         using HttpResponseMessage response = await Client.SendAsync(request, Cancellation);
 
         Microsoft.AspNetCore.Mvc.ProblemDetails problem =
@@ -110,7 +110,7 @@ public sealed class DeleteCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(a
     {
         using HttpClient client = Api.CreateClient();
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(culture);
-        using HttpRequestMessage request = new(HttpMethod.Delete, SignUpFlow.CurrentUrl());
+        using HttpRequestMessage request = new(HttpMethod.Delete, SignUpFlow.CurrentSessionUrl());
 
         using HttpResponseMessage response = await client.SendAsync(request, Cancellation);
 

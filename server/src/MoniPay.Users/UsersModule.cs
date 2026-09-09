@@ -1,8 +1,14 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MoniPay.Kernel;
+using MoniPay.Kernel.Http;
 using MoniPay.Kernel.Security;
 using MoniPay.Persistence;
+using MoniPay.Users.Features.CurrentUser;
 using MoniPay.Users.Features.Registration;
 using MoniPay.Users.Providers;
 using MoniPay.Users.Security;
@@ -11,7 +17,7 @@ namespace MoniPay.Users;
 
 /// <summary>
 /// The composition of the user profile: the module's own services, registered by the module
-/// itself. It maps no route yet.
+/// itself, and the one route group it owns.
 /// </summary>
 public static class UsersModule
 {
@@ -47,6 +53,25 @@ public static class UsersModule
             provider.GetRequiredService<MoniPayDbContext>(),
             provider.GetRequiredService<UserLookupDigest>()));
 
+        services.AddScoped<GetCurrentUserHandler>();
+
         return services;
+    }
+
+    /// <summary>The user routes. The group carries the JSON:API and no-store markers and the authenticated policy.</summary>
+    public static IEndpointRouteBuilder MapUsersModule(this IEndpointRouteBuilder routes)
+    {
+        ArgumentNullException.ThrowIfNull(routes);
+
+        RouteGroupBuilder users = routes
+            .MapGroup(UserRoutes.Group)
+            .WithTags(UserTags.Users)
+            .WithMetadata(MoniPayConventions.JsonApi)
+            .WithMetadata(MoniPayConventions.NoStore)
+            .RequireAuthorization(MoniPayPolicies.AuthenticatedUser);
+
+        users.MapGetCurrentUser();
+
+        return routes;
     }
 }

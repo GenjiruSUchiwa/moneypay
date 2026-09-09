@@ -18,6 +18,7 @@ using MoniPay.Sessions.Features.SignUps.Start;
 using MoniPay.Sessions.Features.SignUps.VerifyPhone;
 using MoniPay.Sessions.Persistence;
 using MoniPay.Sessions.Security;
+using MoniPay.Users.Features.CurrentUser;
 using MoniPay.Users.Features.Registration;
 using Xunit;
 
@@ -255,22 +256,33 @@ internal static class SignUpFlow
     }
 
     /// <summary>The current-session route, built from the group and route constants.</summary>
-    public static string CurrentUrl() => SessionRoutes.Group + SessionRoutes.Current;
+    public static string CurrentSessionUrl() => SessionRoutes.Group + SessionRoutes.Current;
 
     /// <summary>Reads the current session with the given access credential.</summary>
     public static Task<HttpResponseMessage> GetCurrentSessionAsync(HttpClient client, string accessToken) =>
-        SendWithBearerAsync(client, HttpMethod.Get, accessToken);
+        SendWithBearerAsync(client, HttpMethod.Get, CurrentSessionUrl(), accessToken);
 
     /// <summary>Revokes the current session with the given access credential.</summary>
     public static Task<HttpResponseMessage> RevokeCurrentSessionAsync(HttpClient client, string accessToken) =>
-        SendWithBearerAsync(client, HttpMethod.Delete, accessToken);
+        SendWithBearerAsync(client, HttpMethod.Delete, CurrentSessionUrl(), accessToken);
 
-    private static Task<HttpResponseMessage> SendWithBearerAsync(HttpClient client, HttpMethod method, string accessToken)
+    /// <summary>The current-user route, built from the group and route constants.</summary>
+    public static string CurrentUserUrl() => UserRoutes.Group + UserRoutes.Me;
+
+    /// <summary>Reads the current user with the given access credential.</summary>
+    public static Task<HttpResponseMessage> GetCurrentUserAsync(HttpClient client, string accessToken) =>
+        SendWithBearerAsync(client, HttpMethod.Get, CurrentUserUrl(), accessToken);
+
+    private static Task<HttpResponseMessage> SendWithBearerAsync(
+        HttpClient client,
+        HttpMethod method,
+        string url,
+        string accessToken)
     {
         ArgumentNullException.ThrowIfNull(client);
         ArgumentException.ThrowIfNullOrEmpty(accessToken);
 
-        HttpRequestMessage request = new(method, CurrentUrl());
+        HttpRequestMessage request = new(method, url);
         request.Headers.Authorization = new(MoniPayHeaders.Bearer, accessToken);
 
         return client.SendAsync(request, TestContext.Current.CancellationToken);

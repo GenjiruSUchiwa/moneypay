@@ -3,11 +3,13 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MoniPay.Api;
 using MoniPay.Api.OpenApi;
+using MoniPay.Kernel;
 using MoniPay.Kernel.Http;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Security;
 using MoniPay.Tests.Support;
+using MoniPay.Users.Features.CurrentUser;
 using Xunit;
 
 namespace MoniPay.Tests.Api;
@@ -105,6 +107,35 @@ public sealed class OpenApiContractTests(MoniPayApi api)
         Assert.Equal(
             "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfReadSessionAttributes",
             read.GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
+    }
+
+    [Fact]
+    public async Task The_current_user_route_is_bearer_only_with_the_six_attribute_schema()
+    {
+        // The shared link constant mirrors the route the Users module serves: a rename must move
+        // both, and this pins them together.
+        Assert.Equal(UserRoutes.Group + UserRoutes.Me, MoniPayRoutes.CurrentUser);
+
+        JsonElement document = await ReadOpenApiDocumentAsync();
+        JsonElement current = document.GetProperty("paths").GetProperty(UserRoutes.Group + UserRoutes.Me).GetProperty("get");
+
+        JsonElement requirement = Assert.Single(current.GetProperty("security").EnumerateArray());
+        Assert.Equal(
+            MoniPaySecuritySchemes.Bearer,
+            Assert.Single(requirement.EnumerateObject()).Name);
+
+        JsonElement read = current.GetProperty("responses").GetProperty("200").GetProperty("content");
+        Assert.Equal(
+            "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfUserAttributes",
+            read.GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
+
+        JsonElement attributes = document.GetProperty("components").GetProperty("schemas").GetProperty("UserAttributes");
+        Assert.Equal(
+            ["createdAt", "email", "firstName", "lastName", "locale", "phone"],
+            attributes.GetProperty("required").EnumerateArray().Select(member => member.GetString()).Order(StringComparer.Ordinal));
+        Assert.Equal(
+            ["createdAt", "email", "firstName", "lastName", "locale", "phone"],
+            attributes.GetProperty("properties").EnumerateObject().Select(member => member.Name).Order(StringComparer.Ordinal));
     }
 
     [Theory]
