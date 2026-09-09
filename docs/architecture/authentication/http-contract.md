@@ -28,6 +28,32 @@ Read [API representation standards](api-standards.md) before implementing a slic
 
 The .NET API does not add a compatibility `POST /signup` route. The POC stays active until the iOS client and .NET contract change together.
 
+## Route state and authentication matrix
+
+What each command route answers for each workflow state. The credential column is the scheme the
+route publishes in the OpenAPI document; a route answers `401` with that scheme's problem type
+whenever the credential does not open it.
+
+| Workflow state | Resend (`SignUp`) | Verify (`SignUp`) | Complete (`Registration`) |
+|---|---|---|---|
+| `codePending` | `202`, or `429 signup-resend-too-soon` / `429 signup-resend-limit` | `200`, `422 verification-code-invalid`, `410 verification-code-expired`, or `429 signup-attempt-limit` | `401 registration-token-invalid` |
+| `phoneVerified` | `401 signup-token-invalid` | `401 signup-token-invalid` | `201`, or `409 email-already-registered` |
+| `completed` | `401 signup-token-invalid` | `401 signup-token-invalid` | `200` with a replacement session |
+| `locked` | `409 signup-state-invalid` | `429 signup-attempt-limit` with `Retry-After` | `401 registration-token-invalid` |
+| Expired workflow (`signup-expired`) | `401 signup-token-invalid` | `401 signup-token-invalid` | `401 registration-token-invalid` |
+| Expired credential | `401 signup-token-invalid` | `401 signup-token-invalid` | `401 registration-token-invalid` |
+
+Two consequences of that matrix are deliberate:
+
+- **Authentication answers expiry first.** The Sign-up and Registration schemes reject an expired
+  workflow or an expired credential with `401`, so a caller never learns from a `410` that the
+  phone exists. `410 signup-expired` and `409 signup-state-invalid` remain the aggregate's forms
+  for a request that was admitted before the workflow changed underneath it.
+- **A locked workflow is two different refusals.** Verification spends the attempt budget and
+  answers `429 signup-attempt-limit` with `Retry-After`; a resend does not spend anything and
+  answers `409 signup-state-invalid` without a delay, because no delay makes a resend succeed on a
+  locked row.
+
 ## Headers
 
 | Header | Use |
