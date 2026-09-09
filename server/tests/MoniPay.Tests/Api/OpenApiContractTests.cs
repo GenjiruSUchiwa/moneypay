@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MoniPay.Api;
+using MoniPay.Api.OpenApi;
 using MoniPay.Kernel.Http;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.SignUps;
@@ -80,6 +81,30 @@ public sealed class OpenApiContractTests(MoniPayApi api)
             "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfSessionCredentialsAttributes",
             refresh.GetProperty("responses").GetProperty("200").GetProperty("content")
                 .GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
+    }
+
+    [Fact]
+    public async Task The_session_routes_are_bearer_only_and_the_revocation_declares_no_content()
+    {
+        JsonElement document = await ReadOpenApiDocumentAsync();
+        JsonElement current = document.GetProperty("paths").GetProperty(SessionRoutes.Group + SessionRoutes.Current);
+
+        foreach (string method in new[] { "get", "delete" })
+        {
+            JsonElement requirement = Assert.Single(
+                current.GetProperty(method).GetProperty("security").EnumerateArray());
+            Assert.Equal(
+                MoniPaySecuritySchemes.Bearer,
+                Assert.Single(requirement.EnumerateObject()).Name);
+        }
+
+        JsonElement revoked = current.GetProperty("delete").GetProperty("responses").GetProperty("204");
+        Assert.False(revoked.TryGetProperty("content", out _));
+
+        JsonElement read = current.GetProperty("get").GetProperty("responses").GetProperty("200").GetProperty("content");
+        Assert.Equal(
+            "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfReadSessionAttributes",
+            read.GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
     }
 
     [Theory]

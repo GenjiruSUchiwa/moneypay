@@ -244,12 +244,36 @@ internal static class SignUpFlow
     /// <summary>
     /// A live session with its credentials, opened the way the completion route will once #98 lands.
     /// </summary>
-    public static Task<OpenedSession> CreateSessionAsync(this MoniPayApi api)
+    public static Task<OpenedSession> CreateSessionAsync(this MoniPayApi api) => api.CreateSessionAsync(UserId.New());
+
+    public static Task<OpenedSession> CreateSessionAsync(this MoniPayApi api, UserId userId)
     {
         Guid deviceId = Guid.CreateVersion7();
 
         return api.InScopeAsync<SessionTokenService, OpenedSession>(async (sessions, cancellationToken) =>
-            new OpenedSession(await sessions.CreateAsync(UserId.New(), deviceId, cancellationToken), deviceId));
+            new OpenedSession(await sessions.CreateAsync(userId, deviceId, cancellationToken), deviceId));
+    }
+
+    /// <summary>The current-session route, built from the group and route constants.</summary>
+    public static string CurrentUrl() => SessionRoutes.Group + SessionRoutes.Current;
+
+    /// <summary>Reads the current session with the given access credential.</summary>
+    public static Task<HttpResponseMessage> GetCurrentSessionAsync(HttpClient client, string accessToken) =>
+        SendWithBearerAsync(client, HttpMethod.Get, accessToken);
+
+    /// <summary>Revokes the current session with the given access credential.</summary>
+    public static Task<HttpResponseMessage> RevokeCurrentSessionAsync(HttpClient client, string accessToken) =>
+        SendWithBearerAsync(client, HttpMethod.Delete, accessToken);
+
+    private static Task<HttpResponseMessage> SendWithBearerAsync(HttpClient client, HttpMethod method, string accessToken)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentException.ThrowIfNullOrEmpty(accessToken);
+
+        HttpRequestMessage request = new(method, CurrentUrl());
+        request.Headers.Authorization = new(MoniPayHeaders.Bearer, accessToken);
+
+        return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
     /// <summary>The refresh route, built from its constant so a rename breaks the test at compile time.</summary>
