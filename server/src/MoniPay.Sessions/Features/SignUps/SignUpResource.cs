@@ -3,7 +3,9 @@ using MoniPay.Kernel;
 using MoniPay.Kernel.Http;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.SignUps.Get;
+using MoniPay.Sessions.Features.SignUps.ResendCode;
 using MoniPay.Sessions.Features.SignUps.Start;
+using MoniPay.Sessions.Features.SignUps.VerifyPhone;
 using MoniPay.Sessions.Providers;
 
 namespace MoniPay.Sessions.Features.SignUps;
@@ -113,6 +115,20 @@ internal sealed record ReadSignUpResourceAttributes
     public required DateTimeOffset SignUpExpiresAt { get; init; }
 }
 
+/// <summary>
+/// The attributes returned by the phone-verification operation: the one moment the registration
+/// credential exists. The sign-up token is void from here on, and the credential is never read
+/// back.
+/// </summary>
+internal sealed record VerifiedSignUpResourceAttributes
+{
+    public required SignUpStatusValue Status { get; init; }
+
+    public required string RegistrationToken { get; init; }
+
+    public required DateTimeOffset SignUpExpiresAt { get; init; }
+}
+
 /// <summary>Projects handler results onto the <c>signups</c> resource and its links.</summary>
 internal static class SignUpResources
 {
@@ -140,6 +156,32 @@ internal static class SignUpResources
         };
     }
 
+    /// <summary>
+    /// The read form after a resend: the code timing it refreshed. The aggregate only rotates a
+    /// code while the workflow is pending one, so the state and the queued delivery are known here.
+    /// </summary>
+    public static JsonApiResponseResource<ReadSignUpResourceAttributes> FromResend(
+        SignUpId signUpId,
+        CreateVerificationCodeDeliveryResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+
+        return new JsonApiResponseResource<ReadSignUpResourceAttributes>
+        {
+            Type = SignUpResourceTypes.SignUps,
+            Id = signUpId.Value.ToString(),
+            Attributes = new ReadSignUpResourceAttributes
+            {
+                Status = SignUpStatusValue.CodePending,
+                CodeDelivery = CodeDeliveryValue.Queued,
+                CodeExpiresAt = result.CodeExpiresAt,
+                CanResendAt = result.CanResendAt,
+                SignUpExpiresAt = result.SignUpExpiresAt,
+            },
+            Links = new JsonApiLinks { Self = Self(signUpId) },
+        };
+    }
+
     public static JsonApiResponseResource<ReadSignUpResourceAttributes> FromView(SignUpId signUpId, SignUpView view)
     {
         ArgumentNullException.ThrowIfNull(view);
@@ -157,6 +199,25 @@ internal static class SignUpResources
                 SignUpExpiresAt = view.SignUpExpiresAt,
             },
             Links = new JsonApiLinks { Self = Self(signUpId) },
+        };
+    }
+
+    public static JsonApiResponseResource<VerifiedSignUpResourceAttributes> FromVerification(
+        CreatePhoneVerificationResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+
+        return new JsonApiResponseResource<VerifiedSignUpResourceAttributes>
+        {
+            Type = SignUpResourceTypes.SignUps,
+            Id = result.SignUpId.Value.ToString(),
+            Attributes = new VerifiedSignUpResourceAttributes
+            {
+                Status = SignUpStatusValue.PhoneVerified,
+                RegistrationToken = result.RegistrationToken,
+                SignUpExpiresAt = result.SignUpExpiresAt,
+            },
+            Links = new JsonApiLinks { Self = Self(result.SignUpId) },
         };
     }
 }
