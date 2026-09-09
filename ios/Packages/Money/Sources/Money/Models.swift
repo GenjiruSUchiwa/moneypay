@@ -2,8 +2,6 @@ import DesignSystem
 import Foundation
 import SwiftUI
 
-// MARK: - Card
-
 public struct VirtualCard: Identifiable, Hashable, Sendable {
     public init(
         id: UUID,
@@ -48,7 +46,6 @@ public struct VirtualCard: Identifiable, Hashable, Sendable {
     public var expiry: String
     public var isFrozen = false
     public var createdAt: Date
-    /// Monthly limit in USD cents. nil means no limit.
     public var monthlyLimitUSDCents: Int?
     public var spentUSDCents: Int
     public var singleUse = false
@@ -64,8 +61,6 @@ public struct VirtualCard: Identifiable, Hashable, Sendable {
         return Double(spentUSDCents) / Double(limit)
     }
 }
-
-// MARK: - Transaction
 
 public enum TxStatus: String, Sendable {
     case approved, pending, declined, refunded
@@ -128,8 +123,6 @@ public enum TxCategory: String, CaseIterable, Identifiable, Sendable {
         case .travel: "airplane"; case .other: "circle.grid.2x2.fill"
         }
     }
-    /// Fixed categorical slot. The order never changes: it is what guarantees
-    /// colour-blind separation. "Other" takes the reserved neutral.
     public var slot: Int? {
         switch self {
         case .streaming: 0; case .shopping: 1; case .software: 2; case .food: 3
@@ -174,9 +167,7 @@ public struct Transaction: Identifiable, Hashable, Sendable {
     public var category: TxCategory
     public var status: TxStatus
     public var date: Date
-    /// Amount presented by the merchant, in USD cents (negative is a debit).
     public var amountUSDCents: Int
-    /// Amount actually moved on the wallet, in XAF.
     public var amountXAF: Int
     public var cardID: UUID?
     public var fxRate: Double = 610
@@ -187,8 +178,6 @@ public struct Transaction: Identifiable, Hashable, Sendable {
     public static func == (a: Money.Transaction, b: Money.Transaction) -> Bool { a.id == b.id }
     public func hash(into h: inout Hasher) { h.combine(id) }
 }
-
-// MARK: - Top-up
 
 public struct TopUpMethod: Identifiable, Hashable, Sendable {
     public init(id: String, name: String, detail: String, symbol: String, tint: Color, feePct: Double, instant: Bool) {
@@ -210,8 +199,6 @@ public struct TopUpMethod: Identifiable, Hashable, Sendable {
     public var instant: Bool
 }
 
-// MARK: - Notification
-
 public struct AppNotification: Identifiable, Sendable {
     public init(title: String, body: String, date: Date, symbol: String, tint: Color, unread: Bool) {
         self.title = title
@@ -230,8 +217,6 @@ public struct AppNotification: Identifiable, Sendable {
     public var tint: Color
     public var unread: Bool
 }
-
-// MARK: - User
 
 public struct User {
     public init(firstName: String, lastName: String, phone: String, email: String, kycVerified: Bool) {

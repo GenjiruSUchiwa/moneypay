@@ -3,17 +3,9 @@ import Foundation
 import Money
 import SwiftUI
 
-/// The single source of truth for the UI. Demo data held in memory: screens
-/// are bound to this store, and its insides will be swapped for issuer calls
-/// without touching the views.
-/// `@MainActor` explicitly: this is UI state. Every screen observes it, and
-/// SwiftUI reads observable state on the main actor, so that is its isolation.
-/// `actor Wallet` is the piece that deliberately runs off it.
 @MainActor
 @Observable
 public final class Store {
-    /// A class gets no synthesised memberwise init: the composition root
-    /// builds the store with the demo data.
     public init() {}
 
     public var user = User(
@@ -29,8 +21,6 @@ public final class Store {
     public var notifications: [AppNotification] = SampleData.notifications
     public var hiddenBalance = false
 
-    // MARK: Derived
-
     public var usdEquivalentCents: Int {
         Int(Double(balanceXAF) / (fx.usdToXAF * (1 + fx.marginPct)) * 100)
     }
@@ -43,8 +33,6 @@ public final class Store {
         transactions.filter { $0.cardID == cardID }
     }
 
-    /// Grouped by day, newest first: the list structure Monzo, Starling and
-    /// N26 all use.
     public func grouped(_ txs: [Money.Transaction]) -> [(day: Date, items: [Money.Transaction])] {
         let cal = Calendar.current
         return Dictionary(grouping: txs) { cal.startOfDay(for: $0.date) }
@@ -68,8 +56,6 @@ public final class Store {
             .filter { $0.date >= since && $0.amountXAF > 0 && $0.status != .declined }
             .reduce(0) { $0 + $1.amountXAF }
     }
-
-    // MARK: Actions
 
     public func topUp(xaf: Int, method: TopUpMethod) {
         let fee = Int(Double(xaf) * method.feePct)
@@ -114,10 +100,7 @@ public final class Store {
     }
 }
 
-// MARK: - Demo data
-
 public enum SampleData {
-    /// `var` so a locale change in a preview re-resolves the copy.
     public static var methods: [TopUpMethod] {
         [
             .init(id: "mtn", name: "MTN Mobile Money",

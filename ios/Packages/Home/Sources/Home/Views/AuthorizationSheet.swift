@@ -3,9 +3,6 @@ import Money
 import SwiftUI
 import WalletStore
 
-/// The pivotal moment of the whole setup: the processor asks over a webhook
-/// whether we approve a payment, and we have seconds to answer. This is that
-/// decision as the cardholder sees it.
 public struct AuthorizationSheet: View {
     public init(merchant: String, category: TxCategory, amountUSDCents: Int, card: VirtualCard) {
         self.merchant = merchant
@@ -50,7 +47,6 @@ public struct AuthorizationSheet: View {
             }
             .padding(.top, 22)
 
-            // Countdown: a bar that drains, not a decorative ring.
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Rectangle().fill(Brand.hairline)
@@ -176,8 +172,6 @@ public struct AuthorizationSheet: View {
     }
 }
 
-// MARK: - Unlock
-
 public struct LockScreenView: View {
     public init(onUnlock: @escaping () -> Void = {}) {
         self.onUnlock = onUnlock
@@ -228,7 +222,6 @@ public struct LockScreenView: View {
         .gutter()
         .padding(.bottom, 20)
         .page()
-        // A typed digit clears the error; a cleared field after a wrong code keeps it.
         .onChange(of: code) { old, new in
             if new.count > old.count { error = false }
             if new.count == 4 { check() }

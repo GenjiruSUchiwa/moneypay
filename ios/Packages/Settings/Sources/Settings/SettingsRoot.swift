@@ -66,10 +66,6 @@ public struct SettingsView: View {
                             chevron: true)
                     }
 
-                    // The screen gallery (Gallery package) references EVERY
-                    // screen, Settings included, so it sits above this package
-                    // and its entry point lives in MainTabView (App).
-
                     Rule()
                     Row(icon: "rectangle.portrait.and.arrow.right",
                         title: Text("Sign out", bundle: .module), destructive: true)

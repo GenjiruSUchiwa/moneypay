@@ -1,5 +1,4 @@
 import SwiftUI
-// Keep these values fixed: they match the prototype's flag palette.
 
 enum FlagPalette {
     static let cmGreen = Color(rgb: 0x007A5E)

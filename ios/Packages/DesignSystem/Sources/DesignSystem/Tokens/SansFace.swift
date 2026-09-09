@@ -2,9 +2,6 @@ import CoreText
 import Foundation
 import SwiftUI
 
-/// The bundled Google Sans Flex faces. Package resources live in their own bundle, which
-/// `UIAppFonts` cannot see, so the faces are registered with CoreText the first time a
-/// `Font.sans` is built.
 enum SansFace {
     static let registration: Void = {
         let urls = Bundle.module.urls(forResourcesWithExtension: "ttf", subdirectory: nil) ?? []

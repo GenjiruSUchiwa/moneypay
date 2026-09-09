@@ -4,7 +4,6 @@ import Testing
 
 @Suite("SignUpModel")
 struct SignUpModelTests {
-    /// Instant everywhere: no test may wait on wall-clock seconds.
     private static func model(resendDelay: Duration = .seconds(42),
                               verifyDelay: Duration = .zero,
                               resendTick: Duration = .zero,

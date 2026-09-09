@@ -121,8 +121,6 @@ public struct CardDetailView: View {
         .padding(.top, 22)
     }
 
-    // MARK: Card secrets
-
     private var secrets: some View {
         VStack(alignment: .leading, spacing: 0) {
             Eyebrow(text: Text("Card details", bundle: .module)).gutter().padding(.top, 22).padding(.bottom, 4)
@@ -172,8 +170,6 @@ public struct CardDetailView: View {
         }
         .buttonStyle(.plain)
     }
-
-    // MARK: Spend limit
 
     private var limit: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -226,8 +222,6 @@ public struct CardDetailView: View {
         .padding(.bottom, 20)
     }
 
-    // MARK: Controls
-
     private var controls: some View {
         VStack(spacing: 0) {
             Row(icon: "globe", title: Text("Online payments", bundle: .module)) {
@@ -249,8 +243,6 @@ public struct CardDetailView: View {
         }
         .gutter()
     }
-
-    // MARK: Transactions
 
     private var transactions: some View {
         let txs = store.transactions(for: live.id)

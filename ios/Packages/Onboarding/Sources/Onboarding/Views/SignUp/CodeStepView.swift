@@ -2,8 +2,6 @@ import ApiClient
 import DesignSystem
 import SwiftUI
 
-/// Step 1: the six-digit code. The boxes own the system number pad and SMS autofill;
-/// the countdown and the verification both live on the model.
 struct CodeStepView: View {
     let model: SignUpModel
     var feedback: AuthenticationFeedback?

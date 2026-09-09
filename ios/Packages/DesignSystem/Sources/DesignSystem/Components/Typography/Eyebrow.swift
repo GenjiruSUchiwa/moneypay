@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// A short label above a title: "≈ 3 minutes", "This month". Prototype `.eyebrow`:
-/// 13 pt medium, muted ink, no capitals. For raw data such as a PAN, use `Font.dataMono`.
 public struct Eyebrow: View {
     public init(text: Text) {
         self.text = text

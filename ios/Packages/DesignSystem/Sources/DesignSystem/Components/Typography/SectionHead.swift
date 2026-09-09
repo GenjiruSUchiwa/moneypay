@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Section heading. The chevron is the affordance: no button, no coloured
-/// "See all" label.
 public struct SectionHead: View {
     public init(title: Text, trailing: String? = nil, tappable: Bool = false,
                 action: @escaping () -> Void = {}) {

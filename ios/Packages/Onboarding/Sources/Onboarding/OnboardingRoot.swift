@@ -3,10 +3,7 @@ import DesignSystem
 import Money
 import SwiftUI
 
-/// The single public entry point for the onboarding sequence; the app and Gallery
-/// provide its account creator and receive one completion outcome.
 public struct OnboardingRoot: View {
-    /// The account creator selected by the composition root or a preview.
     public struct Dependencies: Sendable {
         public let accounts: any AccountCreating
 
@@ -14,13 +11,11 @@ public struct OnboardingRoot: View {
             self.accounts = accounts
         }
 
-        /// Uses the in-memory account creator so previews never require a server.
         public static var preview: Dependencies {
             Dependencies(accounts: PreviewAccountClient())
         }
     }
 
-    /// The screen at which the sequence starts; Gallery uses this to open a step directly.
     public enum Stage: Equatable {
         case splash
         case welcome
@@ -28,7 +23,6 @@ public struct OnboardingRoot: View {
         case preview(PreviewScenario)
     }
 
-    /// Creates onboarding with the supplied account creator and completion handler.
     public init(
         dependencies: Dependencies,
         stage: Stage = .splash,

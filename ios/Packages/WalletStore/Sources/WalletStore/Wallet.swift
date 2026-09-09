@@ -10,24 +10,14 @@ public enum AuthDecision: String, Sendable {
     public var isApproved: Bool { self == .approved }
 }
 
-/// The wallet IS the source of truth for the balance. A virtual card has no
-/// account of its own: on every authorization the processor asks us, over a
-/// webhook, whether we approve (just-in-time funding). We have about 2 s to
-/// answer.
-///
-/// Model: balance (balanceXAF) plus holds. An authorization freezes funds, a
-/// clearing debits them, a void releases them. Available = balance - holds.
 public actor Wallet {
     public let ownerId: String
     private(set) var balanceXAF: Int
-    private(set) var holds: [String: Int] = [:]   // authId -> FCFA gelés
+    private(set) var holds: [String: Int] = [:]
     private(set) var declineCount = 0
     private(set) var isBlocked = false
     private(set) var fx = FXRate()
 
-    /// Every decline is billed by the processor (about $0.30-0.50 with the
-    /// African providers), which is why the card freezes after N consecutive
-    /// declines. PaySika does exactly this.
     public let maxConsecutiveDeclines: Int
 
     public init(ownerId: String, balanceXAF: Int = 0, maxConsecutiveDeclines: Int = 3) {
@@ -46,11 +36,6 @@ public actor Wallet {
     public func setFX(_ rate: FXRate) { fx = rate }
     public func unblock() { isBlocked = false; declineCount = 0 }
 
-    // MARK: - Authorization flow
-
-    /// Just-in-time decision. Idempotent: the same authId presented twice
-    /// returns the same answer without freezing again (networks replay
-    /// messages).
     public func authorize(authId: String, amountUSDCents: Int, spendLimitUSDCents: Int?) -> AuthDecision {
         if holds[authId] != nil { return .approved }
         if isBlocked { return .cardBlocked }
@@ -69,9 +54,6 @@ public actor Wallet {
         return .approved
     }
 
-    /// Clearing: the merchant presents the final amount, which may differ
-    /// from the authorization (a tip, a fuel adjustment). We debit the real
-    /// one.
     @discardableResult
     public func capture(authId: String, finalUSDCents: Int? = nil) -> Int? {
         guard let held = holds.removeValue(forKey: authId) else { return nil }
@@ -80,7 +62,6 @@ public actor Wallet {
         return debit
     }
 
-    /// Void or expiry of the authorization: the held funds are released.
     @discardableResult
     public func void(authId: String) -> Int? { holds.removeValue(forKey: authId) }
 

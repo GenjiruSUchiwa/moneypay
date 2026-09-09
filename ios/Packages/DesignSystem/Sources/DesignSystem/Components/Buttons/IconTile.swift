@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Icon tile. Concentric-cornered square, tint held at low saturation: the
-/// icon identifies, it does not decorate.
 public struct IconTile: View {
     public init(symbol: String, tint: Color = Brand.ink, size: CGFloat = 38, filled: Bool = false) {
         self.symbol = symbol

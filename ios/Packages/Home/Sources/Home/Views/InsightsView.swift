@@ -53,13 +53,10 @@ public struct InsightsView: View {
         }
     }
 
-    // MARK: Headline figure, not a chart
-
     private var hero: some View {
         VStack(alignment: .leading, spacing: 0) {
             Eyebrow(text: Text("Spent in \(currentLabel)", bundle: .module))
             MoneyText.xaf(current, size: 36).padding(.top, 8)
-            // State never rides on colour alone: arrow plus label.
             HStack(spacing: 5) {
                 Image(systemName: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
                     .font(.system(size: 11, weight: .bold))
@@ -74,8 +71,6 @@ public struct InsightsView: View {
         .padding(.top, 20)
         .padding(.bottom, 26)
     }
-
-    // MARK: Trend: one series, one hue, no legend
 
     private var trend: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -92,7 +87,6 @@ public struct InsightsView: View {
             .gutter()
 
             if showTable {
-                // Table view: the same values, readable without colour.
                 VStack(spacing: 0) {
                     ForEach(Array(months.reversed().enumerated()), id: \.element.id) { i, m in
                         HStack {
@@ -129,7 +123,6 @@ public struct InsightsView: View {
                             .foregroundStyle(Brand.ink.opacity(m.isCurrent ? 1 : 0.28))
                             .cornerRadius(4)
                             .annotation(position: .top, spacing: 5) {
-                                // Selective direct labelling, never on every bar.
                                 if m.isCurrent || m.label == selectedMonth {
                                     Text(m.xaf, format: .number.notation(.compactName))
                                         .font(.system(size: 10, weight: .medium))
@@ -167,8 +160,6 @@ public struct InsightsView: View {
         .padding(.bottom, 26)
     }
 
-    // MARK: Categories
-
     private var ranking: some View {
         let rows = store.spendByCategory()
         let maxV = rows.first?.xaf ?? 1
@@ -178,8 +169,6 @@ public struct InsightsView: View {
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                     VStack(spacing: 7) {
                         HStack(spacing: 9) {
-                            // Identity comes from the tinted icon; the bar
-                            // encodes magnitude only, in a single hue.
                             Image(systemName: row.category.symbol)
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(row.category.tint)
@@ -201,8 +190,6 @@ public struct InsightsView: View {
         }
         .padding(.bottom, 26)
     }
-
-    // MARK: True cost
 
     private var costs: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -246,8 +233,6 @@ public struct InsightsView: View {
         }
         .padding(.vertical, Metric.rowVertical)
     }
-
-    // MARK: Per card
 
     private var perCard: some View {
         VStack(alignment: .leading, spacing: 4) {

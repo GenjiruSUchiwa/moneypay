@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Hairline. Full width between two sections, inset between two rows of the
-/// same list.
 public struct Rule: View {
     public init(inset: CGFloat = 0, strong: Bool = false) {
         self.inset = inset

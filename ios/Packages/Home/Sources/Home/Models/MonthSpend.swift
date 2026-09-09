@@ -1,7 +1,6 @@
 import Charts
 import Foundation
 
-/// One month of spending on the Analyse screen; `month` is a `Date` so the label follows the locale.
 public struct MonthSpend: Identifiable {
     public init(month: Date, xaf: Int, isCurrent: Bool) {
         self.month = month
@@ -16,7 +15,6 @@ public struct MonthSpend: Identifiable {
 
     public var label: String { month.formatted(.dateTime.month(.abbreviated)) }
 
-    /// Demo series over the last `amounts.count` months.
     public static func demoSeries(_ amounts: [Int], calendar: Calendar = .current) -> [MonthSpend] {
         amounts.enumerated().map { offset, xaf in
             let back = offset - (amounts.count - 1)

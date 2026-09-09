@@ -48,7 +48,6 @@ struct AccountCreatingTests {
         #expect(text.contains("\"name\""))
         #expect(text.contains("\"phone\""))
         #expect(text.contains("\"email\""))
-        // The POC wants the country code as digits, with no leading plus.
         #expect(!text.contains("+"))
     }
 

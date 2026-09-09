@@ -1,7 +1,6 @@
 import Foundation
 import Platform
 
-/// Frozen clock: the test decides the instant, not the machine running it.
 public struct FixedClock: Clocking {
     public var now: Date
 
@@ -10,7 +9,6 @@ public struct FixedClock: Clocking {
     }
 }
 
-/// In-memory storage: no UserDefaults shared between two tests.
 public final class InMemoryKeyValueStoring: KeyValueStoring, @unchecked Sendable {
     private let lock = NSLock()
     private var storage: [String: Any] = [:]
@@ -34,7 +32,6 @@ public final class InMemoryKeyValueStoring: KeyValueStoring, @unchecked Sendable
     }
 }
 
-/// A log that keeps what it was handed, so a test can assert on it.
 public final class RecordingLogging: Logging, @unchecked Sendable {
     private let lock = NSLock()
     private var entries: [(LogLevel, String)] = []

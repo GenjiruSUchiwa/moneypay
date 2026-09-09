@@ -2,9 +2,6 @@ import ApiClient
 import DesignSystem
 import SwiftUI
 
-/// Step 2: create a four-digit passcode, then repeat it. `PasscodeDots` owns the system
-/// number pad and the mismatch shake; the two phases, the comparison and the advance all
-/// live on the model.
 struct PasscodeStepView: View {
     let model: SignUpModel
 
@@ -40,7 +37,6 @@ struct PasscodeStepView: View {
 
     private var passcodeInput: some View {
         let phase = model.passcode.phase
-        // UIKit can replay the completed field value before SwiftUI installs the confirmation field.
         return PasscodeDots(code: Binding(get: { model.passcode.entry },
                                           set: { model.setPasscodeEntry($0, during: phase) }),
                             error: model.passcode.isMismatch)

@@ -1,7 +1,6 @@
 import Foundation
 import Observation
 
-/// The hold is a product decision (the prototype dwells 1.5 s), so it lives here, not in the view.
 @Observable
 @MainActor
 final class SplashModel {

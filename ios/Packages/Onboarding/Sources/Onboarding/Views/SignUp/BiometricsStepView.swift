@@ -2,8 +2,6 @@ import ApiClient
 import DesignSystem
 import SwiftUI
 
-/// Step 3: the biometric preference. It records a choice and nothing more — no
-/// `LocalAuthentication`, no enrolment prompt; that belongs to the Sessions epic.
 struct BiometricsStepView: View {
     let model: SignUpModel
 

@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Success check. One ink disc, not a burst of concentric circles.
 public struct SuccessMark: View {
     public init() {
     }

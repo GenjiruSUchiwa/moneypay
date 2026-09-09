@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// The prototype's decorative card patterns. Place behind card content; use the theme fill for plain cards.
 public struct CardArtwork: View {
     public init(theme: CardTheme) {
         self.theme = theme

@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// List row laid straight on the background. No card, no corner radius.
 public struct Row<Trailing: View>: View {
     public init(
         icon: String? = nil,

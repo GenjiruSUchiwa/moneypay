@@ -1,19 +1,13 @@
 import Foundation
 import SwiftUI
 
-/// Renders a supported country's flag as a circular mark.
-/// Use beside a country label, not as a language picker.
-/// If a parent announces the country, apply `.accessibilityHidden(true)`.
 public struct FlagMark: View {
-    /// Supported Mobile Money countries.
     public enum Country: String, CaseIterable, Sendable {
         case cm, ci, sn, ga, cd, bj
 
-        /// ISO 3166-1 alpha-2 region code.
         public var regionCode: String { rawValue.uppercased() }
     }
 
-    /// Creates a fixed-size flag mark.
     public init(_ country: Country, size: CGFloat) {
         self.country = country
         self.size = size
@@ -38,8 +32,6 @@ public struct FlagMark: View {
 }
 
 private enum FlagCanvas {
-    // Keep the prototype's 40×40 coordinate space here; point(_:_:in:) scales
-    // each shape to the requested size.
     nonisolated static let side: CGFloat = 40
 
     nonisolated static func point(_ x: CGFloat, _ y: CGFloat, in rect: CGRect) -> CGPoint {
@@ -85,7 +77,6 @@ private struct FlagShape: Shape {
         return path
     }
 
-    // The prototype's five-point stars use a 40% inner radius.
     private static func starPoints(center: CGPoint, radius: CGFloat) -> [CGPoint] {
         let innerRadius = radius * 0.4
         return (0..<10).map { index in
@@ -115,7 +106,6 @@ private enum FlagArt {
         }
     }
 
-    // Adjacent bands overlap by one coordinate unit to avoid rasterization seams.
     private static let cameroon: [FlagLayer] = [
         FlagLayer(id: 0, shape: .band(x: 0, y: 0, width: 14, height: 40), color: FlagPalette.cmGreen),
         FlagLayer(id: 1, shape: .band(x: 13, y: 0, width: 14, height: 40), color: FlagPalette.cmRed),
@@ -142,7 +132,6 @@ private enum FlagArt {
         FlagLayer(id: 2, shape: .band(x: 0, y: 26, width: 40, height: 14), color: FlagPalette.gaBlue)
     ]
 
-    // These bands extend past the canvas so the clipped circle has no gaps.
     private static let democraticRepublicOfCongo: [FlagLayer] = [
         FlagLayer(id: 0, shape: .band(x: 0, y: 0, width: 40, height: 40), color: FlagPalette.cdBlue),
         FlagLayer(id: 1, shape: FlagShape(art: .polygon([

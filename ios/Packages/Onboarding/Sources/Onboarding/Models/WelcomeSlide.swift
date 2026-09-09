@@ -3,7 +3,6 @@ import Foundation
 import Money
 import SwiftUI
 
-/// One slide of the welcome deck: its copy as catalog keys and its card presentation data.
 struct WelcomeSlide: Identifiable, Sendable {
     let id: Int
     let title: LocalizedStringKey
@@ -11,7 +10,6 @@ struct WelcomeSlide: Identifiable, Sendable {
     let cardLabel: String
     let theme: CardTheme
     let network: CardNetwork
-    /// Stable for the process, so the deck's `VirtualCardView`s keep their identity across renders.
     let cardID = UUID()
 
     static let all: [WelcomeSlide] = [

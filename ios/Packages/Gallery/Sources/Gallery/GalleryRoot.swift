@@ -2,8 +2,6 @@ import DesignSystem
 import SwiftUI
 import WalletStore
 
-/// Index of every view in the mockup: walk each screen without replaying the
-/// flows that lead to it.
 public struct GalleryView: View {
     public init() {
     }

@@ -89,7 +89,6 @@ public struct KYCDocumentPickerView: View {
     public var onPick: (String) -> Void
     public var onBack: () -> Void
 
-    /// `id` is a stable code; the flow never branches on the localized label.
     private struct Document: Identifiable {
         let id: String
         var title: LocalizedStringKey
@@ -270,7 +269,6 @@ public struct KYCCaptureView: View {
     }
 }
 
-/// Four viewfinder corners.
 public struct Corners: Shape {
     public init(len: CGFloat = 30, radius: CGFloat = 14) {
         self.len = len

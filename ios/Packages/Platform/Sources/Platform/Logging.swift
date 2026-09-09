@@ -5,8 +5,6 @@ public enum LogLevel: String, Sendable, CaseIterable {
     case debug, info, error
 }
 
-/// Injectable logging. No amount, card number or phone number may pass
-/// through here: logs leave the device.
 public protocol Logging: Sendable {
     func log(_ level: LogLevel, _ message: String)
 }

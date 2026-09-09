@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Quick action (prototype `.qa`): a well disc with the label underneath. Every action
-/// looks the same; the prototype gives none of them a coloured disc.
 public struct QuickAction: View {
     public init(icon: String, label: Text, action: @escaping () -> Void = {}) {
         self.icon = icon

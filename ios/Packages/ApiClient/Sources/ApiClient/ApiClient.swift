@@ -1,8 +1,5 @@
 import Foundation
 
-/// Transport to the POC backend (`poc/server.js`, port 8743 by default).
-/// One responsibility: speak HTTP and map errors. No business rules here; the
-/// balance is authoritative in `WalletStore`.
 public struct ApiClient: Sendable {
     private let baseURL: URL
     private let session: URLSession
@@ -12,7 +9,6 @@ public struct ApiClient: Sendable {
         self.session = session
     }
 
-    /// Read from `Info.plist` (key `APIBaseURL`, fed by the xcconfig files).
     public static func fromBundle(_ bundle: Bundle = .main) -> ApiClient? {
         guard let raw = bundle.object(forInfoDictionaryKey: "APIBaseURL") as? String,
               let url = URL(string: raw), !raw.isEmpty else { return nil }

@@ -1,10 +1,6 @@
 import SwiftUI
 
-/// Amount entry: the digits so far plus a caret, currency set as a suffix.
-/// Pass a `Binding` to own the system number pad; pass a `String` for a display-only
-/// amount. The binding carries raw digits; the caller groups them for display.
 public struct AmountEntry: View {
-    /// Display-only amount. No keyboard.
     public init(digits: String, currency: String, size: CGFloat = 46) {
         self._digits = .constant(digits)
         self.display = digits
@@ -15,9 +11,6 @@ public struct AmountEntry: View {
         self.editable = false
     }
 
-    /// Editable amount. Owns the system number pad; the caller holds the raw digits
-    /// and formats them for display (`Fmt.group`).
-    /// `digits` is clamped to `maxDigits` and never contains a non-digit.
     public init(digits: Binding<String>, display: String, currency: String, size: CGFloat = 46,
                 maxDigits: Int = 8, autofocus: Bool = true) {
         self._digits = digits
@@ -50,7 +43,6 @@ public struct AmountEntry: View {
         }
     }
 
-    // VoiceOver activates the field to type, so the announcement lives on the field.
     private var editableBody: some View {
         amount
             .accessibilityHidden(true)

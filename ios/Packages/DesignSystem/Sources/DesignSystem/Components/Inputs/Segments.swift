@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// A segmented filter (prototype `.segments`): the system segmented control, whose
-/// sliding surface pill is the prototype's design. For a tappable option list, use `Chip`.
 public struct Segments: View {
     public init(items: [Text], selection: Binding<Int>) {
         self.items = items
