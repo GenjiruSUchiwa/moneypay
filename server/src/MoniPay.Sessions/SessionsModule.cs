@@ -19,6 +19,7 @@ using MoniPay.Sessions.Features.Sessions.GetCurrent;
 using MoniPay.Sessions.Features.Sessions.Refresh;
 using MoniPay.Sessions.Features.Sessions.RevokeCurrent;
 using MoniPay.Sessions.Features.SignUps;
+using MoniPay.Sessions.Features.SignUps.Complete;
 using MoniPay.Sessions.Features.SignUps.Get;
 using MoniPay.Sessions.Features.SignUps.ResendCode;
 using MoniPay.Sessions.Features.SignUps.Start;
@@ -81,6 +82,7 @@ public static class SessionsModule
         services.AddScoped<GetSignUpHandler>();
         services.AddScoped<CreateVerificationCodeDeliveryHandler>();
         services.AddScoped<CreatePhoneVerificationHandler>();
+        services.AddScoped<CreateSignUpCompletionHandler>();
         services.AddScoped<GetCurrentSessionHandler>();
 
         services.AddSingleton<ExpiredCredentialCleanupService>();
@@ -203,6 +205,7 @@ public static class SessionsModule
         signUps.MapGetSignUp();
         signUps.MapCreateVerificationCodeDelivery();
         signUps.MapCreatePhoneVerification();
+        signUps.MapCreateSignUpCompletion();
 
         // The refresh hangs off the root: its credential travels in the body, and the group it
         // would otherwise inherit is authenticated.

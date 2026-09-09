@@ -108,7 +108,62 @@ public sealed class OpenApiContractTests(MoniPayApi api)
     }
 
     [Theory]
+    [InlineData(SignUpRoutes.VerificationCodeDeliveries, "post", SessionsSchemes.SignUp)]
+    [InlineData(SignUpRoutes.PhoneVerifications, "post", SessionsSchemes.SignUp)]
+    [InlineData(SignUpRoutes.Completions, "post", SessionsSchemes.Registration)]
+    public async Task Each_sign_up_command_route_names_its_credential_scheme(string route, string method, string scheme)
+    {
+        JsonElement document = await ReadOpenApiDocumentAsync();
+        JsonElement operation = document
+            .GetProperty("paths")
+            .GetProperty(SignUpRoutes.Group + route.Replace(":guid", string.Empty, StringComparison.Ordinal))
+            .GetProperty(method);
+
+        JsonElement requirement = Assert.Single(operation.GetProperty("security").EnumerateArray());
+        Assert.Equal(scheme, Assert.Single(requirement.EnumerateObject()).Name);
+    }
+
+    [Fact]
+    public async Task The_command_routes_document_their_success_forms()
+    {
+        JsonElement document = await ReadOpenApiDocumentAsync();
+        JsonElement paths = document.GetProperty("paths");
+
+        JsonElement resend = paths
+            .GetProperty(SignUpRoutes.Group + SignUpRoutes.VerificationCodeDeliveries.Replace(":guid", string.Empty, StringComparison.Ordinal))
+            .GetProperty("post");
+        Assert.False(resend.TryGetProperty("requestBody", out _));
+        Assert.Equal(
+            "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfReadSignUpResourceAttributes",
+            resend.GetProperty("responses").GetProperty("202").GetProperty("content")
+                .GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
+
+        JsonElement verify = paths
+            .GetProperty(SignUpRoutes.Group + SignUpRoutes.PhoneVerifications.Replace(":guid", string.Empty, StringComparison.Ordinal))
+            .GetProperty("post")
+            .GetProperty("responses")
+            .GetProperty("200")
+            .GetProperty("content");
+        Assert.Equal(
+            "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfVerifiedSignUpResourceAttributes",
+            verify.GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
+
+        JsonElement completions = paths
+            .GetProperty(SignUpRoutes.Group + SignUpRoutes.Completions.Replace(":guid", string.Empty, StringComparison.Ordinal))
+            .GetProperty("post")
+            .GetProperty("responses");
+        foreach (string status in new[] { "200", "201" })
+        {
+            Assert.Equal(
+                "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfSessionCredentialsAttributes",
+                completions.GetProperty(status).GetProperty("content")
+                    .GetProperty(MoniPayMediaTypes.JsonApi).GetProperty("schema").GetProperty("$ref").GetString());
+        }
+    }
+
+    [Theory]
     [InlineData("SignUpCommandResourceOfCreatePhoneVerificationAttributes")]
+    [InlineData("SignUpCommandResourceOfCreateSignUpCompletionAttributes")]
     public async Task A_sign_up_command_requires_its_named_relationship(string resourceSchema)
     {
         JsonElement schemas = (await ReadOpenApiDocumentAsync()).GetProperty("components").GetProperty("schemas");

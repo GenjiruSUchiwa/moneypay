@@ -2,6 +2,7 @@ using System.Buffers.Text;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -112,6 +113,19 @@ internal abstract class WorkflowAuthenticationHandler(
 
         ClaimsIdentity identity = new([new Claim(MoniPayClaimTypes.SignUpId, signUpIdValue.ToString())], Scheme.Name);
         return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name));
+    }
+
+    /// <summary>
+    /// The raw credential a request presents for a workflow scheme, for a slice that must hand it
+    /// to a handler: the digest comparison lives in the domain, not in the ticket.
+    /// </summary>
+    internal static string PresentedCredential(HttpRequest request, string scheme)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return MatchesScheme(request.Headers.Authorization, scheme, out string rawToken)
+            ? rawToken
+            : string.Empty;
     }
 
     /// <summary>The digest the sign-up stores for this handler's scheme, if it still has one.</summary>
