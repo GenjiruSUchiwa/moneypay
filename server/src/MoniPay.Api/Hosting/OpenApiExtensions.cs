@@ -9,8 +9,9 @@ public static class OpenApiExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        return services.AddOpenApi(
-            options => options.AddDocumentTransformer<SortedOpenApiDocumentTransformer>());
+        return services.AddOpenApi(options => options
+            .AddDocumentTransformer<SortedOpenApiDocumentTransformer>()
+            .AddOperationTransformer<JsonApiRequestBodyTransformer>());
     }
 
     public static WebApplication MapMoniPayOpenApi(this WebApplication app)
