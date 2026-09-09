@@ -6,11 +6,6 @@ using MoniPay.Kernel.Http;
 
 namespace MoniPay.Sessions.Features.Sessions.GetCurrent;
 
-/// <summary>
-/// Reads the current session. The bearer credential is the only thing that names it: the route
-/// takes no identifier, so no body or query can select another user's session. A client that
-/// sends a body is answered with a 415 before it is read.
-/// </summary>
 internal static class GetCurrentSessionEndpoint
 {
     public static IEndpointRouteBuilder MapGetCurrentSession(this IEndpointRouteBuilder routes)
@@ -40,7 +35,6 @@ internal static class GetCurrentSessionEndpoint
         ArgumentNullException.ThrowIfNull(handler);
         ArgumentNullException.ThrowIfNull(http);
 
-        // The ticket the active-session policy already parsed and proved.
         SessionTicket ticket = SessionIdentity.Published(http);
         CurrentSessionView view = await handler
             .HandleAsync(

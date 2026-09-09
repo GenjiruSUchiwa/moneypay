@@ -6,12 +6,6 @@ using MoniPay.Kernel;
 
 namespace MoniPay.Notifications.Persistence;
 
-/// <summary>
-/// The transaction half of the commit signal: when a save that carried a notification commits
-/// through an explicit transaction, the wake-up happens here — after the commit, never before.
-/// A rolled-back transaction forgets the marker, so a later save on the same context cannot
-/// signal for work that no longer exists.
-/// </summary>
 internal sealed class TransactionCommitSignal(
     DeliverySignal signal,
     CarryingContexts carryingContexts) : DbTransactionInterceptor

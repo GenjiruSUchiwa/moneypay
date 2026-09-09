@@ -5,7 +5,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>Shared assertions for successful JSON:API resource documents.</summary>
 public static class JsonApiAssertions
 {
     public static async Task<JsonElement> ReadJsonApiAsync(this HttpResponseMessage response)
@@ -46,7 +45,6 @@ public static class JsonApiAssertions
         return document;
     }
 
-    /// <summary>The wire string of a string-converted enum value, as the converter emits it.</summary>
     public static string Wire<TEnum>(TEnum value) where TEnum : struct, Enum =>
         JsonSerializer.Serialize(value).Trim('"');
 

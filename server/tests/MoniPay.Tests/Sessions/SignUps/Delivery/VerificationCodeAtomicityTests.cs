@@ -18,9 +18,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.Delivery;
 
-/// <summary>
-/// Start and resend commit their sign-up and its notification together or neither.
-/// </summary>
 public sealed class VerificationCodeAtomicityTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private static readonly TimeSpan ResendCooldown = TimeSpan.FromSeconds(60);

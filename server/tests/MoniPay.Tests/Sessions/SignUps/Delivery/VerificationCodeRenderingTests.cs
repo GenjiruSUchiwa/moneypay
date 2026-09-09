@@ -8,10 +8,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.Delivery;
 
-/// <summary>
-/// The SMS Sessions renders for a code: the stored locale wins, the code keeps its zeroes,
-/// and the body carries only the code, its lifetime, and the product.
-/// </summary>
 public sealed class VerificationCodeRenderingTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]

@@ -5,7 +5,6 @@ using MoniPay.Sessions.Providers;
 
 namespace MoniPay.Sessions.Features.SignUps.Get;
 
-/// <summary>Reads one sign-up and the state of its latest code delivery. It changes nothing.</summary>
 internal sealed class GetSignUpHandler(MoniPayDbContext database, IVerificationCodeSender sender)
 {
     public async Task<SignUpView> HandleAsync(SignUpId signUpId, CancellationToken cancellationToken)

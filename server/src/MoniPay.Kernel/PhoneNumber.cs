@@ -1,9 +1,7 @@
 namespace MoniPay.Kernel;
 
-/// <summary>An immutable digits-only E.164 phone number.</summary>
 public readonly record struct PhoneNumber(string Value)
 {
-    /// <summary>Normalizes and validates a phone number against the configured country rules.</summary>
     public static bool TryNormalize(
         string? input,
         IReadOnlyCollection<CountryPhoneRule> rules,

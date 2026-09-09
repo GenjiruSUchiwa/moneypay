@@ -90,7 +90,6 @@ public sealed class PhoneRegistrationLookupTests(MoniPayApi api) : MoniPayApiTes
         await using IDbContextTransaction transaction =
             await database.Database.BeginTransactionAsync(Cancellation);
 
-        // Disposing without a commit rolls back: the shared database stays clean.
         await test(
             scope.ServiceProvider.GetRequiredService<RegisterUserHandler>(),
             scope.ServiceProvider.GetRequiredService<PhoneRegistrationLookup>());

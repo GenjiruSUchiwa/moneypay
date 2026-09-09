@@ -24,19 +24,13 @@ using Xunit;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>The sign-up a completion starts from, and the credential that authorizes it.</summary>
 internal sealed record VerifiedSignUp(
     StartSignUpResult Started,
     CreatePhoneVerificationResult Verified,
     PhoneNumber Phone);
 
-/// <summary>A session the tests opened, and the device label it was opened for: a refresh is refused without it.</summary>
 internal sealed record OpenedSession(SessionTokenResult Session, Guid DeviceId);
 
-/// <summary>
-/// Drives the sign-up slices through their handlers, each call in a fresh scope of the test host,
-/// exactly as one HTTP request would. Every helper is typed on the slice's own records.
-/// </summary>
 internal static class SignUpFlow
 {
     public const string TermsVersion = "terms-2026-08";
@@ -56,10 +50,6 @@ internal static class SignUpFlow
         return api.Services.InScopeAsync(act);
     }
 
-    /// <summary>
-    /// One call in one scope of any host — the shared fixture's, or one a test configured for a
-    /// scenario the fixture cannot be reconfigured for.
-    /// </summary>
     public static async Task<TResult> InScopeAsync<TService, TResult>(
         this IServiceProvider services,
         Func<TService, CancellationToken, Task<TResult>> act)
@@ -88,7 +78,6 @@ internal static class SignUpFlow
         api.InScopeAsync<CreatePhoneVerificationHandler, CreatePhoneVerificationResult>((handler, cancellationToken) =>
             handler.HandleAsync(signUpId, code, cancellationToken));
 
-    /// <summary>The current sign-up code, selected by its delivery key rather than phone history.</summary>
     public static async Task<string> DeliveredCodeAsync(this MoniPayApi api, PhoneNumber phone)
     {
         ArgumentNullException.ThrowIfNull(api);
@@ -112,7 +101,6 @@ internal static class SignUpFlow
         return System.Text.RegularExpressions.Regex.Match(delivered.Body, "[0-9]{6}").Value;
     }
 
-    /// <summary>A phone proven by its code, on its own number: the state completion starts from.</summary>
     public static Task<VerifiedSignUp> StartVerifiedAsync(this MoniPayApi api)
     {
         ArgumentNullException.ThrowIfNull(api);
@@ -120,7 +108,6 @@ internal static class SignUpFlow
         return api.StartVerifiedAsync(api.Services);
     }
 
-    /// <summary>Starts through one host and delivers through the shared fixture.</summary>
     public static async Task<VerifiedSignUp> StartVerifiedAsync(this MoniPayApi api, IServiceProvider services)
     {
         ArgumentNullException.ThrowIfNull(api);
@@ -139,7 +126,6 @@ internal static class SignUpFlow
             phone);
     }
 
-    /// <summary>The profile a completion submits, on an email and device no other test uses.</summary>
     public static CreateSignUpCompletionCommand CompletionCommand(string? email = null, Guid? deviceId = null)
     {
         int unique = Interlocked.Increment(ref sequence);
@@ -169,7 +155,6 @@ internal static class SignUpFlow
         services.InScopeAsync<CreateSignUpCompletionHandler, CreateSignUpCompletionResult>((handler, cancellationToken) =>
             handler.HandleAsync(signUpId, registrationToken, command, cancellationToken));
 
-    /// <summary>Registers a user the way a completed sign-up would have provisioned one.</summary>
     public static Task<RegisteredUser> RegisterUserAsync(this MoniPayApi api, PhoneNumber phone, string? email = null)
     {
         ArgumentNullException.ThrowIfNull(api);
@@ -190,7 +175,6 @@ internal static class SignUpFlow
                 cancellationToken));
     }
 
-    /// <summary>Empties the users tables, so a user one test provisioned never ages into another.</summary>
     public static Task CleanUsersAsync(this MoniPayApi api)
     {
         ArgumentNullException.ThrowIfNull(api);
@@ -198,7 +182,6 @@ internal static class SignUpFlow
         return api.QueryAsync("TRUNCATE TABLE user_consents, users;", reader => 0);
     }
 
-    /// <summary>The row as PostgreSQL holds it, for asserting what a slice persisted.</summary>
     public static Task<SignUp> ReadSignUpRowAsync(this MoniPayApi api, SignUpId signUpId) =>
         api.InScopeAsync<MoniPayDbContext, SignUp>((database, cancellationToken) =>
             database.SignUps.AsNoTracking().SingleAsync(signUp => signUp.Id == signUpId, cancellationToken));
@@ -212,14 +195,12 @@ internal static class SignUpFlow
             database.SignUps.CountAsync(signUp => signUp.PhoneLookupHash.Equals(phoneHash), cancellationToken));
     }
 
-    /// <summary>A code that differs from the real one in its first digit, for a guaranteed mismatch.</summary>
     public static string Wrong(string code)
     {
         ArgumentException.ThrowIfNullOrEmpty(code);
         return (code[0] == '0' ? "1" : "0") + code[1..];
     }
 
-    /// <summary>The refusal a slice call ended in, or <c>null</c> when it succeeded; for parallel calls.</summary>
     public static async Task<RefusalException?> RefusalOfAsync(Task attempt)
     {
         ArgumentNullException.ThrowIfNull(attempt);
@@ -242,9 +223,6 @@ internal static class SignUpFlow
         return refusal;
     }
 
-    /// <summary>
-    /// A live session with its credentials, opened the way the completion route will once #98 lands.
-    /// </summary>
     public static Task<OpenedSession> CreateSessionAsync(this MoniPayApi api) => api.CreateSessionAsync(UserId.New());
 
     public static Task<OpenedSession> CreateSessionAsync(this MoniPayApi api, UserId userId)
@@ -255,21 +233,16 @@ internal static class SignUpFlow
             new OpenedSession(await sessions.CreateAsync(userId, deviceId, cancellationToken), deviceId));
     }
 
-    /// <summary>The current-session route, built from the group and route constants.</summary>
     public static string CurrentSessionUrl() => SessionRoutes.Group + SessionRoutes.Current;
 
-    /// <summary>Reads the current session with the given access credential.</summary>
     public static Task<HttpResponseMessage> GetCurrentSessionAsync(HttpClient client, string accessToken) =>
         SendWithBearerAsync(client, HttpMethod.Get, CurrentSessionUrl(), accessToken);
 
-    /// <summary>Revokes the current session with the given access credential.</summary>
     public static Task<HttpResponseMessage> RevokeCurrentSessionAsync(HttpClient client, string accessToken) =>
         SendWithBearerAsync(client, HttpMethod.Delete, CurrentSessionUrl(), accessToken);
 
-    /// <summary>The current-user route, built from the group and route constants.</summary>
     public static string CurrentUserUrl() => MoniPayRoutes.CurrentUser;
 
-    /// <summary>Reads the current user with the given access credential.</summary>
     public static Task<HttpResponseMessage> GetCurrentUserAsync(HttpClient client, string accessToken) =>
         SendWithBearerAsync(client, HttpMethod.Get, CurrentUserUrl(), accessToken);
 
@@ -288,10 +261,8 @@ internal static class SignUpFlow
         return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
-    /// <summary>The refresh route, built from its constant so a rename breaks the test at compile time.</summary>
     public static string RefreshUrl() => SessionRoutes.Refreshes;
 
-    /// <summary>A refresh document for the given credential and device.</summary>
     public static StringContent RefreshBody(string? refreshToken, Guid deviceId)
     {
         string json = JsonSerializer.Serialize(new
@@ -313,11 +284,9 @@ internal static class SignUpFlow
         return body;
     }
 
-    /// <summary>Posts a refresh document for the session the tests opened.</summary>
     public static Task<HttpResponseMessage> PostRefreshAsync(HttpClient client, OpenedSession session) =>
         PostRefreshAsync(client, session.Session.RefreshToken, session.DeviceId);
 
-    /// <summary>Posts a refresh document on the given client with default JSON:API headers.</summary>
     public static Task<HttpResponseMessage> PostRefreshAsync(HttpClient client, string? refreshToken, Guid deviceId)
     {
         ArgumentNullException.ThrowIfNull(client);
@@ -331,11 +300,9 @@ internal static class SignUpFlow
         return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
-    /// <summary>The resend route for one sign-up, built from its constant.</summary>
     public static string ResendUrl(SignUpId signUpId) =>
         FormattableString.Invariant($"{SignUpResources.Self(signUpId)}/verification-code-deliveries");
 
-    /// <summary>Posts a resend on the given client. The route takes no body, so none is sent unless a test supplies one.</summary>
     public static Task<HttpResponseMessage> PostResendAsync(
         HttpClient client,
         SignUpId signUpId,
@@ -355,11 +322,9 @@ internal static class SignUpFlow
         return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
-    /// <summary>The phone-verification route for one sign-up, built from its constant.</summary>
     public static string VerifyUrl(SignUpId signUpId) =>
         FormattableString.Invariant($"{SignUpResources.Self(signUpId)}/phone-verifications");
 
-    /// <summary>A phone-verification document for the given code and sign-up.</summary>
     public static StringContent VerifyBody(SignUpId signUpId, string? code)
     {
         string json = JsonSerializer.Serialize(new
@@ -391,7 +356,6 @@ internal static class SignUpFlow
         return body;
     }
 
-    /// <summary>Posts a phone verification with the sign-up credential that authorizes it.</summary>
     public static Task<HttpResponseMessage> PostVerifyAsync(
         HttpClient client,
         SignUpId signUpId,
@@ -412,13 +376,10 @@ internal static class SignUpFlow
         return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
-    /// <summary>The start route, built from its constant so a rename breaks the test at compile time.</summary>
     public static string StartUrl() => SignUpRoutes.Group;
 
-    /// <summary>The read route for one sign-up, built from the group and identifier constants.</summary>
     public static string ReadUrl(SignUpId signUpId) => SignUpResources.Self(signUpId);
 
-    /// <summary>A valid start document for the given phone and legal versions.</summary>
     public static StringContent StartBody(string phone, string? termsVersion = null, string? privacyVersion = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(phone);
@@ -443,7 +404,6 @@ internal static class SignUpFlow
         return body;
     }
 
-    /// <summary>Posts a start document on the given client with default JSON:API headers.</summary>
     public static Task<HttpResponseMessage> PostStartAsync(HttpClient client, HttpContent body)
     {
         ArgumentNullException.ThrowIfNull(client);
@@ -458,7 +418,6 @@ internal static class SignUpFlow
         return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
-    /// <summary>Reads one sign-up with the given workflow credential.</summary>
     public static Task<HttpResponseMessage> GetSignUpHttpAsync(
         HttpClient client,
         SignUpId signUpId,
@@ -475,7 +434,6 @@ internal static class SignUpFlow
         return client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
-    /// <summary>The notification rows queued for one sign-up, oldest first.</summary>
     public static async Task<IReadOnlyList<MoniPay.Notifications.Domain.Notification>> NotificationsForAsync(
         MoniPayApi api,
         SignUpId signUpId)
@@ -491,7 +449,6 @@ internal static class SignUpFlow
                 .ToListAsync(cancellationToken));
     }
 
-    /// <summary>A documentation-range address no other test uses, so each start owns its IP budget.</summary>
     private static string IsolatedIp()
     {
         int unique = Interlocked.Increment(ref isolatedIpCounter);

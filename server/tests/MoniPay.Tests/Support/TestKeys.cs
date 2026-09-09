@@ -6,7 +6,6 @@ using MoniPay.Users;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>Fixed key material for tests that validate required 32-byte secrets.</summary>
 public static class TestKeys
 {
     public const string Issuer = "https://tests.monipay.example";
@@ -15,7 +14,6 @@ public static class TestKeys
 
     public static readonly string Signing = Encode("SigningKeyForMoniPayTests0000000");
 
-    /// <summary>A second key, for tokens signed by a key the host no longer names.</summary>
     public static readonly string OtherSigning = Encode("OtherSigningKeyMoniPayTests00000");
 
     public static readonly string VerificationCode = Encode("VerificationCodeKeyForTests00000");
@@ -26,10 +24,6 @@ public static class TestKeys
 
     public static readonly string NotificationsData = Encode("NotificationsDataKeyForTests0000");
 
-    /// <summary>
-    /// Every key the host refuses to start without. A test that probes one key calls this first
-    /// and overrides that one setting afterwards; a new mandatory key is added here only.
-    /// </summary>
     public static IWebHostBuilder UseTestKeys(this IWebHostBuilder builder)
     {
         builder.UseSetting(UsersOptions.Keys.PersonalDataKeyBase64, UsersPersonalData);

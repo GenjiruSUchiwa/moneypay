@@ -7,11 +7,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// The <see cref="MoniPayPolicies.AuthenticatedUser"/> policy: a valid access token whose
-/// session has ended no longer opens anything, and the check it makes is one database query per
-/// request, never a cache.
-/// </summary>
 public sealed class ActiveSessionPolicyTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -69,7 +64,6 @@ public sealed class ActiveSessionPolicyTests(MoniPayApi api) : MoniPayApiTest(ap
         Assert.Equal("Bearer", response.Headers.WwwAuthenticate.ToString());
     }
 
-    /// <summary>One request, one query: the active-session check is answered from the database.</summary>
     [Fact]
     public async Task The_active_session_check_hits_the_database_once_per_request()
     {

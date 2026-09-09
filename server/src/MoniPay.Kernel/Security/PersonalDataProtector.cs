@@ -3,11 +3,6 @@ using System.Text;
 
 namespace MoniPay.Kernel.Security;
 
-/// <summary>
-/// AES-GCM over a module's personal-data key. The payload starts with a one-byte key version —
-/// authenticated as associated data — so a later re-encryption migration can find rows by key.
-/// Each module derives its own protector from its own key; the layout is shared, the key never is.
-/// </summary>
 public class PersonalDataProtector(byte[] key)
 {
     private readonly byte[] key = Base64Key.Require(key);

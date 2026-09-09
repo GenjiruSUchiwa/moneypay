@@ -11,10 +11,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// What the bearer scheme accepts and refuses: the right issuer, audience, key, lifetime and
-/// algorithm, and the previous signing key for exactly as long as the configuration names it.
-/// </summary>
 public sealed class AccessTokenValidationTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -88,7 +84,6 @@ public sealed class AccessTokenValidationTests(MoniPayApi api) : MoniPayApiTest(
             builder.UseSetting(SessionsOptions.Keys.PreviousSigningKeyBase64, TestKeys.OtherSigning));
         using HttpClient client = host.CreateClient();
 
-        // The token was signed before the rotation; the previous key must still open the door.
         string token = TestTokens.Bearer(issued.UserId, issued.SessionId, key: Convert.FromBase64String(TestKeys.OtherSigning));
 
         using HttpResponseMessage response = await SecureAsync(client, token);

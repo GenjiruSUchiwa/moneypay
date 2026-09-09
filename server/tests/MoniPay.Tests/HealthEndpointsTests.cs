@@ -16,8 +16,6 @@ public sealed class HealthEndpointsTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task Liveness_answers_without_touching_a_dependency()
     {
-        // The personal-data key is mandatory configuration, not a dependency: the host refuses
-        // to start without it, by design. Liveness still reaches no database or provider.
         await using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder => builder.UseTestKeys().UseTestPorts(Api));
         using HttpClient client = factory.CreateClient();

@@ -1,6 +1,5 @@
 namespace MoniPay.Sessions;
 
-/// <summary>How the expired-credential sweep runs, bound from <c>MoniPay:Sessions:Cleanup</c>.</summary>
 internal sealed class CleanupOptions
 {
     public bool Enabled { get; set; } = true;

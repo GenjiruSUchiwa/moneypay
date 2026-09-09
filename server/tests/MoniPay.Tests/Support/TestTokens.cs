@@ -6,12 +6,6 @@ using MoniPay.Kernel;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>
-/// Crafts access JWTs with times taken from the system clock. The bearer validation runs on the
-/// system clock whatever the harness's fake clock says, so a token whose not-before is in the
-/// fake clock's future would be refused as not-yet-valid: the times must come from the clock
-/// that judges them.
-/// </summary>
 internal static class TestTokens
 {
     public static string Bearer(
@@ -33,7 +27,6 @@ internal static class TestTokens
             audience,
             expires);
 
-    /// <summary>A structurally valid token with no signature at all, for an <c>alg=none</c> probe.</summary>
     public static string Unsigned(UserId? subject = null)
     {
         string header = Base64Url.EncodeToString("""{"alg":"none","typ":"JWT"}"""u8);
@@ -47,11 +40,6 @@ internal static class TestTokens
         return $"{header}.{payload}.";
     }
 
-    /// <summary>
-    /// A bearer token with exactly the given claims, for malformed-identity probes. The signature,
-    /// issuer, audience, and lifetime stay valid so only the identity parsing is under test.
-    /// The standard factory builds on this one, so the two cannot drift apart.
-    /// </summary>
     public static string BearerWithClaims(
         IReadOnlyDictionary<string, object> claims,
         byte[]? key = null,

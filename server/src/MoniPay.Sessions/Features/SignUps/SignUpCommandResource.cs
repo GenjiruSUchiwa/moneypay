@@ -5,10 +5,6 @@ using MoniPay.Kernel.Http;
 
 namespace MoniPay.Sessions.Features.SignUps;
 
-/// <summary>
-/// Commands identify an existing sign-up through a required relationship. The route remains
-/// authoritative; the document cannot select a different workflow.
-/// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 internal sealed record SignUpCommandResource<TAttributes>
 {

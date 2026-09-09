@@ -10,10 +10,6 @@ using MoniPay.Sessions.Providers;
 
 namespace MoniPay.Sessions.Features.SignUps;
 
-/// <summary>
-/// The documented <c>status</c> values of the <c>signups</c> resource. The member names are the
-/// wire strings; the converter on this enum is the single definition of them.
-/// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter<SignUpStatusValue>))]
 internal enum SignUpStatusValue
 {
@@ -33,7 +29,6 @@ internal enum SignUpStatusValue
     Expired,
 }
 
-/// <summary>Maps the domain states onto the wire values, so the two can evolve independently.</summary>
 internal static class SignUpStatuses
 {
     public static SignUpStatusValue From(SignUpStatus status) => status switch
@@ -47,7 +42,6 @@ internal static class SignUpStatuses
     };
 }
 
-/// <summary>The documented <c>codeDelivery</c> values of the <c>signups</c> resource.</summary>
 [JsonConverter(typeof(JsonStringEnumConverter<CodeDeliveryValue>))]
 internal enum CodeDeliveryValue
 {
@@ -64,7 +58,6 @@ internal enum CodeDeliveryValue
     Expired,
 }
 
-/// <summary>Maps the domain delivery states onto the wire values.</summary>
 internal static class CodeDeliveryValues
 {
     public static CodeDeliveryValue From(CodeDeliveryState delivery) => delivery switch
@@ -77,10 +70,6 @@ internal static class CodeDeliveryValues
     };
 }
 
-/// <summary>
-/// The attributes returned by the start operation. Every member is present because the operation
-/// has created the sign-up and queued its first code.
-/// </summary>
 internal sealed record StartSignUpResourceAttributes
 {
     public required SignUpStatusValue Status { get; init; }
@@ -96,10 +85,6 @@ internal sealed record StartSignUpResourceAttributes
     public required DateTimeOffset SignUpExpiresAt { get; init; }
 }
 
-/// <summary>
-/// The attributes returned by the read operation. A delivery or code expiry can be absent after
-/// the workflow moves past the code stage, so those null members remain omitted on the wire.
-/// </summary>
 internal sealed record ReadSignUpResourceAttributes
 {
     public required SignUpStatusValue Status { get; init; }
@@ -115,11 +100,6 @@ internal sealed record ReadSignUpResourceAttributes
     public required DateTimeOffset SignUpExpiresAt { get; init; }
 }
 
-/// <summary>
-/// The attributes returned by the phone-verification operation: the one moment the registration
-/// credential exists. The sign-up token is void from here on, and the credential is never read
-/// back.
-/// </summary>
 internal sealed record VerifiedSignUpResourceAttributes
 {
     public required SignUpStatusValue Status { get; init; }
@@ -129,7 +109,6 @@ internal sealed record VerifiedSignUpResourceAttributes
     public required DateTimeOffset SignUpExpiresAt { get; init; }
 }
 
-/// <summary>Projects handler results onto the <c>signups</c> resource and its links.</summary>
 internal static class SignUpResources
 {
     public static string Self(SignUpId signUpId) =>
@@ -156,10 +135,6 @@ internal static class SignUpResources
         };
     }
 
-    /// <summary>
-    /// The read form after a resend: the code timing it refreshed. The aggregate only rotates a
-    /// code while the workflow is pending one, so the state and the queued delivery are known here.
-    /// </summary>
     public static JsonApiResponseResource<ReadSignUpResourceAttributes> FromResend(
         SignUpId signUpId,
         CreateVerificationCodeDeliveryResult result)

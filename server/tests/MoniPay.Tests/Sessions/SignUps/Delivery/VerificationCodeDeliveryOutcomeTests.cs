@@ -18,9 +18,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.Delivery;
 
-/// <summary>
-/// The worker delivers verification messages until they send, fail, or expire.
-/// </summary>
 public sealed class VerificationCodeDeliveryOutcomeTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(2);

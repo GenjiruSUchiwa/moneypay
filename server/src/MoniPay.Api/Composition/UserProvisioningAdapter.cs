@@ -4,10 +4,6 @@ using MoniPay.Users.Features.Registration;
 
 namespace MoniPay.Api.Composition;
 
-/// <summary>
-/// Maps the Sessions provisioning port onto the Users registration slice; the only rule here is
-/// the mapping — same scoped context, joins the caller's transaction.
-/// </summary>
 internal sealed class UserProvisioningAdapter(RegisterUserHandler users) : IUserProvisioning
 {
     public async Task<UserId> ProvisionAsync(ProvisionUserRequest request, CancellationToken cancellationToken)

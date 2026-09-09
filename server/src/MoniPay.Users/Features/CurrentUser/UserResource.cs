@@ -3,11 +3,6 @@ using MoniPay.Kernel.Http;
 
 namespace MoniPay.Users.Features.CurrentUser;
 
-/// <summary>
-/// The attributes the current-user read returns: the profile completion stored, without hashes,
-/// ciphertext, consents, or credentials. The phone stays digits-only E.164 and the email stays in
-/// its display form, exactly as registration normalized them.
-/// </summary>
 internal sealed record UserAttributes
 {
     public required string FirstName { get; init; }
@@ -23,7 +18,6 @@ internal sealed record UserAttributes
     public required DateTimeOffset CreatedAt { get; init; }
 }
 
-/// <summary>What a read of the current user returns: the stored profile with its contact data unprotected.</summary>
 internal sealed record CurrentUserView(
     UserId UserId,
     string FirstName,
@@ -33,7 +27,6 @@ internal sealed record CurrentUserView(
     Locale Locale,
     DateTimeOffset CreatedAt);
 
-/// <summary>Projects the current-user view onto the <c>users</c> resource and its self link.</summary>
 internal static class UserResources
 {
     public static JsonApiResponseResource<UserAttributes> FromView(CurrentUserView view)

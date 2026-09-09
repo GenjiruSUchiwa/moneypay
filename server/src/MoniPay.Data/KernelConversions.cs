@@ -4,11 +4,6 @@ using MoniPay.Kernel;
 
 namespace MoniPay.Persistence;
 
-/// <summary>
-/// How the kernel's primitives are stored, declared once for every module: a typed identifier
-/// is its <c>uuid</c>, a locale is its tag, a protected value is its ciphertext or its hash.
-/// A module maps a column name and nothing else.
-/// </summary>
 internal static class KernelConversions
 {
     public static void Apply(ModelConfigurationBuilder configurationBuilder)

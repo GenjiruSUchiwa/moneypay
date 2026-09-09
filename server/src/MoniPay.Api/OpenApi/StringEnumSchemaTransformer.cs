@@ -4,11 +4,6 @@ using Microsoft.OpenApi;
 
 namespace MoniPay.Api.OpenApi;
 
-/// <summary>
-/// Types the schema of an enum serialized as a string. The generator emits only the
-/// <c>enum</c> member list for such an enum; without <c>type: string</c> a client generator
-/// treats the values as untyped and the iOS contract loses its string-backed enums.
-/// </summary>
 internal sealed class StringEnumSchemaTransformer : IOpenApiSchemaTransformer
 {
     public Task TransformAsync(

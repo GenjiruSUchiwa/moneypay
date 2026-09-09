@@ -10,10 +10,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Sessions.GetCurrent;
 
-/// <summary>
-/// The current-session read: a bearer route that names no identifier of its own, so a ticket is
-/// the only thing that can select the session it describes.
-/// </summary>
 public sealed class GetCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -186,11 +182,6 @@ public sealed class GetCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(title, problem.Title);
     }
 
-    /// <summary>
-    /// An access credential for the session: the harness's bearer validation runs on the system
-    /// clock, so the JWT a session was issued with — stamped by the fake clock — is not the one
-    /// under test here. The claims are what matter, and they name the real session.
-    /// </summary>
     private static string AccessToken(OpenedSession session) =>
         TestTokens.Bearer(session.Session.UserId, session.Session.SessionId);
 }

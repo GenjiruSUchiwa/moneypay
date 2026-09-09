@@ -10,13 +10,6 @@ using MoniPay.Persistence;
 
 namespace MoniPay.Notifications;
 
-/// <summary>
-/// The composition of the delivery module: the outbox producers enqueue into, the key that
-/// protects what they enqueue, and the commit interceptors that wake the worker after the
-/// commit. It maps no route — the status read is a method on <see cref="NotificationOutbox"/>,
-/// consumed through a host adapter, and the worker that claims the rows arrives with the
-/// delivery slice.
-/// </summary>
 public static class NotificationsModule
 {
     public static IServiceCollection AddNotificationsModule(
@@ -46,8 +39,6 @@ public static class NotificationsModule
             serviceProvider.GetRequiredService<RecipientProtector>(),
             serviceProvider.GetRequiredService<TimeProvider>()));
 
-        // No INotificationChannel is keyed yet: a placeholder that pretends to send is forbidden.
-        // The processor resolves them with GetKeyedService and leaves the rows waiting until #101 / #102.
         services.AddScoped<NotificationProcessor>();
         services.AddHostedService<NotificationWorker>();
         services.AddScoped<NotificationPurger>();

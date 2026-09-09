@@ -9,11 +9,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Notifications.Purge;
 
-/// <summary>
-/// The purge removes old terminal rows in bounded batches and never touches a Pending row. It
-/// empties the outbox first: the counts it asserts are its own, not the whole assembly's, because
-/// another test's clock advance can age rows this one never created.
-/// </summary>
 public sealed class DeliveredNotificationPurgeTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]

@@ -5,10 +5,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// A refresh token is 43 base64url characters that survive a URL, a JSON body and a database
-/// round trip; only its SHA-256 digest is ever stored.
-/// </summary>
 public sealed class RefreshTokenFactoryTests
 {
     private readonly RefreshTokenFactory factory = new();

@@ -17,11 +17,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Users.Registration;
 
-/// <summary>
-/// The Users side of the welcome email: the renderer picks the stored locale and preserves the
-/// validated name, the handler stages one best-effort message, and a failure or a cancellation
-/// never leaks personal data or turns cancellation into a delivery failure.
-/// </summary>
 public sealed class WelcomeMessageTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private static int sequence;

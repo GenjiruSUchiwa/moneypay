@@ -2,7 +2,6 @@ using Npgsql;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>Queries application tables for accidentally persisted plaintext values.</summary>
 public static class DatabaseAssertions
 {
     private const string ColumnsQuery = """

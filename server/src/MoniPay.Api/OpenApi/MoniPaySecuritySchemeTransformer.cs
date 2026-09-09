@@ -7,18 +7,15 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Api.OpenApi;
 
-/// <summary>The credential schemes, declared once so the generated contract names them.</summary>
 internal static class MoniPaySecuritySchemes
 {
     public const string SignUp = SessionsSchemes.SignUp;
 
     public const string Registration = SessionsSchemes.Registration;
 
-    /// <summary>The access JWT, the scheme of every session and user route.</summary>
     public const string Bearer = MoniPayHeaders.Bearer;
 }
 
-/// <summary>Adds the Sign-up and Registration HTTP schemes to the document components.</summary>
 internal sealed class MoniPaySecuritySchemeTransformer : IOpenApiDocumentTransformer
 {
     public Task TransformAsync(
@@ -55,11 +52,6 @@ internal sealed class MoniPaySecuritySchemeTransformer : IOpenApiDocumentTransfo
     }
 }
 
-/// <summary>
-/// Publishes the workflow credentials as alternative security requirements on the endpoints that
-/// require them. An anonymous endpoint keeps no requirement; an endpoint accepting either workflow
-/// credential lists both, so the contract shows the OR.
-/// </summary>
 internal sealed class MoniPaySecurityOperationTransformer : IOpenApiOperationTransformer
 {
     public Task TransformAsync(
@@ -88,7 +80,6 @@ internal sealed class MoniPaySecurityOperationTransformer : IOpenApiOperationTra
             .ToList();
         operation.Security ??= [];
 
-        // Routes declare workflow schemes explicitly; the remaining routes use the default bearer scheme.
         if (schemes.Count == 0)
         {
             operation.Security.Add(new OpenApiSecurityRequirement

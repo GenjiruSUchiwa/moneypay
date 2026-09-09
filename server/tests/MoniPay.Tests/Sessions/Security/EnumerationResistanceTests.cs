@@ -23,9 +23,6 @@ public sealed class EnumerationResistanceTests(MoniPayApi api) : MoniPayApiTest(
         {
             string inflightId = JsonApiAssertions.IdOf(await StartAsync(inflight));
 
-            // Inside the resend cooldown an in-flight phone answers 429 where the others answer
-            // 202. That transient oracle is accepted and documented; the test pins it so a change
-            // to the trade-off is deliberate.
             using (StringContent tooSoon = SignUpFlow.StartBody(inflight.Value))
             using (HttpResponseMessage cooldown = await SignUpFlow.PostStartAsync(Client, tooSoon))
             {
@@ -92,7 +89,6 @@ public sealed class EnumerationResistanceTests(MoniPayApi api) : MoniPayApiTest(
 
     private static IReadOnlyList<(string Name, JsonValueKind Kind)> PublicShape(JsonElement document)
     {
-        // Tokens and timestamps vary by request; their JSON kinds still belong in the comparison.
         return document
             .GetProperty("data")
             .GetProperty("attributes")

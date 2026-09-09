@@ -12,11 +12,6 @@ using MoniPay.Persistence;
 
 namespace MoniPay.Notifications.Features.Deliver;
 
-/// <summary>
-/// One delivery cycle: claim a batch under <c>FOR UPDATE SKIP LOCKED</c> and a lease, so two
-/// replicas never hold one row, then send each row and record what the channel answered. Scoped:
-/// the worker and the test host each resolve one per cycle.
-/// </summary>
 internal sealed class NotificationProcessor(
     MoniPayDbContext database,
     IServiceProvider services,
@@ -29,10 +24,6 @@ internal sealed class NotificationProcessor(
     public const string ProviderTimeout = "provider-timeout";
     public const string BodyMissing = "body-missing";
 
-    /// <summary>
-    /// The claim: PostgreSQL skips rows another cycle holds, and the lease keeps the claim past
-    /// this statement so a crashed cycle frees its rows only when the lease runs out.
-    /// </summary>
     private const string ClaimSql = $$"""
         WITH claimed AS (
             UPDATE {{NotificationsSchema.NotificationsTable}}
@@ -49,10 +40,8 @@ internal sealed class NotificationProcessor(
         SELECT * FROM claimed
         """;
 
-    /// <summary>One warning per cycle, however many rows wait on the missing channel.</summary>
     private bool channelWarningLogged;
 
-    /// <summary>Claims and delivers one batch; returns how many rows were claimed.</summary>
     public async Task<int> RunCycleAsync(CancellationToken cancellationToken)
     {
         DateTimeOffset now = timeProvider.GetUtcNow();

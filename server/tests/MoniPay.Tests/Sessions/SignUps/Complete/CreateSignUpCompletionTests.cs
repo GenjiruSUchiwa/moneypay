@@ -554,7 +554,6 @@ public sealed class CreateSignUpCompletionTests(MoniPayApi api) : MoniPayApiTest
         IEnumerable<UserConsent> consents) =>
         consents.Select(consent => (consent.DocumentKind, consent.DocumentVersion, consent.AcceptedAt));
 
-    /// <summary>A host whose session insert always fails, so a completion cannot commit.</summary>
     private WebApplicationFactory<Program> FailingSessionInsertHost() =>
         Api.CreateHost(builder =>
         {
@@ -575,7 +574,6 @@ public sealed class CreateSignUpCompletionTests(MoniPayApi api) : MoniPayApiTest
             .HandleAsync(signUp.Started.SignUpId, signUp.Verified.RegistrationToken, command, Cancellation);
     }
 
-    /// <summary>The sign-up stayed where it was and the completion left no row behind.</summary>
     private async Task AssertNothingProvisionedAsync(
         SignUpId signUpId,
         long sessionsBefore,
@@ -628,10 +626,6 @@ public sealed class CreateSignUpCompletionTests(MoniPayApi api) : MoniPayApiTest
 
 }
 
-/// <summary>
-/// Forces the session insert to fail inside the completion's transaction, so a test can watch the
-/// whole completion roll back. A contributor, because the data module is what builds the options.
-/// </summary>
 file sealed class FailSessionInsertContributor : IDbContextOptionsContributor
 {
     public void Contribute(DbContextOptionsBuilder options)
@@ -656,4 +650,3 @@ file sealed class FailSessionInsertInterceptor : SaveChangesInterceptor
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 }
-

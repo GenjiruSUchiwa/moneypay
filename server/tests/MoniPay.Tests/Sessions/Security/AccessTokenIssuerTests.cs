@@ -10,14 +10,8 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// The access token is the only credential a session holds: identity claims, a lifetime from
-/// configuration, and nothing that profiles the user — every profile fact is fetched, never
-/// stamped into a token that cannot be revoked.
-/// </summary>
 public sealed class AccessTokenIssuerTests
 {
-    /// <summary>The real clock, truncated to the second: the time claims travel as epoch seconds.</summary>
     private static DateTimeOffset Now =>
         new(
             TimeProvider.System.GetUtcNow().Ticks / TimeSpan.TicksPerSecond * TimeSpan.TicksPerSecond,

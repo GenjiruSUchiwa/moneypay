@@ -6,11 +6,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Api;
 
-/// <summary>
-/// The request culture decides the title of a problem and nothing else: the type, the status and
-/// the headers stay invariant. A missing resource falls back to the stable code, never to a
-/// second exception, and two cultures in flight never share state.
-/// </summary>
 public sealed class ProblemDetailsLocalizationTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private const string Refusal = "/test/errors/refusal";

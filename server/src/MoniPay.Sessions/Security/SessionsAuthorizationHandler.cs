@@ -8,12 +8,6 @@ using MoniPay.Sessions.Persistence;
 
 namespace MoniPay.Sessions.Security;
 
-/// <summary>
-/// Answers the module's two policy requirements. The active-session check queries the sessions
-/// table once per request — the design's decision: a revoked session must stop working within
-/// the request that revokes it, and no cache can promise that. The route binding compares the
-/// credential's <c>signUpId</c> claim with the route value.
-/// </summary>
 internal sealed class SessionsAuthorizationHandler(MoniPayDbContext database) : IAuthorizationHandler
 {
     public async Task HandleAsync(AuthorizationHandlerContext context)
@@ -35,7 +29,6 @@ internal sealed class SessionsAuthorizationHandler(MoniPayDbContext database) : 
 
     private async Task HandleActiveSessionAsync(AuthorizationHandlerContext context, IAuthorizationRequirement requirement)
     {
-        // One reader for the one credential: the ticket is parsed here and nowhere else.
         if (!SessionIdentity.TryOf(context.User, out SessionTicket ticket))
         {
             return;
@@ -55,8 +48,6 @@ internal sealed class SessionsAuthorizationHandler(MoniPayDbContext database) : 
             return;
         }
 
-        // Published only once the session is proven active, so an endpoint that reads it can
-        // never be reading a ticket the policy refused.
         if (http is not null)
         {
             SessionIdentity.Publish(http, ticket);

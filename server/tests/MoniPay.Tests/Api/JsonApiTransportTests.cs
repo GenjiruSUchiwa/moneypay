@@ -17,13 +17,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Api;
 
-/// <summary>
-/// The JSON:API transport contract, proven through the real host: the marked group rejects a bad
-/// media type, an oversized body, invalid JSON and an invalid document before the endpoint runs,
-/// and a valid document reaches it with the values the validator approved. The probe carries the
-/// expected resource type and a strict attribute record, which is how a slice integrates with the
-/// generic envelope.
-/// </summary>
 public sealed class JsonApiTransportTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private static readonly Uri Widget = new("/test/jsonapi/widgets", UriKind.Relative);
@@ -108,8 +101,6 @@ public sealed class JsonApiTransportTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task A_repeated_member_resolves_the_way_the_binder_resolves_it()
     {
-        // Both the document reader and the serializer resolve a repeated member name to its last
-        // occurrence, so the validator and the endpoint agree on which resource type arrived.
         using HttpResponseMessage response = await PostAsync(
             """{"data":{"type":"gadgets","type":"widgets","attributes":{"name":"W"}}}""");
 
@@ -135,7 +126,6 @@ public sealed class JsonApiTransportTests(MoniPayApi api) : MoniPayApiTest(api)
     [InlineData("text/html")]
     [InlineData("application/vnd.api+json; charset=utf-8")]
     [InlineData("application/vnd.api+json; foo=bar")]
-    // No extension is implemented, so the extension parameter names an unsupported one.
     [InlineData("application/vnd.api+json; ext=\"https://example.test/ext\"")]
     public async Task An_unsupported_content_type_is_rejected_by_the_transport_check(string contentType)
     {
@@ -205,8 +195,6 @@ public sealed class JsonApiTransportTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task Authentication_refuses_before_the_transport_check_on_a_jsonapi_route()
     {
-        // A media type and a body the transport check would refuse, and no credential: the
-        // security middleware answers first, so neither was ever read.
         using HttpResponseMessage response = await PostAsync(
             Client,
             WidgetSecure,
@@ -229,8 +217,6 @@ public sealed class JsonApiTransportTests(MoniPayApi api) : MoniPayApiTest(api)
         using HttpResponseMessage accepted = await PostAsync(client, WidgetLimited, ValidDocument);
         Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
 
-        // Exhausted budget, and a body the transport check would refuse: the limiter answers
-        // first, so neither the media type nor the body was ever read.
         using HttpResponseMessage rejected = await PostAsync(
             client,
             WidgetLimited,

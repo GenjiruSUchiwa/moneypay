@@ -11,12 +11,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Features.SignUps.Start;
 
-/// <summary>
-/// Opens a sign-up for a phone, or reopens the one already in flight for it, and queues the code
-/// in the same transaction. Every start for one phone runs under the phone's lock, so the limit
-/// counts exactly and parallel starts share one row. The persistent per-phone limit is the only
-/// refusal of its own, and it names no reason; reopening answers with the aggregate's.
-/// </summary>
 internal sealed class StartSignUpHandler(
     MoniPayDbContext database,
     IVerificationCodeSender sender,
@@ -60,10 +54,6 @@ internal sealed class StartSignUpHandler(
         return new(signUp.Id, token.Raw, message.ExpiresAt, signUp.CanResendAt, signUp.ExpiresAt);
     }
 
-    /// <summary>
-    /// Counts rows, not calls, and only before a new row: reopening the active sign-up is not a
-    /// start. The delay names when enough of the window's starts will have left it for one more.
-    /// </summary>
     private async Task RefuseAboveTheStartLimitAsync(LookupHash phoneHash, DateTimeOffset now, CancellationToken cancellationToken)
     {
         DateTimeOffset windowStart = now - settings.StartWindow;
@@ -81,10 +71,6 @@ internal sealed class StartSignUpHandler(
         }
     }
 
-    /// <summary>
-    /// The sign-up that still owns the phone, if any. One whose lifetime has passed is closed
-    /// and saved here, on its own, so the phone's unique index is free before a new row claims it.
-    /// </summary>
     private async Task<SignUp?> ExpireOrFindActiveAsync(LookupHash phoneHash, DateTimeOffset now, CancellationToken cancellationToken)
     {
         SignUp? active = await database.LockActiveSignUpAsync(phoneHash, cancellationToken).ConfigureAwait(false);

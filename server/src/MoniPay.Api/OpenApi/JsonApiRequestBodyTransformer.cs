@@ -4,13 +4,6 @@ using MoniPay.Kernel.Http;
 
 namespace MoniPay.Api.OpenApi;
 
-/// <summary>
-/// Publishes the JSON:API request body media type. A JSON:API endpoint also declares the wildcard
-/// content type, so the routing matcher never answers a media-type rejection of its own and the
-/// host's transport check stays the only owner of that decision. The contract the client reads
-/// must name <c>application/vnd.api+json</c> alone, so this transformer replaces whatever the
-/// generator inferred from the wildcard.
-/// </summary>
 internal sealed class JsonApiRequestBodyTransformer : IOpenApiOperationTransformer
 {
     public Task TransformAsync(

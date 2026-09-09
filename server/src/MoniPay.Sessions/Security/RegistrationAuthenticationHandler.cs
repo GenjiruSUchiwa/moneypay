@@ -7,12 +7,6 @@ using MoniPay.Sessions.Domain;
 
 namespace MoniPay.Sessions.Security;
 
-/// <summary>
-/// The <see cref="SessionsSchemes.Registration"/> scheme: the credential issued at phone
-/// verification, usable to complete the sign-up. Its lifetime is the remaining sign-up lifetime
-/// capped at ten minutes from its issue; a completed sign-up stays completable so a safe retry
-/// can return, until that lifetime ends.
-/// </summary>
 internal sealed class RegistrationAuthenticationHandler(
     IOptionsMonitor<AuthenticationSchemeOptions> options,
     ILoggerFactory logger,

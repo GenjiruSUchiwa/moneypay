@@ -8,11 +8,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Features.SignUps.Complete;
 
-/// <summary>
-/// Completes a sign-up in one transaction: the registration token is checked in constant time,
-/// the user is provisioned, the bootstrap session is opened and the sign-up is marked completed,
-/// or nothing is written. A retry on a completed sign-up replaces only the bootstrap session.
-/// </summary>
 internal sealed class CreateSignUpCompletionHandler(
     MoniPayDbContext database,
     IUserProvisioning users,

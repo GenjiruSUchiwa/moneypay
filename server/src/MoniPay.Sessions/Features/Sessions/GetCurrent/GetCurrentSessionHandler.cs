@@ -6,10 +6,6 @@ using MoniPay.Sessions.Persistence;
 
 namespace MoniPay.Sessions.Features.Sessions.GetCurrent;
 
-/// <summary>
-/// Reads the session the caller's ticket names. The active-session policy has already proven the
-/// session exists and is not revoked, so the read is one query scoped to both identifiers.
-/// </summary>
 internal sealed class GetCurrentSessionHandler(MoniPayDbContext database)
 {
     public async Task<CurrentSessionView> HandleAsync(

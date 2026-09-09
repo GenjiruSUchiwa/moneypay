@@ -3,7 +3,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>Reads the test database directly, bypassing the API, to assert what PostgreSQL holds.</summary>
 public static class DatabaseQueries
 {
     public static async Task<IReadOnlyList<T>> QueryAsync<T>(
@@ -34,10 +33,6 @@ public static class DatabaseQueries
         return rows;
     }
 
-    /// <summary>
-    /// Waits until some backend is blocked by the one PostgreSQL named <paramref name="processId"/>,
-    /// so a test can act while a competing request waits for a row lock instead of sleeping.
-    /// </summary>
     public static async Task WaitUntilBlockedAsync(
         this MoniPayApi api,
         int processId,

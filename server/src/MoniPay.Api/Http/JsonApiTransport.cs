@@ -10,26 +10,8 @@ using MoniPay.Kernel.Http;
 
 namespace MoniPay.Api.Http;
 
-/// <summary>
-/// The JSON:API transport rules the host enforces before minimal-API binding reads a body. A
-/// request with a body must be <c>application/vnd.api+json</c>; a <c>profile</c> parameter is
-/// ignored and every other parameter is refused. The body must be at most 8 KiB, must be valid
-/// JSON, and must have the generic envelope (<c>data</c>, a string <c>data.type</c>, an object
-/// <c>data.attributes</c>). <c>Accept</c> must allow a JSON:API success representation. Every
-/// rejection is a refusal the host formats as Problem Details.
-///
-/// This type is the only owner of those decisions. A JSON:API endpoint declares the wildcard
-/// content type as well, so the routing matcher never answers a media-type rejection of its own
-/// before the security middleware and this check have run.
-///
-/// The envelope member names are read case-sensitively, and the minimal-API binding is
-/// configured the same way (<c>PropertyNameCaseInsensitive = false</c>), so the document this
-/// type approves is the document the endpoint receives: JSON:API member names are case sensitive,
-/// and a <c>Type</c> member must not be able to pass validation as <c>type</c> and then bind.
-/// </summary>
 internal static class JsonApiTransport
 {
-    /// <summary>The largest request body a JSON:API route accepts, in bytes.</summary>
     internal const int MaximumBodyBytes = 8 * 1024;
 
     private const string ApplicationWildcard = "application/*";
@@ -150,22 +132,9 @@ internal static class JsonApiTransport
         return MediaTypeHeaderValue.TryParse(values.ToString(), out contentType);
     }
 
-    /// <summary>
-    /// JSON:API 1.1 accepts <c>ext</c> and <c>profile</c> on the request media type and refuses
-    /// every other parameter with a <c>415</c>. This host implements no extension, so an
-    /// <c>ext</c> parameter always names an unsupported one and is refused with the rest; a
-    /// <c>profile</c> is accepted and ignored, which is what the specification requires of a
-    /// profile the server does not recognize.
-    /// </summary>
     private static bool HasUnsupportedParameter(MediaTypeHeaderValue contentType) =>
         contentType.Parameters.Any(parameter => !IsProfileParameter(parameter.Name.Value));
 
-    /// <summary>
-    /// The accepted ranges, split by the framework's list parser: it is the only reader that gets
-    /// a quoted parameter such as <c>text/plain;note=",application/vnd.api+json,"</c> right, where
-    /// a comma split would invent a range the client never asked for. A header the parser refuses
-    /// yields no range, so it names no acceptable representation.
-    /// </summary>
     private static IList<MediaTypeHeaderValue> AcceptedRanges(StringValues values) =>
         MediaTypeHeaderValue.TryParseList(
             [.. values.OfType<string>()],
@@ -173,12 +142,6 @@ internal static class JsonApiTransport
             ? ranges
             : [];
 
-    /// <summary>
-    /// Whether the header names the JSON:API media type only through instances the server must
-    /// ignore: every instance carries a parameter other than <c>ext</c> or <c>profile</c>, or
-    /// every instance asks for an extension this host does not implement. JSON:API 1.1 then
-    /// requires a <c>406</c>, and a wildcard in the same header does not lift that requirement.
-    /// </summary>
     private static bool RefusesEveryJsonApiInstance(IEnumerable<MediaTypeHeaderValue> ranges)
     {
         List<MediaTypeHeaderValue> jsonApi =
@@ -230,11 +193,6 @@ internal static class JsonApiTransport
         return string.Equals(mediaType, AnyWildcard, StringComparison.OrdinalIgnoreCase) ? 0 : -1;
     }
 
-    /// <summary>
-    /// Whether the range carries a representation parameter this host cannot serve. The quality
-    /// weight is not a representation parameter and a profile is ignored, so neither rules the
-    /// range out; an extension is not implemented, so it does.
-    /// </summary>
     private static bool HasUnservableRepresentationParameter(MediaTypeHeaderValue range) =>
         range.Parameters.Any(parameter =>
             !IsQualityParameter(parameter.Name.Value) && !IsProfileParameter(parameter.Name.Value));
@@ -295,9 +253,6 @@ internal static class JsonApiTransport
         }
         catch (InvalidOperationException)
         {
-            // A lone surrogate escape parses as a string token but cannot be decoded to UTF-16.
-            // Decoding belongs to this boundary, so the document is refused as invalid here
-            // instead of reaching the exception handler as an unexpected 500.
             return false;
         }
 

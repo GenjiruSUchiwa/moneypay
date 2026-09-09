@@ -2,10 +2,6 @@ using Microsoft.Extensions.Logging;
 
 namespace MoniPay.Notifications;
 
-/// <summary>
-/// The module's log events. Each carries the row's identifiers, its hint and a result code, and
-/// nothing a recipient could be found by or a code read from.
-/// </summary>
 internal static partial class NotificationsLog
 {
     [LoggerMessage(EventId = 1, Level = LogLevel.Information,

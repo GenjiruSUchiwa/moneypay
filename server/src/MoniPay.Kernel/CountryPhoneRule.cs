@@ -1,6 +1,5 @@
 namespace MoniPay.Kernel;
 
-/// <summary>Describes the calling code and local digit count accepted for one country.</summary>
 public readonly record struct CountryPhoneRule(string CallingCode, int LocalLength)
 {
     public string CallingCode { get; } = ValidateCallingCode(CallingCode);

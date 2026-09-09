@@ -9,16 +9,8 @@ using Xunit;
 
 namespace MoniPay.Tests.Api;
 
-/// <summary>
-/// Every known stable code resolves to its owning module's translation in both supported cultures.
-/// Each row names the expected text rather than merely asserting that something was found: the
-/// resolver falls back to the code itself for an unknown code, so a missing entry for a known one
-/// must fail here instead of shipping a code as a user-facing title. A new code therefore needs
-/// its row here as well as its resource.
-/// </summary>
 public sealed class ProblemTextLocalizationTests(MoniPayApi api)
 {
-    /// <summary>The eight validation codes, resolved as the <c>errors[].detail</c> text.</summary>
     public static TheoryData<string, string, string> ValidationCodes_ => new()
     {
         { ValidationCodes.PhoneFormatInvalid, Locale.EnglishTag, "The phone number format is invalid." },
@@ -39,7 +31,6 @@ public sealed class ProblemTextLocalizationTests(MoniPayApi api)
         { ValidationCodes.RefreshTokenFormatInvalid, Locale.FrenchTag, "Le format du jeton de rafraîchissement est invalide." },
     };
 
-    /// <summary>The module refusals and the three authentication challenges, resolved as titles.</summary>
     public static TheoryData<string, string, string> RefusalTitles => new()
     {
         { MoniPayErrorTypes.SignUpStateInvalid.Code, Locale.EnglishTag, "The sign-up is not in a state that allows this action." },
@@ -72,7 +63,6 @@ public sealed class ProblemTextLocalizationTests(MoniPayApi api)
         { MoniPayErrorTypes.SessionInvalid.Code, Locale.FrenchTag, "Le jeton de session est invalide ou expiré." },
     };
 
-    /// <summary>The host's own codes, resolved from the host's resources.</summary>
     public static TheoryData<string, string, string> HostTitles => new()
     {
         { MoniPayErrorTypes.MalformedJson.Code, Locale.EnglishTag, "The request body is not valid JSON." },

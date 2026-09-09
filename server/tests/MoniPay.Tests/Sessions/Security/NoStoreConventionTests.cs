@@ -6,12 +6,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// A route group that carries the no-store marker answers with response headers no shared cache
-/// may ignore: credentials travel there. The middleware owns the policy, so the headers hold for a
-/// normal response, for a request the security middleware short-circuits, for a transport refusal
-/// and for a response the exception handler formats.
-/// </summary>
 public sealed class NoStoreConventionTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Theory]
@@ -36,7 +30,6 @@ public sealed class NoStoreConventionTests(MoniPayApi api) : MoniPayApiTest(api)
             Content = new StringContent("""{"data":{"type":"widgets","attributes":{"name":"W"}}}""", Encoding.UTF8),
         };
 
-        // The transport check's own refusal: a media type it reads and rejects.
         request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
 
         using HttpResponseMessage response = await client.SendAsync(request, Cancellation);
@@ -51,7 +44,6 @@ public sealed class NoStoreConventionTests(MoniPayApi api) : MoniPayApiTest(api)
 
         using HttpResponseMessage response = await client.GetAsync("/test/secure", Cancellation);
 
-        // 401, and not uncacheable: the convention marks the credential routes, not the host.
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.NotEqual("no-store", response.Headers.CacheControl?.ToString());
     }

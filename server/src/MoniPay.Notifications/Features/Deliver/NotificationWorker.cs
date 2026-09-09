@@ -5,11 +5,6 @@ using Microsoft.Extensions.Options;
 
 namespace MoniPay.Notifications.Features.Deliver;
 
-/// <summary>
-/// The delivery loop: wakes on the commit signal or after <c>PollInterval</c>, runs one cycle in
-/// a fresh scope, and keeps going through its own failures. A cycle already running finishes its
-/// batch on shutdown — the stopping token gates the loop and the wait, not the batch.
-/// </summary>
 internal sealed class NotificationWorker(
     IServiceScopeFactory scopeFactory,
     DeliverySignal signal,

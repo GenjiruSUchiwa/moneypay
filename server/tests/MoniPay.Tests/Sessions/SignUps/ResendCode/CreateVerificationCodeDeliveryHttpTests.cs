@@ -13,10 +13,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.ResendCode;
 
-/// <summary>
-/// The resend route: a command with no body, authorized by the sign-up credential, that replaces
-/// the code without resetting the attempt budget or extending the workflow.
-/// </summary>
 public sealed class CreateVerificationCodeDeliveryHttpTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     private static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(2);
@@ -78,7 +74,6 @@ public sealed class CreateVerificationCodeDeliveryHttpTests(MoniPayApi api) : Mo
         Assert.Equal(started.SignUpExpiresAt, attributes.GetProperty("signUpExpiresAt").GetDateTimeOffset());
         Assert.Equal(Api.Time.GetUtcNow() + CodeLifetime, attributes.GetProperty("codeExpiresAt").GetDateTimeOffset());
 
-        // A resend never resets the budget: the one failed attempt is still counted.
         Assert.Equal(1, (await Api.ReadSignUpRowAsync(started.SignUpId)).FailedAttempts);
 
         IReadOnlyList<MoniPay.Notifications.Domain.Notification> deliveries =
@@ -132,7 +127,6 @@ public sealed class CreateVerificationCodeDeliveryHttpTests(MoniPayApi api) : Mo
         Assert.Equal(MoniPayErrorTypes.SignUpResendTooSoon.Urn, problem.Type);
         Assert.NotNull(response.Headers.RetryAfter);
 
-        // The boundary itself is a permitted resend: the cooldown elapsed, it did not nearly elapse.
         Api.Time.Advance(TimeSpan.FromSeconds(1));
         using HttpResponseMessage atBoundary = await SignUpFlow.PostResendAsync(
             Client,

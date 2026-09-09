@@ -10,11 +10,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Notifications.Enqueue;
 
-/// <summary>
-/// The outbox contract: enqueue is part of the producer's transaction, the commit signal comes
-/// after the commit and only once, the idempotency key admits one delivery, the status read
-/// answers with the newest row, and the ciphertext columns hold no plaintext.
-/// </summary>
 public sealed class NotificationOutboxTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]

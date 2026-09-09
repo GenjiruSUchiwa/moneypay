@@ -7,10 +7,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Domain;
 
-/// <summary>
-/// Every documented row of the <c>SignUp</c> transition table, against options whose values
-/// deliberately differ from the defaults: a test passing on a default would prove nothing.
-/// </summary>
 public sealed class SignUpTransitionTests
 {
     private static readonly DateTimeOffset StartedAt = new(2026, 9, 5, 10, 0, 0, TimeSpan.Zero);

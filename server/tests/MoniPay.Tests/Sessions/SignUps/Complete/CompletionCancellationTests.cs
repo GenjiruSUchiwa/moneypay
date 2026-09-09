@@ -17,10 +17,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.SignUps.Complete;
 
-/// <summary>
-/// A canceled completion writes nothing, wherever the cancellation lands, and the provisioning
-/// port is handed the caller's token rather than a fresh one.
-/// </summary>
 public sealed class CompletionCancellationTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -154,10 +150,6 @@ public sealed class CompletionCancellationTests(MoniPayApi api) : MoniPayApiTest
     }
 }
 
-/// <summary>
-/// Provisions through the real Users slice and then fails the way a request canceled mid-flight
-/// would. It adds no rule of its own: the mapping stays the host adapter's.
-/// </summary>
 file sealed class CancellingUserProvisioning(UserProvisioningAdapter inner) : IUserProvisioning
 {
     public async Task<UserId> ProvisionAsync(ProvisionUserRequest request, CancellationToken cancellationToken)
@@ -167,10 +159,6 @@ file sealed class CancellingUserProvisioning(UserProvisioningAdapter inner) : IU
     }
 }
 
-/// <summary>
-/// The provisioning port as a test double: it records the token it was handed and answers with an
-/// identity, without writing, so a test can assert forwarding alone.
-/// </summary>
 file sealed class RecordingUserProvisioning : IUserProvisioning
 {
     public CancellationToken Token { get; private set; }

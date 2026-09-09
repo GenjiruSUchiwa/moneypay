@@ -8,10 +8,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// Only the Sessions wiring: the kernel primitive itself is covered once, in
-/// <c>Users/Registration/PersonalDataProtectionTests</c>.
-/// </summary>
 public sealed class PersonalDataProtectorTests
 {
     [Fact]

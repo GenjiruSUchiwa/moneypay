@@ -30,11 +30,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions;
 
-/// <summary>
-/// The composition of the sign-up and session machinery: the module's own services, registered
-/// by the module itself. The start and read slices are registered here because the host provides
-/// the delivery port they need; the remaining slices stay test-only until their routes land.
-/// </summary>
 public static class SessionsModule
 {
     public static IServiceCollection AddSessionsModule(
@@ -63,7 +58,6 @@ public static class SessionsModule
                 $"{SessionsOptions.Keys.PreviousSigningKeyBase64} must be empty or a base64-encoded 32-byte key.")
             .ValidateOnStart();
 
-        // All hold key material only; none holds request state.
         services.AddSingleton<VerificationCodeGenerator>();
         services.AddSingleton<VerificationCodeDigest>();
         services.AddSingleton<SignUpTokens>();
@@ -72,12 +66,9 @@ public static class SessionsModule
         services.AddSingleton<AccessTokenIssuer>();
         services.AddSingleton<RefreshTokenFactory>();
 
-        // Holds request state: the context it saves through.
         services.AddScoped<SessionTokenService>();
         services.AddSingleton<VerificationCodeRenderer>();
 
-        // The slices the routes need. The host provides their ports, so they resolve here;
-        // the remaining slices stay registered by the tests until their routes land.
         services.AddScoped<StartSignUpHandler>();
         services.AddScoped<GetSignUpHandler>();
         services.AddScoped<CreateVerificationCodeDeliveryHandler>();
@@ -94,13 +85,6 @@ public static class SessionsModule
         return services;
     }
 
-    /// <summary>
-    /// The three schemes. The bearer scheme validates the access JWT — issuer, audience,
-    /// signature, lifetime, HS256 only, inbound claim mapping off so the claim names are the
-    /// ones the issuer stamped — accepting the previous signing key while a rotation is in
-    /// flight. The two workflow schemes share one handler shape, one per purpose, and never
-    /// accept each other's tokens: the purpose baked into the digest sees to that.
-    /// </summary>
     private static void AddAuthentication(IServiceCollection services)
     {
         services
@@ -128,7 +112,6 @@ public static class SessionsModule
                 };
                 bearer.Events = new JwtBearerEvents
                 {
-                    // The challenge body stays generic; the cause stays in this module's log.
                     OnAuthenticationFailed = failure =>
                     {
                         SessionsLog.BearerTokenRefused(logger, CauseOf(failure.Exception));
@@ -146,10 +129,6 @@ public static class SessionsModule
             });
     }
 
-    /// <summary>
-    /// A bounded cause for a rejected access JWT. The framework's own diagnostic carries the
-    /// validation exception, whose message can quote token content, so it is never logged here.
-    /// </summary>
     private static string CauseOf(Exception? exception) => exception switch
     {
         SecurityTokenExpiredException => "expired",
@@ -169,12 +148,6 @@ public static class SessionsModule
         }
     }
 
-    /// <summary>
-    /// The two named policies. <see cref="MoniPayPolicies.AuthenticatedUser"/> demands an active
-    /// session behind the ticket; <see cref="MoniPayPolicies.Registration"/> demands the
-    /// registration scheme's credential bound to the route's sign-up. Both answer a refusal of
-    /// an authenticated principal with a 401, through the shared result handler.
-    /// </summary>
     private static void AddAuthorization(IServiceCollection services)
     {
         services.AddAuthorizationBuilder()
@@ -190,7 +163,6 @@ public static class SessionsModule
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, PolicyFailureResultHandler>();
     }
 
-    /// <summary>The sign-up routes. The group carries the JSON:API and no-store markers; the start owns its IP limit.</summary>
     public static IEndpointRouteBuilder MapSessionsModule(this IEndpointRouteBuilder routes)
     {
         ArgumentNullException.ThrowIfNull(routes);
@@ -207,8 +179,6 @@ public static class SessionsModule
         signUps.MapCreatePhoneVerification();
         signUps.MapCreateSignUpCompletion();
 
-        // The refresh hangs off the root: its credential travels in the body, and the group it
-        // would otherwise inherit is authenticated.
         routes.MapCreateSessionRefresh();
 
         RouteGroupBuilder sessions = routes

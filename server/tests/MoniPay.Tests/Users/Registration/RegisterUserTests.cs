@@ -128,7 +128,6 @@ public sealed class RegisterUserTests(MoniPayApi api)
     {
         await InRolledBackTransactionAsync(async (handler, _) =>
         {
-            // Two spellings, one normalized value: the lookup hash folds the case.
             RegisterUserCommand first = Command(email: "Marie.Ngo@Example.com");
             await handler.HandleAsync(first, Cancellation);
 
@@ -176,8 +175,6 @@ public sealed class RegisterUserTests(MoniPayApi api)
     [Fact]
     public async Task Two_parallel_registrations_for_one_email_create_one_user()
     {
-        // The handler's own read is by sign-up id only, so with two distinct sign-ups nothing
-        // but the unique index can decide this race.
         const string email = "race@example.com";
         try
         {
@@ -229,7 +226,6 @@ public sealed class RegisterUserTests(MoniPayApi api)
         await using IDbContextTransaction transaction =
             await database.Database.BeginTransactionAsync(Cancellation);
 
-        // Disposing without a commit rolls back: the shared database stays clean.
         await test(scope.ServiceProvider.GetRequiredService<RegisterUserHandler>(), database);
     }
 

@@ -2,7 +2,6 @@ using System.Globalization;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>Generates unique Cameroon E.164 test numbers without sharing test data.</summary>
 public static class TestPhones
 {
     private static long nextCounter = 599_999_999;

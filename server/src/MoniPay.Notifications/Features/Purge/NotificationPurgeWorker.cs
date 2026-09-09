@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 
 namespace MoniPay.Notifications.Features.Purge;
 
-/// <summary>Runs one <see cref="NotificationPurger"/> sweep an hour, gated with the delivery worker.</summary>
 internal sealed class NotificationPurgeWorker(
     IServiceScopeFactory scopeFactory,
     IOptions<NotificationsOptions> options,

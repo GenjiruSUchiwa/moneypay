@@ -8,11 +8,6 @@ using MoniPay.Sessions.Features.SignUps.VerifyPhone;
 
 namespace MoniPay.Tests.Support;
 
-/// <summary>
-/// Registers the sign-up handlers that depend on the ports. The module
-/// registers the handlers itself once the endpoints need them;
-/// until then, only the tests resolve them.
-/// </summary>
 public static class TestPorts
 {
     public static IWebHostBuilder UseTestPorts(this IWebHostBuilder builder, MoniPayApi api)

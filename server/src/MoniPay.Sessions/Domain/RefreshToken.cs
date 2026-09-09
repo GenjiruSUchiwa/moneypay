@@ -1,12 +1,7 @@
 namespace MoniPay.Sessions.Domain;
 
-/// <summary>
-/// One link of a session's rotation chain. Only the SHA-256 digest of the token is ever held;
-/// a consumed link keeps its digest and <see cref="UsedAt"/> so a replay is recognised.
-/// </summary>
 internal sealed class RefreshToken
 {
-    /// <summary>The length of a SHA-256 digest; anything else is a caller bug, not a token.</summary>
     public const int DigestLength = 32;
 
     private RefreshToken()
@@ -51,7 +46,6 @@ internal sealed class RefreshToken
         };
     }
 
-    /// <summary>Marks the link used by a rotation. A consumed link cannot be consumed again.</summary>
     public void Consume(Guid replacementId, DateTimeOffset now)
     {
         if (IsConsumed)

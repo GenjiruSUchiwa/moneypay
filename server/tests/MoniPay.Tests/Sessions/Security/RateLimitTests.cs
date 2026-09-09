@@ -14,11 +14,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Security;
 
-/// <summary>
-/// The IP rate limits: a budget per client IP, exhausted budgets answered with 429 and
-/// <c>Retry-After</c>, and an <c>X-Forwarded-For</c> header an untrusted edge sends is worth
-/// nothing.
-/// </summary>
 public sealed class RateLimitTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -45,7 +40,6 @@ public sealed class RateLimitTests(MoniPayApi api) : MoniPayApiTest(api)
     [Fact]
     public async Task Two_client_ips_have_separate_budgets()
     {
-        // The edge is trusted, so the client IP comes from the forwarded header.
         using WebApplicationFactory<Program> host = Api.CreateHost(builder =>
             builder.UseSetting(MoniPayConfiguration.ForwardedHeadersKnownProxies, "127.0.0.1,::1"));
         using HttpClient client = host.CreateClient();
@@ -56,7 +50,6 @@ public sealed class RateLimitTests(MoniPayApi api) : MoniPayApiTest(api)
             Assert.Equal(HttpStatusCode.OK, await ProbeAsync(client, forwardedFor: "203.0.113.1"));
         }
 
-        // A second client IP behind the trusted edge starts with a full budget.
         Assert.Equal(HttpStatusCode.OK, await ProbeAsync(client, forwardedFor: "203.0.113.2"));
     }
 
@@ -71,7 +64,6 @@ public sealed class RateLimitTests(MoniPayApi api) : MoniPayApiTest(api)
 
         for (int request = 0; request <= limit; request++)
         {
-            // TestServer leaves RemoteIpAddress null unless the test supplies a real peer.
             HttpContext response = await host.Server.SendAsync(context =>
             {
                 context.Connection.RemoteIpAddress = IPAddress.Loopback;
@@ -119,7 +111,6 @@ public sealed class RateLimitTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
         Assert.NotNull(rejected.Headers.RetryAfter);
 
-        // The budget belongs to the session, not to the address the two sessions share.
         OpenedSession other = await Api.CreateSessionAsync(user.Id);
         using HttpResponseMessage another = await SignUpFlow.GetCurrentUserAsync(
             client,

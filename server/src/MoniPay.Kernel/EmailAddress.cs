@@ -1,12 +1,9 @@
 namespace MoniPay.Kernel;
 
-/// <summary>An immutable normalized email address.</summary>
 public readonly record struct EmailAddress(string Value)
 {
-    /// <summary>The case-folded form lookup hashes are computed from.</summary>
     public string LookupValue => Value.ToLowerInvariant();
 
-    /// <summary>Trims and validates an email address, preserving display casing in its local part.</summary>
     public static bool TryNormalize(string? input, out EmailAddress email)
     {
         email = default;

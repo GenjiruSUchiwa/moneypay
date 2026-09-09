@@ -8,10 +8,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Architecture;
 
-/// <summary>
-/// Asserts the layering the projects claim: a module talks to the kernel and to the shared
-/// context, never to a sibling module, and the kernel talks to nobody.
-/// </summary>
 public sealed class ModuleBoundaryTests
 {
     private static readonly string[] ModuleDependencies = ["MoniPay.Kernel", "MoniPay.Data"];

@@ -11,15 +11,6 @@ using Npgsql;
 
 namespace MoniPay.Users.Features.Registration;
 
-/// <summary>
-/// Provisions exactly one user per sign-up: encrypts the contact data, computes the keyed
-/// lookup hashes, and writes the user with its two consent rows. Idempotent on the sign-up id.
-/// It saves inside the caller's ambient transaction — that is how it observes a
-/// unique-constraint violation and maps it — but it opens no transaction of its own and never
-/// commits: the ambient transaction decides. The welcome email is enqueued after the race is
-/// settled and saved in the same ambient transaction; it is best effort, so a render or enqueue
-/// failure is logged and registration continues.
-/// </summary>
 public sealed class RegisterUserHandler
 {
     private readonly MoniPayDbContext database;
@@ -45,11 +36,6 @@ public sealed class RegisterUserHandler
         this.logger = logger;
     }
 
-    /// <summary>Registers the user, or returns the one this sign-up already provisioned.</summary>
-    /// <exception cref="RefusalException">
-    /// <c>phone-already-registered</c> or <c>email-already-registered</c> when another user
-    /// holds the contact — the unique index decides, not a preliminary read.
-    /// </exception>
     public async Task<RegisteredUser> HandleAsync(
         RegisterUserCommand command,
         CancellationToken cancellationToken)
@@ -84,9 +70,6 @@ public sealed class RegisterUserHandler
             switch (postgres.ConstraintName)
             {
                 case UsersSchema.SignUpIdUnique:
-                    // Another registration of this sign-up won the race and committed — the
-                    // violation proves it. SaveChanges already rolled the ambient transaction
-                    // back to its own savepoint, so the winner is readable here.
                     return new RegisteredUser(
                         await database.Users
                             .Where(candidate => candidate.SignUpId == command.SignUpId)
@@ -107,12 +90,6 @@ public sealed class RegisterUserHandler
         return new RegisteredUser(user.Id, Created: true);
     }
 
-    /// <summary>
-    /// Renders and enqueues the welcome after the registration save, then saves it in the same
-    /// ambient transaction. The optional work is the only thing the catch covers: a failure logs
-    /// one warning and leaves the user created without a welcome, and a later replay does not
-    /// backfill it.
-    /// </summary>
     private async Task TryEnqueueWelcomeAsync(
         UserId userId,
         RegisterUserCommand command,
@@ -141,8 +118,6 @@ public sealed class RegisterUserHandler
 
     private void Forget(User user)
     {
-        // The failed insert must not ride along on the caller's next save. Detaching triggers
-        // EF's navigation fixup, which edits the consents collection — hence the copy.
         foreach (UserConsent consent in user.Consents.ToArray())
         {
             database.Entry(consent).State = EntityState.Detached;

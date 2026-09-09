@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 
 namespace MoniPay.Tests.Fakes;
 
-/// <summary>Keeps every log event the host writes, so a test can assert on level, message and state.</summary>
 public sealed class RecordingLoggerProvider : ILoggerProvider
 {
     private readonly ConcurrentQueue<LogEntry> entries = new();

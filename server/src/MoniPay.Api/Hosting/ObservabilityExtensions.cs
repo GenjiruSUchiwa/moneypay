@@ -2,7 +2,6 @@ using Serilog;
 
 namespace MoniPay.Api.Hosting;
 
-/// <summary>Logging: how the host says what it did.</summary>
 public static class ObservabilityExtensions
 {
     public static WebApplicationBuilder AddMoniPayObservability(this WebApplicationBuilder builder)

@@ -13,10 +13,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Users.Registration;
 
-/// <summary>
-/// The host adapter maps the Users welcome onto the Notifications outbox: email, optional, no
-/// expiry, the user as correlation, and the normalized recipient — without saving or sending.
-/// </summary>
 public sealed class WelcomeMessageDeliveryAdapterTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]

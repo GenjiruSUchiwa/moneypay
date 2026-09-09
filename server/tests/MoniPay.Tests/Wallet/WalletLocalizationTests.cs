@@ -9,13 +9,8 @@ using Xunit;
 
 namespace MoniPay.Tests.Wallet;
 
-/// <summary>
-/// Drives the real host over HTTP: request localization is middleware, so nothing below the
-/// pipeline can prove it works.
-/// </summary>
 public sealed class WalletLocalizationTests(MoniPayApi api) : MoniPayApiTest(api)
 {
-    /// <summary>A currency MoniPay does not hold, which is what makes the wallet refuse.</summary>
     private static readonly string UnsupportedCurrency = nameof(Currency.Usd).ToUpperInvariant();
 
     private static readonly Uri Wallet = new(WalletRoutes.Group, UriKind.Relative);
@@ -43,7 +38,6 @@ public sealed class WalletLocalizationTests(MoniPayApi api) : MoniPayApiTest(api
     [Fact]
     public async Task French_is_the_default_when_the_client_states_no_preference()
     {
-        // The product's users read French, so a request with no Accept-Language gets French.
         HttpResponseMessage response = await Refusal(acceptLanguage: null);
 
         Assert.Equal("Seul le portefeuille en FCFA est disponible.", await TitleOf(response));
@@ -52,7 +46,6 @@ public sealed class WalletLocalizationTests(MoniPayApi api) : MoniPayApiTest(api
     [Fact]
     public async Task A_regional_culture_falls_back_to_its_parent_resource()
     {
-        // fr-CM is supported and has no .resx of its own: it must resolve to WalletMessages.fr.
         HttpResponseMessage response = await Refusal(acceptLanguage: Locale.FrenchCameroonTag);
 
         Assert.Equal("Seul le portefeuille en FCFA est disponible.", await TitleOf(response));

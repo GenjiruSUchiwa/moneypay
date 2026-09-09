@@ -10,11 +10,6 @@ using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Features.SignUps.VerifyPhone;
 
-/// <summary>
-/// Checks a code against a locked sign-up row. A mismatch is committed before it is refused, so
-/// the attempt budget survives the refusal; a match asks Users whether the phone is taken before
-/// it publishes the registration token.
-/// </summary>
 internal sealed class CreatePhoneVerificationHandler(
     MoniPayDbContext database,
     VerificationCodeDigest codeDigest,
@@ -24,7 +19,6 @@ internal sealed class CreatePhoneVerificationHandler(
     TimeProvider timeProvider,
     IOptions<SessionsOptions> options)
 {
-    /// <summary>The request member a mismatch points at, as the HTTP contract names it.</summary>
     internal const string VerificationCodePointer = "/data/attributes/verificationCode";
 
     private readonly SessionsOptions settings = options.Value;
@@ -57,8 +51,6 @@ internal sealed class CreatePhoneVerificationHandler(
         PhoneNumber phone = new(personalData.Unprotect(signUp.PhoneCiphertext));
         if (await registeredPhones.FindUserIdAsync(phone, cancellationToken).ConfigureAwait(false) is not null)
         {
-            // Nothing can complete this sign-up, so it is closed now rather than at expiry:
-            // left open, it would own the phone and refuse every start until then.
             signUp.Close();
             await database.CommitAsync(transaction, cancellationToken).ConfigureAwait(false);
             throw new RefusalException(MoniPayErrorTypes.PhoneAlreadyRegistered);

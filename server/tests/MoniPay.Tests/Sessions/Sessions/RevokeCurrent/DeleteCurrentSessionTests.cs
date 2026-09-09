@@ -8,9 +8,6 @@ using Xunit;
 
 namespace MoniPay.Tests.Sessions.Sessions.RevokeCurrent;
 
-/// <summary>
-/// The revocation of the session the caller's ticket names, and what stops working afterwards.
-/// </summary>
 public sealed class DeleteCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
@@ -120,11 +117,6 @@ public sealed class DeleteCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(a
         Assert.Equal(title, problem.Title);
     }
 
-    /// <summary>
-    /// An access credential for the session: the harness's bearer validation runs on the system
-    /// clock, so the JWT a session was issued with — stamped by the fake clock — is not the one
-    /// under test here. The claims are what matter, and they name the real session.
-    /// </summary>
     private static string AccessToken(OpenedSession session) =>
         TestTokens.Bearer(session.Session.UserId, session.Session.SessionId);
 }

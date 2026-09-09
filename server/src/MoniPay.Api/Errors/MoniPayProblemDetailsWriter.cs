@@ -10,21 +10,10 @@ using MoniPay.Kernel.Http;
 
 namespace MoniPay.Api.Errors;
 
-/// <summary>
-/// The one formatter for every error body, thrown or not. It preserves the caller's type, title
-/// and status, fills in the request path and trace identifier, localizes a stable MoniPay code in
-/// the request culture, and writes <c>application/problem+json</c> without a charset. It never
-/// copies an exception message, and a 500 carries no detail.
-/// </summary>
 internal sealed class MoniPayProblemDetailsWriter(MoniPayProblemText text) : IProblemDetailsWriter
 {
-    /// <summary>The extension member that carries the validation items.</summary>
     internal const string ErrorsExtension = "errors";
 
-    /// <summary>
-    /// The type ASP.NET Core assigns when a problem has no explicit type. It is a framework
-    /// default, not a caller's choice, so the writer replaces it with the stable MoniPay fallback.
-    /// </summary>
     private const string FrameworkDefaultType = "https://tools.ietf.org/html/rfc9110";
 
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
@@ -32,14 +21,8 @@ internal sealed class MoniPayProblemDetailsWriter(MoniPayProblemText text) : IPr
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
-    /// <inheritdoc />
-    /// <remarks>
-    /// Always writable: an error response must use the Problem Details format even when the client
-    /// did not ask for it. This is the deliberate error-format policy, not content negotiation.
-    /// </remarks>
     public bool CanWrite(ProblemDetailsContext context) => true;
 
-    /// <inheritdoc />
     public async ValueTask WriteAsync(ProblemDetailsContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
