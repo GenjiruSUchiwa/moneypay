@@ -54,7 +54,11 @@ internal static class TestProbes
             .WithMetadata(MoniPayConventions.NoStore);
 
         app.MapGet(RegistrationRoute, () => Results.Ok())
-            .RequireAuthorization(MoniPayPolicies.Registration);
+            .RequireAuthorization(new AuthorizeAttribute
+            {
+                Policy = MoniPayPolicies.Registration,
+                AuthenticationSchemes = SessionsSchemes.Registration,
+            });
 
         app.MapGet(NoStoreRoute, () => Results.Ok())
             .WithMetadata(MoniPayConventions.NoStore);

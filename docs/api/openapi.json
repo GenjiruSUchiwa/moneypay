@@ -137,6 +137,52 @@
         }
       }
     },
+    "/sessions/current": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Returns the current session without its credentials.",
+        "operationId": "GetCurrentSession",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfReadSessionAttributes"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/signups": {
       "post": {
         "tags": [
@@ -554,6 +600,37 @@
         },
         "additionalProperties": false
       },
+      "JsonApiResponseOfJsonApiResponseResourceOfReadSessionAttributes": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "jsonapi": {
+            "$ref": "#/components/schemas/JsonApiVersion"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiResponseResourceOfReadSessionAttributes"
+              }
+            ]
+          },
+          "links": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiLinks"
+              }
+            ]
+          }
+        }
+      },
       "JsonApiResponseOfJsonApiResponseResourceOfReadSignUpResourceAttributes": {
         "required": [
           "data"
@@ -634,6 +711,44 @@
                 "$ref": "#/components/schemas/JsonApiResponseResourceOfStartSignUpResourceAttributes"
               }
             ]
+          },
+          "links": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiLinks"
+              }
+            ]
+          }
+        }
+      },
+      "JsonApiResponseResourceOfReadSessionAttributes": {
+        "required": [
+          "type",
+          "id",
+          "attributes"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/ReadSessionAttributes"
+          },
+          "relationships": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonApiRelationship"
+            }
           },
           "links": {
             "oneOf": [
@@ -804,6 +919,28 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ReadSessionAttributes": {
+        "required": [
+          "createdAt",
+          "lastSeenAt",
+          "accessTokenExpiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "accessTokenExpiresAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -987,6 +1124,12 @@
         "type": "http",
         "description": "The registration workflow credential: Authorization: Registration <token>.",
         "scheme": "Registration"
+      },
+      "Bearer": {
+        "type": "http",
+        "description": "The access credential: Authorization: Bearer <jwt>.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },

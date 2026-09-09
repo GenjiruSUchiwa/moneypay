@@ -2,16 +2,20 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
+using MoniPay.Kernel.Http;
 using MoniPay.Sessions.Security;
 
 namespace MoniPay.Api.OpenApi;
 
-/// <summary>The workflow credential schemes, declared once so the generated contract names them.</summary>
+/// <summary>The credential schemes, declared once so the generated contract names them.</summary>
 internal static class MoniPaySecuritySchemes
 {
     public const string SignUp = SessionsSchemes.SignUp;
 
     public const string Registration = SessionsSchemes.Registration;
+
+    /// <summary>The access JWT, the scheme of every session and user route.</summary>
+    public const string Bearer = MoniPayHeaders.Bearer;
 }
 
 /// <summary>Adds the Sign-up and Registration HTTP schemes to the document components.</summary>
@@ -38,6 +42,13 @@ internal sealed class MoniPaySecuritySchemeTransformer : IOpenApiDocumentTransfo
             Type = SecuritySchemeType.Http,
             Scheme = MoniPaySecuritySchemes.Registration,
             Description = "The registration workflow credential: Authorization: Registration <token>.",
+        };
+        document.Components.SecuritySchemes[MoniPaySecuritySchemes.Bearer] = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = MoniPaySecuritySchemes.Bearer.ToLowerInvariant(),
+            BearerFormat = "JWT",
+            Description = "The access credential: Authorization: Bearer <jwt>.",
         };
 
         return Task.CompletedTask;
@@ -75,12 +86,19 @@ internal sealed class MoniPaySecurityOperationTransformer : IOpenApiOperationTra
                 string.Equals(scheme, MoniPaySecuritySchemes.SignUp, StringComparison.Ordinal)
                 || string.Equals(scheme, MoniPaySecuritySchemes.Registration, StringComparison.Ordinal))
             .ToList();
+        operation.Security ??= [];
+
+        // Routes declare workflow schemes explicitly; the remaining routes use the default bearer scheme.
         if (schemes.Count == 0)
         {
+            operation.Security.Add(new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference(MoniPaySecuritySchemes.Bearer, context.Document)] = [],
+            });
+
             return Task.CompletedTask;
         }
 
-        operation.Security ??= [];
         foreach (string scheme in schemes)
         {
             operation.Security.Add(new OpenApiSecurityRequirement

@@ -15,6 +15,7 @@ using MoniPay.Kernel.Http;
 using MoniPay.Kernel.Security;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.Sessions;
+using MoniPay.Sessions.Features.Sessions.GetCurrent;
 using MoniPay.Sessions.Features.Sessions.Refresh;
 using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Features.SignUps.Get;
@@ -75,6 +76,7 @@ public static class SessionsModule
         // the remaining slices stay registered by the tests until their routes land.
         services.AddScoped<StartSignUpHandler>();
         services.AddScoped<GetSignUpHandler>();
+        services.AddScoped<GetCurrentSessionHandler>();
 
         services.AddSingleton<ExpiredCredentialCleanupService>();
         services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<ExpiredCredentialCleanupService>());
@@ -198,6 +200,15 @@ public static class SessionsModule
         // The refresh hangs off the root: its credential travels in the body, and the group it
         // would otherwise inherit is authenticated.
         routes.MapCreateSessionRefresh();
+
+        RouteGroupBuilder sessions = routes
+            .MapGroup(SessionRoutes.Group)
+            .WithTags(SessionTags.Sessions)
+            .WithMetadata(MoniPayConventions.JsonApi)
+            .WithMetadata(MoniPayConventions.NoStore)
+            .RequireAuthorization(MoniPayPolicies.AuthenticatedUser);
+
+        sessions.MapGetCurrentSession();
 
         return routes;
     }
