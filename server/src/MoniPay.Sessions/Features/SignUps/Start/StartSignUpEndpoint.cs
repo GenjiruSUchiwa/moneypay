@@ -23,7 +23,7 @@ internal static class StartSignUpEndpoint
                 MoniPayMediaTypes.JsonApi,
                 MoniPayMediaTypes.AnyContentType)
             .WithMetadata(new JsonApiResourceType(SignUpResourceTypes.SignUps))
-            .Produces<JsonApiResponse<SignUpResource<StartSignUpResourceAttributes>>>(StatusCodes.Status202Accepted, MoniPayMediaTypes.JsonApi)
+            .Produces<JsonApiResponse<JsonApiResponseResource<StartSignUpResourceAttributes>>>(StatusCodes.Status202Accepted, MoniPayMediaTypes.JsonApi)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status406NotAcceptable)
             .ProducesProblem(StatusCodes.Status413RequestEntityTooLarge)
@@ -53,8 +53,8 @@ internal static class StartSignUpEndpoint
         StartSignUpCommand command = request.Data.Attributes.Validate(settings, CurrentLocale());
         StartSignUpResult result = await handler.HandleAsync(command, cancellationToken).ConfigureAwait(false);
 
-        SignUpResource<StartSignUpResourceAttributes> resource = SignUpResources.FromStart(result);
-        JsonApiResponse<SignUpResource<StartSignUpResourceAttributes>> document = new()
+        JsonApiResponseResource<StartSignUpResourceAttributes> resource = SignUpResources.FromStart(result);
+        JsonApiResponse<JsonApiResponseResource<StartSignUpResourceAttributes>> document = new()
         {
             Data = resource,
             Links = new JsonApiLinks { Self = resource.Links?.Self },

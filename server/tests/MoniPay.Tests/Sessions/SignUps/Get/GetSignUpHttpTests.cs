@@ -29,14 +29,14 @@ public sealed class GetSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(MoniPayMediaTypes.JsonApi, response.Content.Headers.ContentType?.ToString());
         AssertNoStore(response);
 
-        JsonElement document = await ReadSuccessAsync(response);
+        JsonElement document = await JsonApiAssertions.ReadJsonApiAsync(response);
         JsonElement data = document.GetProperty("data");
         Assert.Equal(SignUpResourceTypes.SignUps, data.GetProperty("type").GetString());
         Assert.Equal(started.SignUpId.Value.ToString(), data.GetProperty("id").GetString());
 
         JsonElement attributes = data.GetProperty("attributes");
-        Assert.Equal(SignUpStatuses.CodePending, attributes.GetProperty("status").GetString());
-        Assert.Equal(CodeDeliveryValues.Queued, attributes.GetProperty("codeDelivery").GetString());
+        Assert.Equal(JsonApiAssertions.Wire(SignUpStatusValue.CodePending), attributes.GetProperty("status").GetString());
+        Assert.Equal(JsonApiAssertions.Wire(CodeDeliveryValue.Queued), attributes.GetProperty("codeDelivery").GetString());
         Assert.False(attributes.TryGetProperty("signUpToken", out _));
         Assert.False(attributes.TryGetProperty("registrationToken", out _));
         Assert.False(attributes.TryGetProperty("phone", out _));
@@ -52,9 +52,9 @@ public sealed class GetSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
             started.SignUpId,
             SessionsSchemes.SignUp,
             started.SignUpToken);
-        JsonElement resent = await ReadSuccessAsync(sent);
+        JsonElement resent = await JsonApiAssertions.ReadJsonApiAsync(sent);
         Assert.Equal(
-            CodeDeliveryValues.Sent,
+            JsonApiAssertions.Wire(CodeDeliveryValue.Sent),
             resent.GetProperty("data").GetProperty("attributes").GetProperty("codeDelivery").GetString());
     }
 
@@ -70,9 +70,9 @@ public sealed class GetSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
             verified.Verified.RegistrationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        JsonElement document = await ReadSuccessAsync(response);
+        JsonElement document = await JsonApiAssertions.ReadJsonApiAsync(response);
         JsonElement attributes = document.GetProperty("data").GetProperty("attributes");
-        Assert.Equal(SignUpStatuses.PhoneVerified, attributes.GetProperty("status").GetString());
+        Assert.Equal(JsonApiAssertions.Wire(SignUpStatusValue.PhoneVerified), attributes.GetProperty("status").GetString());
         Assert.False(attributes.TryGetProperty("signUpToken", out _));
         Assert.False(attributes.TryGetProperty("registrationToken", out _));
     }

@@ -19,7 +19,7 @@ internal static class GetSignUpEndpoint
         routes.MapGet(SignUpRoutes.ById, GetAsync)
             .WithName(SignUpEndpointNames.GetSignUp)
             .WithSummary(SignUpSummaries.GetSignUp)
-            .Produces<JsonApiResponse<SignUpResource<ReadSignUpResourceAttributes>>>(StatusCodes.Status200OK, MoniPayMediaTypes.JsonApi)
+            .Produces<JsonApiResponse<JsonApiResponseResource<ReadSignUpResourceAttributes>>>(StatusCodes.Status200OK, MoniPayMediaTypes.JsonApi)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status406NotAcceptable)
             .RequireAuthorization(new AuthorizeAttribute
@@ -40,8 +40,8 @@ internal static class GetSignUpEndpoint
         SignUpId id = new(signUpId);
         SignUpView view = await handler.HandleAsync(id, cancellationToken).ConfigureAwait(false);
 
-        SignUpResource<ReadSignUpResourceAttributes> resource = SignUpResources.FromView(id, view);
-        JsonApiResponse<SignUpResource<ReadSignUpResourceAttributes>> document = new()
+        JsonApiResponseResource<ReadSignUpResourceAttributes> resource = SignUpResources.FromView(id, view);
+        JsonApiResponse<JsonApiResponseResource<ReadSignUpResourceAttributes>> document = new()
         {
             Data = resource,
             Links = new JsonApiLinks { Self = resource.Links?.Self },

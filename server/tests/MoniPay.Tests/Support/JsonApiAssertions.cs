@@ -46,4 +46,15 @@ public static class JsonApiAssertions
         return document;
     }
 
+    /// <summary>The wire string of a string-converted enum value, as the converter emits it.</summary>
+    public static string Wire<TEnum>(TEnum value) where TEnum : struct, Enum =>
+        JsonSerializer.Serialize(value).Trim('"');
+
+    public static string IdOf(JsonElement document) =>
+        document.GetProperty("data").GetProperty("id").GetString()
+        ?? throw new Xunit.Sdk.XunitException("The resource identifier was not a JSON string.");
+
+    public static string StatusOf(JsonElement document) =>
+        document.GetProperty("data").GetProperty("attributes").GetProperty("status").GetString()
+        ?? throw new Xunit.Sdk.XunitException("The resource status was not a JSON string.");
 }

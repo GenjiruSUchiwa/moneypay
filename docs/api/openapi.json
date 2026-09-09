@@ -49,7 +49,7 @@
             "content": {
               "application/vnd.api+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonApiResponseOfSignUpResourceOfStartSignUpResourceAttributes"
+                  "$ref": "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfStartSignUpResourceAttributes"
                 }
               }
             }
@@ -161,7 +161,7 @@
             "content": {
               "application/vnd.api+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonApiResponseOfSignUpResourceOfReadSignUpResourceAttributes"
+                  "$ref": "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfReadSignUpResourceAttributes"
                 }
               }
             }
@@ -246,7 +246,8 @@
           "sent",
           "failed",
           "expired"
-        ]
+        ],
+        "type": "string"
       },
       "HealthResponse": {
         "required": [
@@ -374,7 +375,7 @@
         },
         "additionalProperties": false
       },
-      "JsonApiResponseOfSignUpResourceOfReadSignUpResourceAttributes": {
+      "JsonApiResponseOfJsonApiResponseResourceOfReadSignUpResourceAttributes": {
         "required": [
           "data"
         ],
@@ -389,7 +390,7 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/SignUpResourceOfReadSignUpResourceAttributes"
+                "$ref": "#/components/schemas/JsonApiResponseResourceOfReadSignUpResourceAttributes"
               }
             ]
           },
@@ -405,7 +406,7 @@
           }
         }
       },
-      "JsonApiResponseOfSignUpResourceOfStartSignUpResourceAttributes": {
+      "JsonApiResponseOfJsonApiResponseResourceOfStartSignUpResourceAttributes": {
         "required": [
           "data"
         ],
@@ -420,9 +421,85 @@
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/SignUpResourceOfStartSignUpResourceAttributes"
+                "$ref": "#/components/schemas/JsonApiResponseResourceOfStartSignUpResourceAttributes"
               }
             ]
+          },
+          "links": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiLinks"
+              }
+            ]
+          }
+        }
+      },
+      "JsonApiResponseResourceOfReadSignUpResourceAttributes": {
+        "required": [
+          "type",
+          "id",
+          "attributes"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/ReadSignUpResourceAttributes"
+          },
+          "relationships": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonApiRelationship"
+            }
+          },
+          "links": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiLinks"
+              }
+            ]
+          }
+        }
+      },
+      "JsonApiResponseResourceOfStartSignUpResourceAttributes": {
+        "required": [
+          "type",
+          "id",
+          "attributes"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/StartSignUpResourceAttributes"
+          },
+          "relationships": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonApiRelationship"
+            }
           },
           "links": {
             "oneOf": [
@@ -520,64 +597,6 @@
           }
         }
       },
-      "SignUpResourceOfReadSignUpResourceAttributes": {
-        "required": [
-          "type",
-          "id",
-          "attributes"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "attributes": {
-            "$ref": "#/components/schemas/ReadSignUpResourceAttributes"
-          },
-          "links": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/JsonApiLinks"
-              }
-            ]
-          }
-        }
-      },
-      "SignUpResourceOfStartSignUpResourceAttributes": {
-        "required": [
-          "type",
-          "id",
-          "attributes"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "attributes": {
-            "$ref": "#/components/schemas/StartSignUpResourceAttributes"
-          },
-          "links": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/JsonApiLinks"
-              }
-            ]
-          }
-        }
-      },
       "SignUpStatusValue": {
         "enum": [
           "codePending",
@@ -585,7 +604,8 @@
           "completed",
           "locked",
           "expired"
-        ]
+        ],
+        "type": "string"
       },
       "StartSignUpAttributes": {
         "required": [

@@ -12,6 +12,7 @@ public static class OpenApiExtensions
         return services.AddOpenApi(options => options
             .AddDocumentTransformer<SortedOpenApiDocumentTransformer>()
             .AddDocumentTransformer<MoniPaySecuritySchemeTransformer>()
+            .AddSchemaTransformer<StringEnumSchemaTransformer>()
             .AddOperationTransformer<JsonApiRequestBodyTransformer>()
             .AddOperationTransformer<MoniPaySecurityOperationTransformer>());
     }

@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using MoniPay.Api;
 using MoniPay.Kernel.Http;
+using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Security;
 using MoniPay.Tests.Support;
 using Xunit;
@@ -19,17 +20,7 @@ public sealed class OpenApiContractTests(MoniPayApi api)
     [Fact]
     public async Task A_jsonapi_endpoint_documents_the_jsonapi_request_media_type_alone()
     {
-        using WebApplicationFactory<Program> host = api.CreateHost(
-            builder => builder.UseSetting(MoniPayConfiguration.OpenApiEnabled, "true"));
-        using HttpClient client = host.CreateClient();
-
-        using HttpResponseMessage response = await client.GetAsync(
-            "/openapi/v1.json",
-            TestContext.Current.CancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        JsonElement document = await response.Content.ReadFromJsonAsync<JsonElement>(
-            TestContext.Current.CancellationToken);
+        JsonElement document = await ReadOpenApiDocumentAsync();
         JsonElement content = document
             .GetProperty("paths")
             .GetProperty("/test/jsonapi/widgets")
@@ -48,20 +39,11 @@ public sealed class OpenApiContractTests(MoniPayApi api)
     [Fact]
     public async Task Workflow_security_is_or_for_read_and_absent_for_start()
     {
-        using WebApplicationFactory<Program> host = api.CreateHost(
-            builder => builder.UseSetting(MoniPayConfiguration.OpenApiEnabled, "true"));
-        using HttpClient client = host.CreateClient();
-
-        using HttpResponseMessage response = await client.GetAsync(
-            "/openapi/v1.json",
-            TestContext.Current.CancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        JsonElement document = await response.Content.ReadFromJsonAsync<JsonElement>(
-            TestContext.Current.CancellationToken);
+        JsonElement document = await ReadOpenApiDocumentAsync();
         JsonElement signUps = document.GetProperty("paths");
-        JsonElement start = signUps.GetProperty("/signups").GetProperty("post");
-        JsonElement read = signUps.GetProperty("/signups/{signUpId}").GetProperty("get");
+        JsonElement start = signUps.GetProperty(SignUpRoutes.Group).GetProperty("post");
+        // OpenAPI paths carry no route constraint, so the by-id template is rebuilt without ":guid".
+        JsonElement read = signUps.GetProperty(SignUpRoutes.Group + "/{signUpId}").GetProperty("get");
 
         Assert.False(start.TryGetProperty("security", out _));
 
@@ -76,5 +58,32 @@ public sealed class OpenApiContractTests(MoniPayApi api)
             new[] { SessionsSchemes.Registration, SessionsSchemes.SignUp }
                 .OrderBy(name => name, StringComparer.Ordinal),
             schemes);
+    }
+
+    [Theory]
+    [InlineData(nameof(SignUpStatusValue))]
+    [InlineData(nameof(CodeDeliveryValue))]
+    public async Task A_string_enum_is_typed_as_a_string_in_the_contract(string schema)
+    {
+        JsonElement document = await ReadOpenApiDocumentAsync();
+
+        JsonElement definition = document.GetProperty("components").GetProperty("schemas").GetProperty(schema);
+
+        Assert.Equal("string", definition.GetProperty("type").GetString());
+        Assert.NotEmpty(definition.GetProperty("enum").EnumerateArray());
+    }
+
+    private async Task<JsonElement> ReadOpenApiDocumentAsync()
+    {
+        using WebApplicationFactory<Program> host = api.CreateHost(
+            builder => builder.UseSetting(MoniPayConfiguration.OpenApiEnabled, "true"));
+        using HttpClient client = host.CreateClient();
+
+        using HttpResponseMessage response = await client.GetAsync(
+            "/openapi/v1.json",
+            TestContext.Current.CancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
     }
 }
