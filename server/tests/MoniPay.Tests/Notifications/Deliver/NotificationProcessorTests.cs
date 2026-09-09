@@ -239,7 +239,18 @@ public sealed class NotificationProcessorTests(MoniPayApi api) : MoniPayApiTest(
             builder.UseSetting("ConnectionStrings:MoniPay", Api.ConnectionString);
             builder.UseTestKeys();
             MoniPayApi.UseNotificationTestSettings(builder);
-            builder.ConfigureServices(services => services.AddLogging(logging => logging.AddProvider(logs)));
+            builder.ConfigureServices(services =>
+            {
+                foreach (ServiceDescriptor descriptor in services
+                    .Where(descriptor => descriptor.ServiceType == typeof(INotificationChannel)
+                        && Equals(descriptor.ServiceKey, NotificationChannel.Sms))
+                    .ToArray())
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.AddLogging(logging => logging.AddProvider(logs));
+            });
         });
 
     private async Task<Guid[]> EnqueueWithoutChannelAsync(IServiceProvider services, params string[] kinds)

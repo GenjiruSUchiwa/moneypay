@@ -25,6 +25,9 @@ MoniPay__Sessions__Audience="monipay-openapi" \
 MoniPay__Sessions__Legal__TermsVersion="terms-2026-08" \
 MoniPay__Sessions__Legal__PrivacyVersion="privacy-2026-08" \
 MoniPay__Notifications__DataKeyBase64="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
+MoniPay__Notifications__Sms__BaseUrl="https://sms-openapi.monipay.example" \
+MoniPay__Notifications__Sms__ApiKey="openapi-throwaway" \
+MoniPay__Notifications__Sms__SenderId="MoniPay" \
 dotnet build server/src/MoniPay.Api/MoniPay.Api.csproj -c Release -p:GenerateOpenApiDocs=true
 
 cp server/src/MoniPay.Api/obj/openapi/openapi.json docs/api/openapi.json

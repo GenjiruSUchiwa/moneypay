@@ -232,7 +232,7 @@ SMS delivery outside an HTTP request uses the stored sign-up locale.
 
 ## Provider decision gate
 
-The repository has no SMS provider decision. Do not invent a production adapter.
+The SMS provider is Bird, decided in `docs/adr/0004-sms-provider.md`. Do not invent another SMS adapter.
 
 Before implementation reaches SMS delivery, select a provider and record:
 

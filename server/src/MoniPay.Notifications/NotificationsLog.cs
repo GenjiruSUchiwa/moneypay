@@ -41,4 +41,16 @@ internal static partial class NotificationsLog
 
     [LoggerMessage(EventId = 9, Level = LogLevel.Information, Message = "Purged {Count} terminal notifications created before {Cutoff}")]
     public static partial void Purged(ILogger logger, int count, DateTimeOffset cutoff);
+
+    [LoggerMessage(EventId = 10, Level = LogLevel.Information,
+        Message = "Bird SMS submission accepted after {ElapsedMilliseconds}ms")]
+    public static partial void BirdSmsAccepted(ILogger logger, double elapsedMilliseconds);
+
+    [LoggerMessage(EventId = 11, Level = LogLevel.Warning,
+        Message = "Bird SMS submission retried after {ElapsedMilliseconds}ms: {Code}")]
+    public static partial void BirdSmsRetried(ILogger logger, string code, double elapsedMilliseconds);
+
+    [LoggerMessage(EventId = 12, Level = LogLevel.Error,
+        Message = "Bird SMS submission rejected after {ElapsedMilliseconds}ms: {Code}")]
+    public static partial void BirdSmsRejected(ILogger logger, string code, double elapsedMilliseconds);
 }
