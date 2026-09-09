@@ -1,83 +1,75 @@
 ---
-title: Comments Explain Why; Doc Comments Document the Contract
+title: No Docstrings, No Inline Comments
 impact: MEDIUM
-impactDescription: Noise comments rot; missing rationale costs hours in a money flow
-tags: quality, comments, documentation, docc
+impactDescription: Comments rot and restate the code; a name that needs a paragraph is the real defect
+tags: quality, comments, naming, simplicity
 ---
 
-## Comments Explain Why; Doc Comments Document the Contract
+## No Docstrings, No Inline Comments
 
 **Impact: MEDIUM**
 
-Swift is expressive enough that a comment restating the code is pure maintenance debt — it drifts, and the
-next reader trusts it. Comment the *reason*: a regulatory constraint, a provider quirk, a rounding decision,
-a deliberate trade-off. In a fintech codebase those reasons are the part nobody can reconstruct from the
-source.
+Never add a docstring (`///`, `/// <summary>`) or an inline comment (`//`, `/* … */`) to shipped
+code. If a comment feels necessary, the code is not clear enough: the name is wrong, the function
+does two things, the type is too wide, or the structure hides the intent. Fix that instead of
+explaining — rename, split, narrow the type, or reshape until the comment has nothing left to say.
+A comment is a symptom; the cure is always in the code.
 
-**Comment when:**
-- A business or regulatory rule drives the code (BEAC/CEMAC rules, KYC thresholds, XAF having no decimals).
-- A provider forces a workaround (Campay sandbox caps, Sudo Africa webhook replays, a 2 s authorisation
-  window).
-- A rounding or precision decision has a money consequence.
-- A non-obvious performance or concurrency choice was made after measuring.
-- Something looks wrong but is deliberate.
-
-**Do not comment:** what a well-named function already says, section dividers with no content, commented-out
-code (delete it — git remembers), or `// TODO` without an owner and a reason.
-
-**Incorrect (restates the code, adds nothing):**
+**Incorrect (the comment carries what the code should say):**
 
 ```swift
-// Get the card
-let card = store.cards.first { $0.id == id }
+/// A MoMo collection request. FCFA has no minor unit, so `amountXAF` is whole francs.
+struct TopUpRequest: Sendable, Hashable {
+    let amountXAF: Int
 
-// Loop through transactions
-for transaction in transactions {
-    // Process the transaction
-    process(transaction)
+    init?(amountXAF: Int, ...) {
+        guard amountXAF > 0 else { return nil }   // an invalid amount cannot be constructed
+        ...
+    }
 }
-
-// Multiply by 100
-let cents = dollars * 100
 ```
 
-**Correct (explains what the code cannot):**
+```csharp
+/// <summary>Whole francs. FCFA has no minor unit, so this is an integer on the wire.</summary>
+public record TopUpRequest(...);
+```
 
 ```swift
-// Always round up to the whole XAF: the currency has no sub-unit, and rounding
-// to nearest would lose the issuer ~0.5 XAF on every transaction.
-var rounded = Decimal.zero
-NSDecimalRound(&rounded, &raw, 0, .up)
-
-// The card network replays authorization messages. Answer a known authId with the
-// same decision, otherwise the same funds get held twice.
-if let existing = holds[authId] { return .approved }
-
-// The Campay sandbox caps collections at 100 XAF; the business minimum in
-// production is 1,000 XAF. Hence the two constants.
+// The Campay sandbox caps collections at 100 XAF; production starts at 1,000 XAF.
 static let minimumXAF = AppEnvironment.isLive ? 25 : 1_000
 ```
 
-**Doc comments (`///`) on the package's public surface.** Anything marked `public` — a `Store` action in
-`WalletStore`, a `Wallet` method, a `DesignSystem` component — gets a doc comment stating what it does, what it throws, and
-any precondition. Private helpers do not need one; if a private helper needs a paragraph to explain itself,
-rename or split it instead.
+**Correct (the code says it, the test pins it):**
 
 ```swift
-/// Makes the *just-in-time* funding decision for a card authorization.
-///
-/// Idempotent: re-presenting the same `authId` returns the original decision without
-/// holding funds again. The network gives us about two seconds to answer.
-///
-/// - Parameters:
-///   - authId: authorization identifier supplied by the issuer.
-///   - amount: amount presented by the merchant, in USD cents.
-/// - Returns: `.approved`, or the reason for the decline.
-/// - Throws: `WalletError.cardNotFound` if the card does not belong to this wallet.
-func authorize(authId: String, amount: Money) throws(WalletError) -> AuthDecision
+struct TopUpRequest: Sendable, Hashable {
+    let amountXAF: WholeFrancs
+    ...
+}
 ```
 
-Use `- Parameters`, `- Returns`, `- Throws` (DocC syntax) — Xcode Quick Help renders them, so they pay for
-themselves at every call site.
+```csharp
+public record TopUpRequest(...);
+```
 
-Reference: [DocC — Writing symbol documentation](https://www.swift.org/documentation/docc/writing-symbol-documentation-in-your-source-files)
+```swift
+static let minimumXAF = AppEnvironment.isLive ? campaySandboxCapXAF : productionMinimumXAF
+```
+
+**When the urge to comment appears, do this instead:**
+
+- Unclear what it is → rename the type, function, or value until it reads plainly.
+- Unclear which of two similar things to use → make the names unambiguous (`StatusPill` for a
+  state label, `Chip` for an interactive filter) and show both side by side in `Gallery`.
+- A magic value or a provider quirk → name the constant (`campaySandboxCapXAF`) and pin the
+  behavior with a test; the test name states the rule.
+- A surprising behavior → cover it with a test. Tests are the executable specification; a
+  paragraph is not.
+- Pending work → file an issue, never a `// TODO`.
+
+**The only exceptions:**
+
+- `// swift-tools-version: 6.2` on the first line of every `Package.swift` — a functional SwiftPM
+  directive, not a comment. Never remove it.
+- Files the project does not own: generator output (`<auto-generated>`, EF Core migrations under
+  `MoniPay.Data/Migrations`). Never hand-edit those; leave whatever the generator emits alone.
