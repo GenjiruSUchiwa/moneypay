@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
 using MoniPay.Kernel;
-using MoniPay.Kernel.Errors;
 using MoniPay.Kernel.Http;
-using MoniPay.Kernel.Validation;
 
 namespace MoniPay.Sessions.Features.SignUps.Start;
 
@@ -25,7 +23,7 @@ internal static class StartSignUpEndpoint
                 MoniPayMediaTypes.JsonApi,
                 MoniPayMediaTypes.AnyContentType)
             .WithMetadata(new JsonApiResourceType(SignUpResourceTypes.SignUps))
-            .Produces<JsonApiResponse<SignUpResource>>(StatusCodes.Status202Accepted, MoniPayMediaTypes.JsonApi)
+            .Produces<JsonApiResponse<SignUpResource<StartSignUpResourceAttributes>>>(StatusCodes.Status202Accepted, MoniPayMediaTypes.JsonApi)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status406NotAcceptable)
             .ProducesProblem(StatusCodes.Status413RequestEntityTooLarge)
@@ -52,33 +50,11 @@ internal static class StartSignUpEndpoint
         ArgumentNullException.ThrowIfNull(http);
 
         SessionsOptions settings = options.Value;
-        ValidationFailures failures = request.Data.Attributes.Validate(settings);
-        if (failures.Any())
-        {
-            throw new ValidationException(failures);
-        }
-
-        if (!PhoneNumber.TryNormalize(
-                request.Data.Attributes.Phone,
-                settings.SupportedCountries,
-                out PhoneNumber phone,
-                out _))
-        {
-            ValidationFailures retry = new();
-            retry.Require(false, StartSignUpPointers.Phone, ValidationCodes.PhoneFormatInvalid);
-            throw new ValidationException(retry);
-        }
-
-        Locale locale = CurrentLocale();
-        StartSignUpCommand command = new(
-            phone,
-            locale,
-            request.Data.Attributes.TermsVersion,
-            request.Data.Attributes.PrivacyVersion);
+        StartSignUpCommand command = request.Data.Attributes.Validate(settings, CurrentLocale());
         StartSignUpResult result = await handler.HandleAsync(command, cancellationToken).ConfigureAwait(false);
 
-        SignUpResource resource = SignUpResources.FromStart(result);
-        JsonApiResponse<SignUpResource> document = new()
+        SignUpResource<StartSignUpResourceAttributes> resource = SignUpResources.FromStart(result);
+        JsonApiResponse<SignUpResource<StartSignUpResourceAttributes>> document = new()
         {
             Data = resource,
             Links = new JsonApiLinks { Self = resource.Links?.Self },
