@@ -17,6 +17,7 @@ using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.Sessions;
 using MoniPay.Sessions.Features.Sessions.GetCurrent;
 using MoniPay.Sessions.Features.Sessions.Refresh;
+using MoniPay.Sessions.Features.Sessions.RevokeCurrent;
 using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Features.SignUps.Get;
 using MoniPay.Sessions.Features.SignUps.Start;
@@ -209,6 +210,7 @@ public static class SessionsModule
             .RequireAuthorization(MoniPayPolicies.AuthenticatedUser);
 
         sessions.MapGetCurrentSession();
+        sessions.MapDeleteCurrentSession();
 
         return routes;
     }

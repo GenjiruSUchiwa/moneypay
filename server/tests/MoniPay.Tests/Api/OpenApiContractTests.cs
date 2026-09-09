@@ -84,16 +84,22 @@ public sealed class OpenApiContractTests(MoniPayApi api)
     }
 
     [Fact]
-    public async Task The_current_session_route_is_bearer_only_and_documents_the_read_form()
+    public async Task The_session_routes_are_bearer_only_and_the_revocation_declares_no_content()
     {
         JsonElement document = await ReadOpenApiDocumentAsync();
         JsonElement current = document.GetProperty("paths").GetProperty(SessionRoutes.Group + SessionRoutes.Current);
 
-        JsonElement requirement = Assert.Single(
-            current.GetProperty("get").GetProperty("security").EnumerateArray());
-        Assert.Equal(
-            MoniPaySecuritySchemes.Bearer,
-            Assert.Single(requirement.EnumerateObject()).Name);
+        foreach (string method in new[] { "get", "delete" })
+        {
+            JsonElement requirement = Assert.Single(
+                current.GetProperty(method).GetProperty("security").EnumerateArray());
+            Assert.Equal(
+                MoniPaySecuritySchemes.Bearer,
+                Assert.Single(requirement.EnumerateObject()).Name);
+        }
+
+        JsonElement revoked = current.GetProperty("delete").GetProperty("responses").GetProperty("204");
+        Assert.False(revoked.TryGetProperty("content", out _));
 
         JsonElement read = current.GetProperty("get").GetProperty("responses").GetProperty("200").GetProperty("content");
         Assert.Equal(
