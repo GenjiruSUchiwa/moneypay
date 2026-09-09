@@ -20,6 +20,7 @@ using MoniPay.Sessions.Features.Sessions.Refresh;
 using MoniPay.Sessions.Features.Sessions.RevokeCurrent;
 using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Features.SignUps.Get;
+using MoniPay.Sessions.Features.SignUps.ResendCode;
 using MoniPay.Sessions.Features.SignUps.Start;
 using MoniPay.Sessions.Persistence;
 using MoniPay.Sessions.Providers;
@@ -77,6 +78,7 @@ public static class SessionsModule
         // the remaining slices stay registered by the tests until their routes land.
         services.AddScoped<StartSignUpHandler>();
         services.AddScoped<GetSignUpHandler>();
+        services.AddScoped<CreateVerificationCodeDeliveryHandler>();
         services.AddScoped<GetCurrentSessionHandler>();
 
         services.AddSingleton<ExpiredCredentialCleanupService>();
@@ -197,6 +199,7 @@ public static class SessionsModule
 
         signUps.MapStartSignUp();
         signUps.MapGetSignUp();
+        signUps.MapCreateVerificationCodeDelivery();
 
         // The refresh hangs off the root: its credential travels in the body, and the group it
         // would otherwise inherit is authenticated.
