@@ -108,6 +108,19 @@ public sealed class OpenApiContractTests(MoniPayApi api)
     }
 
     [Theory]
+    [InlineData("SignUpCommandResourceOfCreatePhoneVerificationAttributes")]
+    public async Task A_sign_up_command_requires_its_named_relationship(string resourceSchema)
+    {
+        JsonElement schemas = (await ReadOpenApiDocumentAsync()).GetProperty("components").GetProperty("schemas");
+        Assert.Contains("relationships", schemas.GetProperty(resourceSchema).GetProperty("required")
+            .EnumerateArray().Select(member => member.GetString()));
+        Assert.Contains("signUp", schemas.GetProperty(nameof(SignUpRelationships)).GetProperty("required")
+            .EnumerateArray().Select(member => member.GetString()));
+        Assert.Contains("data", schemas.GetProperty(nameof(SignUpRelationship)).GetProperty("required")
+            .EnumerateArray().Select(member => member.GetString()));
+    }
+
+    [Theory]
     [InlineData(nameof(SignUpStatusValue))]
     [InlineData(nameof(CodeDeliveryValue))]
     public async Task A_string_enum_is_typed_as_a_string_in_the_contract(string schema)
