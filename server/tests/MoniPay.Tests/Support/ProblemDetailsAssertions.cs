@@ -80,6 +80,12 @@ public static class ProblemDetailsAssertions
         return await response.ReadProblemAsync(requireNoStore);
     }
 
+    public static IReadOnlyList<string> Pointers(this ProblemDetails problem)
+    {
+        JsonElement errors = Assert.IsType<JsonElement>(problem.Extensions["errors"]);
+        return [.. errors.EnumerateArray().Select(error => RequiredString(error, "pointer"))];
+    }
+
     private static string RequiredString(JsonElement document, string propertyName)
     {
         JsonElement property = document.GetProperty(propertyName);
