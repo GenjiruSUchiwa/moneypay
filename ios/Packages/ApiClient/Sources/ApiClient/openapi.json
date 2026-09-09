@@ -802,6 +802,52 @@
         ]
       }
     },
+    "/users/me": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Returns the current user profile.",
+        "operationId": "GetCurrentUser",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfUserAttributes"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/wallet": {
       "get": {
         "tags": [
@@ -1247,6 +1293,37 @@
           }
         }
       },
+      "JsonApiResponseOfJsonApiResponseResourceOfUserAttributes": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "jsonapi": {
+            "$ref": "#/components/schemas/JsonApiVersion"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiResponseResourceOfUserAttributes"
+              }
+            ]
+          },
+          "links": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiLinks"
+              }
+            ]
+          }
+        }
+      },
       "JsonApiResponseOfJsonApiResponseResourceOfVerifiedSignUpResourceAttributes": {
         "required": [
           "data"
@@ -1408,6 +1485,44 @@
           },
           "attributes": {
             "$ref": "#/components/schemas/StartSignUpResourceAttributes"
+          },
+          "relationships": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonApiRelationship"
+            }
+          },
+          "links": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiLinks"
+              }
+            ]
+          }
+        }
+      },
+      "JsonApiResponseResourceOfUserAttributes": {
+        "required": [
+          "type",
+          "id",
+          "attributes"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/UserAttributes"
           },
           "relationships": {
             "type": [
@@ -1755,6 +1870,38 @@
           }
         }
       },
+      "UserAttributes": {
+        "required": [
+          "firstName",
+          "lastName",
+          "phone",
+          "email",
+          "locale",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "VerifiedSignUpResourceAttributes": {
         "required": [
           "status",
@@ -1842,6 +1989,9 @@
     },
     {
       "name": "Sessions"
+    },
+    {
+      "name": "Users"
     },
     {
       "name": "Wallet"

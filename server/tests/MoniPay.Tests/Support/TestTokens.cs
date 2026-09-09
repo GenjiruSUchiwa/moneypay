@@ -20,28 +20,18 @@ internal static class TestTokens
         byte[]? key = null,
         string issuer = TestKeys.Issuer,
         string audience = TestKeys.Audience,
-        DateTimeOffset? expires = null)
-    {
-        SecurityTokenDescriptor descriptor = new()
-        {
-            Issuer = issuer,
-            Audience = audience,
-            NotBefore = DateTime.UtcNow.AddMinutes(-10),
-            IssuedAt = DateTime.UtcNow.AddMinutes(-10),
-            Expires = (expires ?? DateTimeOffset.UtcNow + TimeSpan.FromMinutes(5)).UtcDateTime,
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key ?? Convert.FromBase64String(TestKeys.Signing)),
-                SecurityAlgorithms.HmacSha256),
-            Claims = new Dictionary<string, object>
+        DateTimeOffset? expires = null) =>
+        BearerWithClaims(
+            new Dictionary<string, object>
             {
                 [MoniPayClaimTypes.Subject] = subject.Value.ToString(),
                 [MoniPayClaimTypes.SessionId] = sessionId.ToString(),
                 [MoniPayClaimTypes.TokenId] = Guid.CreateVersion7().ToString(),
             },
-        };
-
-        return new JsonWebTokenHandler().CreateToken(descriptor);
-    }
+            key,
+            issuer,
+            audience,
+            expires);
 
     /// <summary>A structurally valid token with no signature at all, for an <c>alg=none</c> probe.</summary>
     public static string Unsigned(UserId? subject = null)
@@ -55,5 +45,35 @@ internal static class TestTokens
         }));
 
         return $"{header}.{payload}.";
+    }
+
+    /// <summary>
+    /// A bearer token with exactly the given claims, for malformed-identity probes. The signature,
+    /// issuer, audience, and lifetime stay valid so only the identity parsing is under test.
+    /// The standard factory builds on this one, so the two cannot drift apart.
+    /// </summary>
+    public static string BearerWithClaims(
+        IReadOnlyDictionary<string, object> claims,
+        byte[]? key = null,
+        string issuer = TestKeys.Issuer,
+        string audience = TestKeys.Audience,
+        DateTimeOffset? expires = null)
+    {
+        ArgumentNullException.ThrowIfNull(claims);
+
+        SecurityTokenDescriptor descriptor = new()
+        {
+            Issuer = issuer,
+            Audience = audience,
+            NotBefore = DateTime.UtcNow.AddMinutes(-10),
+            IssuedAt = DateTime.UtcNow.AddMinutes(-10),
+            Expires = (expires ?? DateTimeOffset.UtcNow + TimeSpan.FromMinutes(5)).UtcDateTime,
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key ?? Convert.FromBase64String(TestKeys.Signing)),
+                SecurityAlgorithms.HmacSha256),
+            Claims = new Dictionary<string, object>(claims, StringComparer.Ordinal),
+        };
+
+        return new JsonWebTokenHandler().CreateToken(descriptor);
     }
 }

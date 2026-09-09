@@ -60,7 +60,7 @@ internal static class SessionResources
     public const string Self = SessionRoutes.Group + SessionRoutes.Current;
 
     /// <summary>The URI of the user a session belongs to. The Users module owns that route.</summary>
-    public const string CurrentUser = "/users/me";
+    public const string CurrentUser = MoniPayRoutes.CurrentUser;
 
     public static JsonApiResponseResource<SessionCredentialsAttributes> Credentials(SessionTokenResult session)
     {

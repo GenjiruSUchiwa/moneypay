@@ -1,16 +1,17 @@
 using System.Security.Claims;
-using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
 
-namespace MoniPay.Sessions.Features.Sessions;
+namespace MoniPay.Kernel;
 
 /// <summary>
-/// The caller's identity as the session routes read it: the <c>sid</c> and <c>sub</c> claims the
-/// bearer ticket carries, and the moment the presented access token expires. Nothing else in the
-/// ticket is trusted, and a ticket that does not name both a session and its user names no
-/// session at all — it is refused as an invalid credential, never answered for another one.
+/// The caller's identity as the bearer routes read it: the <c>sid</c> and <c>sub</c> claims the
+/// ticket carries, and the moment the presented access token expires. It lives in Kernel rather
+/// than Sessions because both Sessions and Users read the same ticket, and two parsers for one
+/// credential would drift: nothing else in the ticket is trusted, and a ticket that does not name
+/// both a session and its user names nothing at all — it is refused as an invalid credential,
+/// never answered for another one.
 /// </summary>
-internal static class SessionIdentity
+public static class SessionIdentity
 {
     public static (Guid SessionId, UserId UserId) Of(ClaimsPrincipal principal)
     {
