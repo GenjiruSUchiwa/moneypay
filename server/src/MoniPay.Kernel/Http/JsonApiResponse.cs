@@ -25,7 +25,7 @@ public sealed record JsonApiResponse<TResource>
 /// never a field inside it.
 /// </summary>
 /// <typeparam name="TAttributes">The slice-owned attributes object.</typeparam>
-public sealed record JsonApiResponseResource<TAttributes>
+public sealed record JsonApiResponseResource<TAttributes> where TAttributes : notnull
 {
     /// <summary>The resource type, a lowercase plural word such as <c>signups</c>.</summary>
     public required string Type { get; init; }
@@ -36,7 +36,8 @@ public sealed record JsonApiResponseResource<TAttributes>
     /// <summary>The slice-owned attributes. Resource identifiers do not belong here.</summary>
     public required TAttributes Attributes { get; init; }
 
-    /// <summary>Named relationships to other resources.</summary>
+    /// <summary>Named relationships to other resources. Omitted when the resource has none.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyDictionary<string, JsonApiRelationship>? Relationships { get; init; }
 
     /// <summary>Resource-level links, typically <c>self</c>.</summary>

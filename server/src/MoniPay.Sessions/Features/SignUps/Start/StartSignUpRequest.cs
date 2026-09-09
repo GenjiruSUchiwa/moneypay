@@ -14,7 +14,12 @@ internal static class StartSignUpPointers
     public const string PrivacyVersion = "/data/attributes/privacyVersion";
 }
 
-/// <summary>The attributes a start request carries. Validation runs at the edge before the handler.</summary>
+/// <summary>
+/// The attributes a start request carries. Validation runs at the edge before the handler.
+/// <c>required</c> only checks presence, so an explicit JSON null still reaches these members;
+/// <see cref="Validate"/> is their only reader and answers it with a 422 at the pointer. They stay
+/// non-nullable so the published contract keeps saying "string", which is what the client may send.
+/// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 internal sealed record StartSignUpAttributes
 {
@@ -55,7 +60,8 @@ internal sealed record StartSignUpAttributes
             throw new ValidationException(failures);
         }
 
-        return new(phone, locale, TermsVersion, PrivacyVersion);
+        // Validation proved both versions equal the published ones, so the command carries those.
+        return new(phone, locale, options.Legal.TermsVersion, options.Legal.PrivacyVersion);
     }
 
     private static bool IsCurrent(string? value, string current) =>

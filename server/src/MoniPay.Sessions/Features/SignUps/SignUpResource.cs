@@ -8,39 +8,32 @@ using MoniPay.Sessions.Providers;
 
 namespace MoniPay.Sessions.Features.SignUps;
 
-/// <summary>The documented <c>status</c> values of the <c>signups</c> resource.</summary>
+/// <summary>
+/// The documented <c>status</c> values of the <c>signups</c> resource. The member names are the
+/// wire strings; the converter on this enum is the single definition of them.
+/// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter<SignUpStatusValue>))]
 internal enum SignUpStatusValue
 {
-    [JsonStringEnumMemberName(SignUpStatuses.CodePending)]
+    [JsonStringEnumMemberName("codePending")]
     CodePending,
 
-    [JsonStringEnumMemberName(SignUpStatuses.PhoneVerified)]
+    [JsonStringEnumMemberName("phoneVerified")]
     PhoneVerified,
 
-    [JsonStringEnumMemberName(SignUpStatuses.Completed)]
+    [JsonStringEnumMemberName("completed")]
     Completed,
 
-    [JsonStringEnumMemberName(SignUpStatuses.Locked)]
+    [JsonStringEnumMemberName("locked")]
     Locked,
 
-    [JsonStringEnumMemberName(SignUpStatuses.Expired)]
+    [JsonStringEnumMemberName("expired")]
     Expired,
 }
 
-/// <summary>The documented <c>status</c> values of the <c>signups</c> resource.</summary>
+/// <summary>Maps the domain states onto the wire values, so the two can evolve independently.</summary>
 internal static class SignUpStatuses
 {
-    public const string CodePending = "codePending";
-
-    public const string PhoneVerified = "phoneVerified";
-
-    public const string Completed = "completed";
-
-    public const string Locked = "locked";
-
-    public const string Expired = "expired";
-
     public static SignUpStatusValue From(SignUpStatus status) => status switch
     {
         SignUpStatus.CodePending => SignUpStatusValue.CodePending,
@@ -56,30 +49,22 @@ internal static class SignUpStatuses
 [JsonConverter(typeof(JsonStringEnumConverter<CodeDeliveryValue>))]
 internal enum CodeDeliveryValue
 {
-    [JsonStringEnumMemberName(CodeDeliveryValues.Queued)]
+    [JsonStringEnumMemberName("queued")]
     Queued,
 
-    [JsonStringEnumMemberName(CodeDeliveryValues.Sent)]
+    [JsonStringEnumMemberName("sent")]
     Sent,
 
-    [JsonStringEnumMemberName(CodeDeliveryValues.Failed)]
+    [JsonStringEnumMemberName("failed")]
     Failed,
 
-    [JsonStringEnumMemberName(CodeDeliveryValues.Expired)]
+    [JsonStringEnumMemberName("expired")]
     Expired,
 }
 
-/// <summary>The documented <c>codeDelivery</c> values of the <c>signups</c> resource.</summary>
+/// <summary>Maps the domain delivery states onto the wire values.</summary>
 internal static class CodeDeliveryValues
 {
-    public const string Queued = "queued";
-
-    public const string Sent = "sent";
-
-    public const string Failed = "failed";
-
-    public const string Expired = "expired";
-
     public static CodeDeliveryValue From(CodeDeliveryState delivery) => delivery switch
     {
         CodeDeliveryState.Queued => CodeDeliveryValue.Queued,
@@ -128,29 +113,17 @@ internal sealed record ReadSignUpResourceAttributes
     public required DateTimeOffset SignUpExpiresAt { get; init; }
 }
 
-/// <summary>The <c>signups</c> resource. The identifier lives in <c>id</c> only, never in the attributes.</summary>
-internal sealed record SignUpResource<TAttributes> where TAttributes : notnull
-{
-    public required string Type { get; init; }
-
-    public required string Id { get; init; }
-
-    public required TAttributes Attributes { get; init; }
-
-    public JsonApiLinks? Links { get; init; }
-}
-
 /// <summary>Projects handler results onto the <c>signups</c> resource and its links.</summary>
 internal static class SignUpResources
 {
     public static string Self(SignUpId signUpId) =>
         FormattableString.Invariant($"{SignUpRoutes.Group}/{signUpId.Value}");
 
-    public static SignUpResource<StartSignUpResourceAttributes> FromStart(StartSignUpResult result)
+    public static JsonApiResponseResource<StartSignUpResourceAttributes> FromStart(StartSignUpResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        return new SignUpResource<StartSignUpResourceAttributes>
+        return new JsonApiResponseResource<StartSignUpResourceAttributes>
         {
             Type = SignUpResourceTypes.SignUps,
             Id = result.SignUpId.Value.ToString(),
@@ -167,11 +140,11 @@ internal static class SignUpResources
         };
     }
 
-    public static SignUpResource<ReadSignUpResourceAttributes> FromView(SignUpId signUpId, SignUpView view)
+    public static JsonApiResponseResource<ReadSignUpResourceAttributes> FromView(SignUpId signUpId, SignUpView view)
     {
         ArgumentNullException.ThrowIfNull(view);
 
-        return new SignUpResource<ReadSignUpResourceAttributes>
+        return new JsonApiResponseResource<ReadSignUpResourceAttributes>
         {
             Type = SignUpResourceTypes.SignUps,
             Id = signUpId.Value.ToString(),

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -8,10 +9,12 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MoniPay.Api;
+using MoniPay.Api.Errors;
 using MoniPay.Api.Hosting;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
 using MoniPay.Kernel.Http;
+using MoniPay.Kernel.Validation;
 using MoniPay.Sessions;
 using MoniPay.Sessions.Features.SignUps;
 using MoniPay.Sessions.Features.SignUps.Start;
@@ -35,15 +38,15 @@ public sealed class StartSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(MoniPayMediaTypes.JsonApi, response.Content.Headers.ContentType?.ToString());
         AssertNoStore(response);
 
-        JsonElement document = await ReadSuccessAsync(response);
+        JsonElement document = await JsonApiAssertions.ReadJsonApiAsync(response);
         JsonElement data = document.GetProperty("data");
         Assert.Equal(SignUpResourceTypes.SignUps, data.GetProperty("type").GetString());
         string id = data.GetProperty("id").GetString()!;
         Assert.True(Guid.TryParse(id, out _));
 
         JsonElement attributes = data.GetProperty("attributes");
-        Assert.Equal(SignUpStatuses.CodePending, attributes.GetProperty("status").GetString());
-        Assert.Equal(CodeDeliveryValues.Queued, attributes.GetProperty("codeDelivery").GetString());
+        Assert.Equal(JsonApiAssertions.Wire(SignUpStatusValue.CodePending), attributes.GetProperty("status").GetString());
+        Assert.Equal(JsonApiAssertions.Wire(CodeDeliveryValue.Queued), attributes.GetProperty("codeDelivery").GetString());
         Assert.False(string.IsNullOrWhiteSpace(attributes.GetProperty("signUpToken").GetString()));
         Assert.False(attributes.TryGetProperty("registrationToken", out _));
         Assert.False(string.IsNullOrWhiteSpace(attributes.GetProperty("codeExpiresAt").GetString()));
@@ -65,18 +68,24 @@ public sealed class StartSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
     }
 
     [Theory]
-    [InlineData("+237699123456")]
-    [InlineData("237 699123456")]
-    [InlineData("23769912")]
-    [InlineData("999699123456")]
-    [InlineData("2376991234567890123")]
-    public async Task An_invalid_phone_is_422_at_the_phone_pointer(string phone)
+    [InlineData("+237699123456", ValidationCodes.PhoneFormatInvalid)]
+    [InlineData("237 699123456", ValidationCodes.PhoneFormatInvalid)]
+    [InlineData("23769912", ValidationCodes.PhoneCountryUnsupported)]
+    [InlineData("999699123456", ValidationCodes.PhoneCountryUnsupported)]
+    [InlineData("2376991234567890123", ValidationCodes.PhoneFormatInvalid)]
+    public async Task An_invalid_phone_is_422_at_the_phone_pointer_with_its_code(string phone, string code)
     {
         using StringContent body = SignUpFlow.StartBody(phone);
 
         using HttpResponseMessage response = await SignUpFlow.PostStartAsync(Client, body);
 
-        await AssertValidationAsync(response, StartSignUpPointers.Phone);
+        // The code never reaches the wire; its localized detail does, so the mapping is asserted through it.
+        string detail = ExpectedDetail(code);
+        Microsoft.AspNetCore.Mvc.ProblemDetails problem = await AssertValidationAsync(response, StartSignUpPointers.Phone);
+        Assert.Contains(
+            ProblemErrors(problem).EnumerateArray(),
+            error => error.GetProperty("pointer").GetString() == StartSignUpPointers.Phone
+                && error.GetProperty("detail").GetString() == detail);
     }
 
     [Theory]
@@ -123,12 +132,15 @@ public sealed class StartSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
 
     [Theory]
     [InlineData(
+        """{"data":{"type":"signups","attributes":{"phone":null,"termsVersion":"terms-2026-08","privacyVersion":"2026-08"}}}""",
+        StartSignUpPointers.Phone)]
+    [InlineData(
         """{"data":{"type":"signups","attributes":{"phone":"237699123456","termsVersion":null,"privacyVersion":"2026-08"}}}""",
         StartSignUpPointers.TermsVersion)]
     [InlineData(
         """{"data":{"type":"signups","attributes":{"phone":"237699123456","termsVersion":"terms-2026-08","privacyVersion":null}}}""",
         StartSignUpPointers.PrivacyVersion)]
-    public async Task An_explicitly_null_legal_version_is_422_at_its_pointer(string json, string pointer)
+    public async Task An_explicitly_null_attribute_is_422_at_its_pointer(string json, string pointer)
     {
         using StringContent body = JsonBody(json);
 
@@ -319,20 +331,31 @@ public sealed class StartSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal("no-cache", Assert.Single(pragma!));
     }
 
-    private static async Task<JsonElement> ReadSuccessAsync(HttpResponseMessage response)
+    /// <summary>The detail the API answers for a validation code in its default culture, French.</summary>
+    private string ExpectedDetail(string code)
     {
-        JsonElement document = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
-        Assert.Equal(JsonApiVersion.Current, document.GetProperty("jsonapi").GetProperty("version").GetString());
-
-        return document;
+        CultureInfo previous = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("fr");
+        try
+        {
+            return Api.Services.GetRequiredService<MoniPayProblemText>().FailureDetail(code);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
     }
 
-    private static async Task AssertValidationAsync(HttpResponseMessage response, string pointer)
+    private static async Task<Microsoft.AspNetCore.Mvc.ProblemDetails> AssertValidationAsync(
+        HttpResponseMessage response,
+        string pointer)
     {
         Microsoft.AspNetCore.Mvc.ProblemDetails problem =
             await response.ReadProblemAsync(HttpStatusCode.UnprocessableEntity);
         Assert.Equal(MoniPayErrorTypes.Validation.Urn, problem.Type);
         Assert.Contains(pointer, PointersOf(problem));
+
+        return problem;
     }
 
     private static IReadOnlyList<string> PointersOf(Microsoft.AspNetCore.Mvc.ProblemDetails problem) =>

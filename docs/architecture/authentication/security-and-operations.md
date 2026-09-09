@@ -125,6 +125,8 @@ Return `429 Too Many Requests` with `Retry-After`. Do not say which limit fired.
 
 Before phone verification, return the same start response for registered and unregistered phones.
 
+One transient exception is accepted: inside the resend cooldown, a start for a phone with an in-flight sign-up answers `429` (`signup-resend-too-soon`) where a fresh or registered phone answers `202`. The window is 60 seconds and only reveals that someone started a sign-up for that phone moments ago. The enumeration-resistance test pins this behavior.
+
 If rate limits permit, send the same verification-code message for registered and unregistered phones.
 
 After successful phone verification, the API can return `phone-already-registered`. The caller proved control of that phone.

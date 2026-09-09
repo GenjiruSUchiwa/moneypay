@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
@@ -22,25 +21,31 @@ public sealed class EnumerationResistanceTests(MoniPayApi api) : MoniPayApiTest(
 
         try
         {
-            (HttpStatusCode inflightStartStatus, JsonElement inflightStart) = await StartAsync(inflight);
-            Assert.Equal(HttpStatusCode.Accepted, inflightStartStatus);
-            string inflightId = IdOf(inflightStart);
+            string inflightId = JsonApiAssertions.IdOf(await StartAsync(inflight));
+
+            // Inside the resend cooldown an in-flight phone answers 429 where the others answer
+            // 202. That transient oracle is accepted and documented; the test pins it so a change
+            // to the trade-off is deliberate.
+            using (StringContent tooSoon = SignUpFlow.StartBody(inflight.Value))
+            using (HttpResponseMessage cooldown = await SignUpFlow.PostStartAsync(Client, tooSoon))
+            {
+                Microsoft.AspNetCore.Mvc.ProblemDetails problem =
+                    await cooldown.ReadProblemAsync(HttpStatusCode.TooManyRequests);
+                Assert.Equal(MoniPayErrorTypes.SignUpResendTooSoon.Urn, problem.Type);
+            }
 
             Api.Time.Advance(TimeSpan.FromSeconds(61));
 
-            (HttpStatusCode firstStatus, JsonElement first) = await StartAsync(fresh);
-            (HttpStatusCode secondStatus, JsonElement second) = await StartAsync(inflight);
-            (HttpStatusCode thirdStatus, JsonElement third) = await StartAsync(registered);
+            JsonElement first = await StartAsync(fresh);
+            JsonElement second = await StartAsync(inflight);
+            JsonElement third = await StartAsync(registered);
 
-            Assert.Equal(HttpStatusCode.Accepted, firstStatus);
-            Assert.Equal(HttpStatusCode.Accepted, secondStatus);
-            Assert.Equal(HttpStatusCode.Accepted, thirdStatus);
+            string codePending = JsonApiAssertions.Wire(SignUpStatusValue.CodePending);
+            Assert.Equal(codePending, JsonApiAssertions.StatusOf(first));
+            Assert.Equal(codePending, JsonApiAssertions.StatusOf(second));
+            Assert.Equal(codePending, JsonApiAssertions.StatusOf(third));
 
-            Assert.Equal(SignUpStatuses.CodePending, StatusOf(first));
-            Assert.Equal(SignUpStatuses.CodePending, StatusOf(second));
-            Assert.Equal(SignUpStatuses.CodePending, StatusOf(third));
-
-            Assert.Equal(inflightId, IdOf(second));
+            Assert.Equal(inflightId, JsonApiAssertions.IdOf(second));
             Assert.Equal(PublicShape(first), PublicShape(second));
             Assert.Equal(PublicShape(first), PublicShape(third));
         }
@@ -75,23 +80,15 @@ public sealed class EnumerationResistanceTests(MoniPayApi api) : MoniPayApiTest(
         }
     }
 
-    private async Task<(HttpStatusCode Status, JsonElement Document)> StartAsync(PhoneNumber phone)
+    private async Task<JsonElement> StartAsync(PhoneNumber phone)
     {
         using StringContent body = SignUpFlow.StartBody(phone.Value);
         using HttpResponseMessage response = await SignUpFlow.PostStartAsync(Client, body);
 
-        JsonElement document = await response.Content.ReadFromJsonAsync<JsonElement>(Cancellation);
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
 
-        return (response.StatusCode, document);
+        return await response.ReadJsonApiAsync();
     }
-
-    private static string StatusOf(JsonElement document) =>
-        document.GetProperty("data").GetProperty("attributes").GetProperty("status").GetString()
-        ?? throw new InvalidOperationException("The sign-up status was not a JSON string.");
-
-    private static string IdOf(JsonElement document) =>
-        document.GetProperty("data").GetProperty("id").GetString()
-        ?? throw new InvalidOperationException("The sign-up identifier was not a JSON string.");
 
     private static IReadOnlyList<(string Name, JsonValueKind Kind)> PublicShape(JsonElement document)
     {
