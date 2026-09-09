@@ -12,8 +12,10 @@ so write it as a user-facing changelog entry. The pr-title workflow enforces it.
 
 ## Why
 
-<!-- The problem or the decision behind it. Link the issue: Closes #123
-     If an ADR covers this, link it instead of re-arguing the decision here. -->
+<!-- Required: replace ISSUE_NUMBER below with the issue number. Keep the closing reference on its own line.
+     Explain the problem or decision. Link an ADR if one covers it. -->
+
+Closes #ISSUE_NUMBER
 
 ## How
 

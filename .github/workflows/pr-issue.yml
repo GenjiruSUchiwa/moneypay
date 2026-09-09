@@ -1,0 +1,35 @@
+name: pr-issue
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions: {}
+
+concurrency:
+  group: pr-issue-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  linked-issue:
+    name: linked issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require an issue closing reference
+        shell: python
+        run: |
+          import json
+          import os
+          import re
+          import sys
+
+          with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
+              body = json.load(event_file)["pull_request"]["body"] or ""
+
+          # Template examples and code samples do not link an issue for closure.
+          body = re.sub(r"<!--.*?(?:-->|\Z)", "", body, flags=re.S)
+          body = re.sub(r"(?ms)^\s*(`{3,}|~{3,}).*?^\s*\1[^\n]*(?:\n|\Z)", "", body)
+          body = re.sub(r"`+[^`]*`+", "", body)
+          if not re.search(r"(?im)^\s*Closes #[1-9][0-9]*\s*[.!]?\s*$", body):
+              print("::error::Add a standalone line 'Closes #123' to the PR description, using the issue number. Comments and code samples do not count.")
+              sys.exit(1)
