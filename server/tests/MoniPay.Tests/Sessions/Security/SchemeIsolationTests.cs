@@ -1,5 +1,6 @@
 using System.Net;
 using MoniPay.Kernel;
+using MoniPay.Kernel.Http;
 using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.SignUps.Start;
 using MoniPay.Sessions.Features.SignUps.VerifyPhone;
@@ -81,6 +82,95 @@ public sealed class SchemeIsolationTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(scheme, response.Headers.WwwAuthenticate.ToString());
     }
 
+    [Fact]
+    public async Task The_sign_up_command_routes_challenge_with_the_sign_up_scheme()
+    {
+        PhoneNumber phone = new(TestPhones.Next());
+        StartSignUpResult started = await Api.StartSignUpAsync(phone);
+        using HttpClient client = Api.CreateClient();
+
+        foreach (string route in new[]
+        {
+            SignUpFlow.ResendUrl(started.SignUpId),
+            SignUpFlow.VerifyUrl(started.SignUpId),
+        })
+        {
+            using HttpResponseMessage response = await client.PostAsync(route, null, Cancellation);
+
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+            Assert.Equal(SessionsSchemes.SignUp, response.Headers.WwwAuthenticate.ToString());
+        }
+    }
+
+    [Fact]
+    public async Task The_completion_route_challenges_with_the_registration_scheme()
+    {
+        StartSignUpResult started = await Api.StartSignUpAsync(new PhoneNumber(TestPhones.Next()));
+        using HttpClient client = Api.CreateClient();
+
+        using HttpResponseMessage response = await client.PostAsync(
+            CompletionFlow.CompleteUrl(started.SignUpId),
+            null,
+            Cancellation);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(SessionsSchemes.Registration, response.Headers.WwwAuthenticate.ToString());
+    }
+
+    [Fact]
+    public async Task A_bearer_credential_does_not_open_the_sign_up_command_routes()
+    {
+        PhoneNumber phone = new(TestPhones.Next());
+        StartSignUpResult started = await Api.StartSignUpAsync(phone);
+        VerifiedSignUp verified = await Api.StartVerifiedAsync();
+        OpenedSession session = await Api.CreateSessionAsync();
+        string bearer = TestTokens.Bearer(session.Session.UserId, session.Session.SessionId);
+        using HttpClient client = Api.CreateClient();
+
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            await PostAsync(client, SignUpFlow.VerifyUrl(started.SignUpId), MoniPayHeaders.Bearer, bearer));
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            await PostAsync(
+                client,
+                CompletionFlow.CompleteUrl(verified.Started.SignUpId),
+                MoniPayHeaders.Bearer,
+                bearer));
+    }
+
+    [Fact]
+    public async Task A_sign_up_credential_does_not_open_the_completion_route()
+    {
+        PhoneNumber phone = new(TestPhones.Next());
+        StartSignUpResult started = await Api.StartSignUpAsync(phone);
+        using HttpClient client = Api.CreateClient();
+
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            await PostAsync(
+                client,
+                CompletionFlow.CompleteUrl(started.SignUpId),
+                SessionsSchemes.SignUp,
+                started.SignUpToken));
+    }
+
+    private static async Task<HttpStatusCode> PostAsync(
+        HttpClient client,
+        string route,
+        string scheme,
+        string credential)
+    {
+        using HttpRequestMessage request = new(HttpMethod.Post, route)
+        {
+            Content = new StringContent(string.Empty),
+        };
+        request.Headers.Authorization = new(scheme, credential);
+        using HttpResponseMessage response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        return response.StatusCode;
+    }
+
     private async Task<(SignUpId SignUpId, string RegistrationToken)> VerifiedSignUpAsync()
     {
         PhoneNumber phone = new(TestPhones.Next());
@@ -100,4 +190,5 @@ public sealed class SchemeIsolationTests(MoniPayApi api) : MoniPayApiTest(api)
     private Task<SessionTokenResult> CreateSessionAsync() =>
         Api.InScopeAsync<SessionTokenService, SessionTokenResult>((sessions, cancellationToken) =>
             sessions.CreateAsync(UserId.New(), Guid.CreateVersion7(), cancellationToken));
+
 }
