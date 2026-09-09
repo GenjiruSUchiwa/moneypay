@@ -391,6 +391,153 @@
         ]
       }
     },
+    "/signups/{signUpId}/phone-verifications": {
+      "post": {
+        "tags": [
+          "SignUps"
+        ],
+        "summary": "Checks the verification code and issues the registration credential.",
+        "operationId": "CreatePhoneVerification",
+        "parameters": [
+          {
+            "name": "signUpId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/vnd.api+json": {
+              "schema": {
+                "$ref": "#/components/schemas/JsonApiRequestOfJsonApiRequestResourceOfCreatePhoneVerificationAttributes"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.api+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JsonApiResponseOfJsonApiResponseResourceOfVerifiedSignUpResourceAttributes"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "406": {
+            "description": "Not Acceptable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Gone",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload Too Large",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported Media Type",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "SignUp": [ ]
+          }
+        ]
+      }
+    },
     "/signups/{signUpId}/verification-code-deliveries": {
       "post": {
         "tags": [
@@ -550,6 +697,18 @@
         ],
         "type": "string"
       },
+      "CreatePhoneVerificationAttributes": {
+        "required": [
+          "verificationCode"
+        ],
+        "type": "object",
+        "properties": {
+          "verificationCode": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateSessionRefreshAttributes": {
         "required": [
           "refreshToken",
@@ -626,6 +785,25 @@
         },
         "additionalProperties": false
       },
+      "JsonApiRequestOfJsonApiRequestResourceOfCreatePhoneVerificationAttributes": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiRequestResourceOfCreatePhoneVerificationAttributes"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
       "JsonApiRequestOfJsonApiRequestResourceOfCreateSessionRefreshAttributes": {
         "required": [
           "data"
@@ -660,6 +838,38 @@
                 "$ref": "#/components/schemas/JsonApiRequestResourceOfStartSignUpAttributes"
               }
             ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "JsonApiRequestResourceOfCreatePhoneVerificationAttributes": {
+        "required": [
+          "type",
+          "attributes"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "attributes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CreatePhoneVerificationAttributes"
+              }
+            ]
+          },
+          "relationships": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonApiRelationship"
+            }
           }
         },
         "additionalProperties": false
@@ -868,6 +1078,37 @@
           }
         }
       },
+      "JsonApiResponseOfJsonApiResponseResourceOfVerifiedSignUpResourceAttributes": {
+        "required": [
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "jsonapi": {
+            "$ref": "#/components/schemas/JsonApiVersion"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiResponseResourceOfVerifiedSignUpResourceAttributes"
+              }
+            ]
+          },
+          "links": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiLinks"
+              }
+            ]
+          }
+        }
+      },
       "JsonApiResponseResourceOfReadSessionAttributes": {
         "required": [
           "type",
@@ -998,6 +1239,44 @@
           },
           "attributes": {
             "$ref": "#/components/schemas/StartSignUpResourceAttributes"
+          },
+          "relationships": {
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonApiRelationship"
+            }
+          },
+          "links": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonApiLinks"
+              }
+            ]
+          }
+        }
+      },
+      "JsonApiResponseResourceOfVerifiedSignUpResourceAttributes": {
+        "required": [
+          "type",
+          "id",
+          "attributes"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/VerifiedSignUpResourceAttributes"
           },
           "relationships": {
             "type": [
@@ -1212,6 +1491,26 @@
           "canResendAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "signUpExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "VerifiedSignUpResourceAttributes": {
+        "required": [
+          "status",
+          "registrationToken",
+          "signUpExpiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/SignUpStatusValue"
+          },
+          "registrationToken": {
+            "type": "string"
           },
           "signUpExpiresAt": {
             "type": "string",
