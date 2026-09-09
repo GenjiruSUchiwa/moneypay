@@ -74,4 +74,72 @@
     <value>Le jeton de session est invalide ou expiré.</value>
     <comment>Title of the 401 problem the bearer scheme challenges with.</comment>
   </data>
+  <data name="signup-state-invalid" xml:space="preserve">
+    <value>L'inscription n'est pas dans un état qui permet cette action.</value>
+    <comment>Title of the 409 problem a sign-up guard refuses with.</comment>
+  </data>
+  <data name="verification-code-invalid" xml:space="preserve">
+    <value>Le code de vérification est incorrect.</value>
+    <comment>Title of the 422 problem a wrong verification code refuses with.</comment>
+  </data>
+  <data name="verification-code-expired" xml:space="preserve">
+    <value>Le code de vérification a expiré.</value>
+    <comment>Title of the 410 problem an expired verification code refuses with.</comment>
+  </data>
+  <data name="signup-expired" xml:space="preserve">
+    <value>L'inscription a expiré.</value>
+    <comment>Title of the 410 problem an expired sign-up refuses with.</comment>
+  </data>
+  <data name="signup-attempt-limit" xml:space="preserve">
+    <value>La limite de tentatives de vérification est atteinte.</value>
+    <comment>Title of the 429 problem the attempt counter refuses with.</comment>
+  </data>
+  <data name="signup-resend-limit" xml:space="preserve">
+    <value>La limite de renvois du code de vérification est atteinte.</value>
+    <comment>Title of the 429 problem the resend counter refuses with.</comment>
+  </data>
+  <data name="signup-resend-too-soon" xml:space="preserve">
+    <value>Le code de vérification a été redemandé trop tôt.</value>
+    <comment>Title of the 429 problem the resend cooldown refuses with.</comment>
+  </data>
+  <data name="refresh-token-reused" xml:space="preserve">
+    <value>Le jeton de rafraîchissement a déjà été utilisé.</value>
+    <comment>Title of the 401 problem a replayed refresh token refuses with.</comment>
+  </data>
+  <data name="verification-delivery-unavailable" xml:space="preserve">
+    <value>Le code de vérification n'a pas pu être envoyé.</value>
+    <comment>Title of the 503 problem an undeliverable verification code refuses with.</comment>
+  </data>
+  <data name="phone-format-invalid" xml:space="preserve">
+    <value>Le format du numéro de téléphone est invalide.</value>
+    <comment>Validation detail for ValidationCodes.PhoneFormatInvalid.</comment>
+  </data>
+  <data name="phone-country-unsupported" xml:space="preserve">
+    <value>Le pays du numéro de téléphone n'est pas pris en charge.</value>
+    <comment>Validation detail for ValidationCodes.PhoneCountryUnsupported.</comment>
+  </data>
+  <data name="legal-version-outdated" xml:space="preserve">
+    <value>La version acceptée du document juridique n'est plus à jour.</value>
+    <comment>Validation detail for ValidationCodes.LegalVersionOutdated.</comment>
+  </data>
+  <data name="verification-code-format-invalid" xml:space="preserve">
+    <value>Le format du code de vérification est invalide.</value>
+    <comment>Validation detail for ValidationCodes.VerificationCodeFormatInvalid.</comment>
+  </data>
+  <data name="person-name-invalid" xml:space="preserve">
+    <value>Le nom est invalide.</value>
+    <comment>Validation detail for ValidationCodes.PersonNameInvalid.</comment>
+  </data>
+  <data name="email-invalid" xml:space="preserve">
+    <value>L'adresse e-mail est invalide.</value>
+    <comment>Validation detail for ValidationCodes.EmailInvalid.</comment>
+  </data>
+  <data name="device-id-required" xml:space="preserve">
+    <value>L'identifiant de l'appareil est obligatoire.</value>
+    <comment>Validation detail for ValidationCodes.DeviceIdRequired.</comment>
+  </data>
+  <data name="refresh-token-format-invalid" xml:space="preserve">
+    <value>Le format du jeton de rafraîchissement est invalide.</value>
+    <comment>Validation detail for ValidationCodes.RefreshTokenFormatInvalid.</comment>
+  </data>
 </root>

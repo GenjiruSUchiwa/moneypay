@@ -74,4 +74,72 @@
     <value>The session token is invalid or expired.</value>
     <comment>Title of the 401 problem the bearer scheme challenges with.</comment>
   </data>
+  <data name="signup-state-invalid" xml:space="preserve">
+    <value>The sign-up is not in a state that allows this action.</value>
+    <comment>Title of the 409 problem a sign-up guard refuses with.</comment>
+  </data>
+  <data name="verification-code-invalid" xml:space="preserve">
+    <value>The verification code is incorrect.</value>
+    <comment>Title of the 422 problem a wrong verification code refuses with.</comment>
+  </data>
+  <data name="verification-code-expired" xml:space="preserve">
+    <value>The verification code has expired.</value>
+    <comment>Title of the 410 problem an expired verification code refuses with.</comment>
+  </data>
+  <data name="signup-expired" xml:space="preserve">
+    <value>The sign-up has expired.</value>
+    <comment>Title of the 410 problem an expired sign-up refuses with.</comment>
+  </data>
+  <data name="signup-attempt-limit" xml:space="preserve">
+    <value>The verification attempt limit was reached.</value>
+    <comment>Title of the 429 problem the attempt counter refuses with.</comment>
+  </data>
+  <data name="signup-resend-limit" xml:space="preserve">
+    <value>The verification-code resend limit was reached.</value>
+    <comment>Title of the 429 problem the resend counter refuses with.</comment>
+  </data>
+  <data name="signup-resend-too-soon" xml:space="preserve">
+    <value>The verification code was requested again too soon.</value>
+    <comment>Title of the 429 problem the resend cooldown refuses with.</comment>
+  </data>
+  <data name="refresh-token-reused" xml:space="preserve">
+    <value>The refresh token has already been used.</value>
+    <comment>Title of the 401 problem a replayed refresh token refuses with.</comment>
+  </data>
+  <data name="verification-delivery-unavailable" xml:space="preserve">
+    <value>The verification code could not be sent.</value>
+    <comment>Title of the 503 problem an undeliverable verification code refuses with.</comment>
+  </data>
+  <data name="phone-format-invalid" xml:space="preserve">
+    <value>The phone number format is invalid.</value>
+    <comment>Validation detail for ValidationCodes.PhoneFormatInvalid.</comment>
+  </data>
+  <data name="phone-country-unsupported" xml:space="preserve">
+    <value>The phone country is not supported.</value>
+    <comment>Validation detail for ValidationCodes.PhoneCountryUnsupported.</comment>
+  </data>
+  <data name="legal-version-outdated" xml:space="preserve">
+    <value>The accepted legal document version is not current.</value>
+    <comment>Validation detail for ValidationCodes.LegalVersionOutdated.</comment>
+  </data>
+  <data name="verification-code-format-invalid" xml:space="preserve">
+    <value>The verification code format is invalid.</value>
+    <comment>Validation detail for ValidationCodes.VerificationCodeFormatInvalid.</comment>
+  </data>
+  <data name="person-name-invalid" xml:space="preserve">
+    <value>The name is invalid.</value>
+    <comment>Validation detail for ValidationCodes.PersonNameInvalid.</comment>
+  </data>
+  <data name="email-invalid" xml:space="preserve">
+    <value>The email address is invalid.</value>
+    <comment>Validation detail for ValidationCodes.EmailInvalid.</comment>
+  </data>
+  <data name="device-id-required" xml:space="preserve">
+    <value>The device identifier is required.</value>
+    <comment>Validation detail for ValidationCodes.DeviceIdRequired.</comment>
+  </data>
+  <data name="refresh-token-format-invalid" xml:space="preserve">
+    <value>The refresh token format is invalid.</value>
+    <comment>Validation detail for ValidationCodes.RefreshTokenFormatInvalid.</comment>
+  </data>
 </root>
