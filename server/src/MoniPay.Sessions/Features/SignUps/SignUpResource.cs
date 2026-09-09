@@ -9,6 +9,26 @@ using MoniPay.Sessions.Providers;
 namespace MoniPay.Sessions.Features.SignUps;
 
 /// <summary>The documented <c>status</c> values of the <c>signups</c> resource.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<SignUpStatusValue>))]
+internal enum SignUpStatusValue
+{
+    [JsonStringEnumMemberName(SignUpStatuses.CodePending)]
+    CodePending,
+
+    [JsonStringEnumMemberName(SignUpStatuses.PhoneVerified)]
+    PhoneVerified,
+
+    [JsonStringEnumMemberName(SignUpStatuses.Completed)]
+    Completed,
+
+    [JsonStringEnumMemberName(SignUpStatuses.Locked)]
+    Locked,
+
+    [JsonStringEnumMemberName(SignUpStatuses.Expired)]
+    Expired,
+}
+
+/// <summary>The documented <c>status</c> values of the <c>signups</c> resource.</summary>
 internal static class SignUpStatuses
 {
     public const string CodePending = "codePending";
@@ -21,15 +41,32 @@ internal static class SignUpStatuses
 
     public const string Expired = "expired";
 
-    public static string From(SignUpStatus status) => status switch
+    public static SignUpStatusValue From(SignUpStatus status) => status switch
     {
-        SignUpStatus.CodePending => CodePending,
-        SignUpStatus.PhoneVerified => PhoneVerified,
-        SignUpStatus.Completed => Completed,
-        SignUpStatus.Locked => Locked,
-        SignUpStatus.Expired => Expired,
+        SignUpStatus.CodePending => SignUpStatusValue.CodePending,
+        SignUpStatus.PhoneVerified => SignUpStatusValue.PhoneVerified,
+        SignUpStatus.Completed => SignUpStatusValue.Completed,
+        SignUpStatus.Locked => SignUpStatusValue.Locked,
+        SignUpStatus.Expired => SignUpStatusValue.Expired,
         _ => throw new ArgumentOutOfRangeException(nameof(status), status, null),
     };
+}
+
+/// <summary>The documented <c>codeDelivery</c> values of the <c>signups</c> resource.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<CodeDeliveryValue>))]
+internal enum CodeDeliveryValue
+{
+    [JsonStringEnumMemberName(CodeDeliveryValues.Queued)]
+    Queued,
+
+    [JsonStringEnumMemberName(CodeDeliveryValues.Sent)]
+    Sent,
+
+    [JsonStringEnumMemberName(CodeDeliveryValues.Failed)]
+    Failed,
+
+    [JsonStringEnumMemberName(CodeDeliveryValues.Expired)]
+    Expired,
 }
 
 /// <summary>The documented <c>codeDelivery</c> values of the <c>signups</c> resource.</summary>
@@ -43,50 +80,62 @@ internal static class CodeDeliveryValues
 
     public const string Expired = "expired";
 
-    public static string From(CodeDeliveryState delivery) => delivery switch
+    public static CodeDeliveryValue From(CodeDeliveryState delivery) => delivery switch
     {
-        CodeDeliveryState.Queued => Queued,
-        CodeDeliveryState.Sent => Sent,
-        CodeDeliveryState.Failed => Failed,
-        CodeDeliveryState.Expired => Expired,
+        CodeDeliveryState.Queued => CodeDeliveryValue.Queued,
+        CodeDeliveryState.Sent => CodeDeliveryValue.Sent,
+        CodeDeliveryState.Failed => CodeDeliveryValue.Failed,
+        CodeDeliveryState.Expired => CodeDeliveryValue.Expired,
         _ => throw new ArgumentOutOfRangeException(nameof(delivery), delivery, null),
     };
 }
 
 /// <summary>
-/// The attributes of the <c>signups</c> resource. One record serves the start and the read: optional
-/// members are omitted when null, so a creation response carries its one-time token while a read carries none.
+/// The attributes returned by the start operation. Every member is present because the operation
+/// has created the sign-up and queued its first code.
 /// </summary>
-internal sealed record SignUpAttributes
+internal sealed record StartSignUpResourceAttributes
 {
-    public required string Status { get; init; }
+    public required SignUpStatusValue Status { get; init; }
+
+    public required CodeDeliveryValue CodeDelivery { get; init; }
+
+    public required string SignUpToken { get; init; }
+
+    public required DateTimeOffset CodeExpiresAt { get; init; }
+
+    public required DateTimeOffset CanResendAt { get; init; }
+
+    public required DateTimeOffset SignUpExpiresAt { get; init; }
+}
+
+/// <summary>
+/// The attributes returned by the read operation. A delivery or code expiry can be absent after
+/// the workflow moves past the code stage, so those null members remain omitted on the wire.
+/// </summary>
+internal sealed record ReadSignUpResourceAttributes
+{
+    public required SignUpStatusValue Status { get; init; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? CodeDelivery { get; init; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? SignUpToken { get; init; }
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? RegistrationToken { get; init; }
+    public CodeDeliveryValue? CodeDelivery { get; init; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public DateTimeOffset? CodeExpiresAt { get; init; }
 
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public DateTimeOffset? CanResendAt { get; init; }
+    public required DateTimeOffset CanResendAt { get; init; }
 
     public required DateTimeOffset SignUpExpiresAt { get; init; }
 }
 
 /// <summary>The <c>signups</c> resource. The identifier lives in <c>id</c> only, never in the attributes.</summary>
-internal sealed record SignUpResource
+internal sealed record SignUpResource<TAttributes> where TAttributes : notnull
 {
     public required string Type { get; init; }
 
     public required string Id { get; init; }
 
-    public required SignUpAttributes Attributes { get; init; }
+    public required TAttributes Attributes { get; init; }
 
     public JsonApiLinks? Links { get; init; }
 }
@@ -97,18 +146,18 @@ internal static class SignUpResources
     public static string Self(SignUpId signUpId) =>
         FormattableString.Invariant($"{SignUpRoutes.Group}/{signUpId.Value}");
 
-    public static SignUpResource FromStart(StartSignUpResult result)
+    public static SignUpResource<StartSignUpResourceAttributes> FromStart(StartSignUpResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
 
-        return new SignUpResource
+        return new SignUpResource<StartSignUpResourceAttributes>
         {
             Type = SignUpResourceTypes.SignUps,
             Id = result.SignUpId.Value.ToString(),
-            Attributes = new SignUpAttributes
+            Attributes = new StartSignUpResourceAttributes
             {
-                Status = SignUpStatuses.CodePending,
-                CodeDelivery = CodeDeliveryValues.Queued,
+                Status = SignUpStatusValue.CodePending,
+                CodeDelivery = CodeDeliveryValue.Queued,
                 SignUpToken = result.SignUpToken,
                 CodeExpiresAt = result.CodeExpiresAt,
                 CanResendAt = result.CanResendAt,
@@ -118,15 +167,15 @@ internal static class SignUpResources
         };
     }
 
-    public static SignUpResource FromView(SignUpId signUpId, SignUpView view)
+    public static SignUpResource<ReadSignUpResourceAttributes> FromView(SignUpId signUpId, SignUpView view)
     {
         ArgumentNullException.ThrowIfNull(view);
 
-        return new SignUpResource
+        return new SignUpResource<ReadSignUpResourceAttributes>
         {
             Type = SignUpResourceTypes.SignUps,
             Id = signUpId.Value.ToString(),
-            Attributes = new SignUpAttributes
+            Attributes = new ReadSignUpResourceAttributes
             {
                 Status = SignUpStatuses.From(view.Status),
                 CodeDelivery = view.CodeDelivery is { } delivery ? CodeDeliveryValues.From(delivery) : null,

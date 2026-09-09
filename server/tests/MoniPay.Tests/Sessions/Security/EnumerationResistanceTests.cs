@@ -22,8 +22,13 @@ public sealed class EnumerationResistanceTests(MoniPayApi api) : MoniPayApiTest(
 
         try
         {
-            (HttpStatusCode firstStatus, JsonElement first) = await StartAsync(fresh);
+            (HttpStatusCode inflightStartStatus, JsonElement inflightStart) = await StartAsync(inflight);
+            Assert.Equal(HttpStatusCode.Accepted, inflightStartStatus);
+            string inflightId = IdOf(inflightStart);
+
             Api.Time.Advance(TimeSpan.FromSeconds(61));
+
+            (HttpStatusCode firstStatus, JsonElement first) = await StartAsync(fresh);
             (HttpStatusCode secondStatus, JsonElement second) = await StartAsync(inflight);
             (HttpStatusCode thirdStatus, JsonElement third) = await StartAsync(registered);
 
@@ -35,8 +40,9 @@ public sealed class EnumerationResistanceTests(MoniPayApi api) : MoniPayApiTest(
             Assert.Equal(SignUpStatuses.CodePending, StatusOf(second));
             Assert.Equal(SignUpStatuses.CodePending, StatusOf(third));
 
-            Assert.Equal(PublicKeys(first), PublicKeys(second));
-            Assert.Equal(PublicKeys(first), PublicKeys(third));
+            Assert.Equal(inflightId, IdOf(second));
+            Assert.Equal(PublicShape(first), PublicShape(second));
+            Assert.Equal(PublicShape(first), PublicShape(third));
         }
         finally
         {
@@ -80,23 +86,22 @@ public sealed class EnumerationResistanceTests(MoniPayApi api) : MoniPayApiTest(
     }
 
     private static string StatusOf(JsonElement document) =>
-        document.GetProperty("data").GetProperty("attributes").GetProperty("status").GetString()!;
+        document.GetProperty("data").GetProperty("attributes").GetProperty("status").GetString()
+        ?? throw new InvalidOperationException("The sign-up status was not a JSON string.");
 
-    private static IReadOnlyList<string> PublicKeys(JsonElement document)
+    private static string IdOf(JsonElement document) =>
+        document.GetProperty("data").GetProperty("id").GetString()
+        ?? throw new InvalidOperationException("The sign-up identifier was not a JSON string.");
+
+    private static IReadOnlyList<(string Name, JsonValueKind Kind)> PublicShape(JsonElement document)
     {
-        List<string> keys = new();
-        foreach (JsonProperty property in document.GetProperty("data").GetProperty("attributes").EnumerateObject())
-        {
-            if (property.Name is "signUpToken" or "codeExpiresAt" or "canResendAt" or "signUpExpiresAt")
-            {
-                continue;
-            }
-
-            keys.Add(property.Name);
-        }
-
-        keys.Sort(StringComparer.Ordinal);
-
-        return keys;
+        // Tokens and timestamps vary by request; their JSON kinds still belong in the comparison.
+        return document
+            .GetProperty("data")
+            .GetProperty("attributes")
+            .EnumerateObject()
+            .Select(property => (property.Name, property.Value.ValueKind))
+            .OrderBy(property => property.Name, StringComparer.Ordinal)
+            .ToArray();
     }
 }

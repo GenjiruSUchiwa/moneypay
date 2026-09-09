@@ -25,16 +25,22 @@ internal sealed record StartSignUpAttributes
     public required string PrivacyVersion { get; init; }
 
     /// <summary>
-    /// Checks the request attributes. A phone needs its configured country rules; legal versions must
-    /// equal the published ones. An outdated legal version is a validation failure, not a conflict:
-    /// the client must show the new document and send the new version.
+    /// Validates and normalizes the request attributes. A phone needs its configured country rules;
+    /// legal versions must equal the published ones. An outdated legal version is a validation
+    /// failure, not a conflict: the client must show the new document and send the new version.
     /// </summary>
-    public ValidationFailures Validate(SessionsOptions options)
+    public StartSignUpCommand Validate(SessionsOptions options, Locale locale)
     {
         ArgumentNullException.ThrowIfNull(options);
 
         ValidationFailures failures = new();
-        ValidatePhone(options, failures);
+        if (!PhoneNumber.TryNormalize(Phone, options.SupportedCountries, out PhoneNumber phone, out PhoneFailure failure))
+        {
+            failures.Require(false, StartSignUpPointers.Phone, failure == PhoneFailure.CountryUnsupported
+                ? ValidationCodes.PhoneCountryUnsupported
+                : ValidationCodes.PhoneFormatInvalid);
+        }
+
         failures.Require(
             IsCurrent(TermsVersion, options.Legal.TermsVersion),
             StartSignUpPointers.TermsVersion,
@@ -44,22 +50,15 @@ internal sealed record StartSignUpAttributes
             StartSignUpPointers.PrivacyVersion,
             ValidationCodes.LegalVersionOutdated);
 
-        return failures;
-    }
-
-    private void ValidatePhone(SessionsOptions options, ValidationFailures failures)
-    {
-        if (PhoneNumber.TryNormalize(Phone, options.SupportedCountries, out _, out PhoneFailure failure))
+        if (failures.Any())
         {
-            return;
+            throw new ValidationException(failures);
         }
 
-        failures.Require(false, StartSignUpPointers.Phone, failure == PhoneFailure.CountryUnsupported
-            ? ValidationCodes.PhoneCountryUnsupported
-            : ValidationCodes.PhoneFormatInvalid);
+        return new(phone, locale, TermsVersion, PrivacyVersion);
     }
 
-    private static bool IsCurrent(string value, string current) =>
-        value.Length is > 0 and <= SessionsOptions.LegalOptions.MaximumVersionLength
+    private static bool IsCurrent(string? value, string current) =>
+        value is { Length: > 0 and <= SessionsOptions.LegalOptions.MaximumVersionLength }
         && string.Equals(value, current, StringComparison.Ordinal);
 }

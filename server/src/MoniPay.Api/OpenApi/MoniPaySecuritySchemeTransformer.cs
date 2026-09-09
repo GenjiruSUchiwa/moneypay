@@ -85,30 +85,10 @@ internal sealed class MoniPaySecurityOperationTransformer : IOpenApiOperationTra
         {
             operation.Security.Add(new OpenApiSecurityRequirement
             {
-                [ReferenceTo(scheme)] = [],
+                [new OpenApiSecuritySchemeReference(scheme, context.Document)] = [],
             });
         }
 
         return Task.CompletedTask;
-    }
-
-    private static OpenApiSecuritySchemeReference ReferenceTo(string scheme)
-    {
-        OpenApiDocument host = new()
-        {
-            Components = new OpenApiComponents
-            {
-                SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
-                {
-                    [scheme] = new OpenApiSecurityScheme
-                    {
-                        Type = SecuritySchemeType.Http,
-                        Scheme = scheme,
-                    },
-                },
-            },
-        };
-
-        return new OpenApiSecuritySchemeReference(scheme, host);
     }
 }

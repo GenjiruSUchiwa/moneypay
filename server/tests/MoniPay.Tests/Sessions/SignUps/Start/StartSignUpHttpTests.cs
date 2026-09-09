@@ -122,6 +122,22 @@ public sealed class StartSignUpHttpTests(MoniPayApi api) : MoniPayApiTest(api)
     }
 
     [Theory]
+    [InlineData(
+        """{"data":{"type":"signups","attributes":{"phone":"237699123456","termsVersion":null,"privacyVersion":"2026-08"}}}""",
+        StartSignUpPointers.TermsVersion)]
+    [InlineData(
+        """{"data":{"type":"signups","attributes":{"phone":"237699123456","termsVersion":"terms-2026-08","privacyVersion":null}}}""",
+        StartSignUpPointers.PrivacyVersion)]
+    public async Task An_explicitly_null_legal_version_is_422_at_its_pointer(string json, string pointer)
+    {
+        using StringContent body = JsonBody(json);
+
+        using HttpResponseMessage response = await SignUpFlow.PostStartAsync(Client, body);
+
+        await AssertValidationAsync(response, pointer);
+    }
+
+    [Theory]
     [InlineData("""{"data":{"type":"signups","attributes":{"phone":"237699123456","termsVersion":"x","privacyVersion":"y","extra":1}}}""")]
     [InlineData("""{"data":[]}""")]
     [InlineData("""{"data":null}""")]
