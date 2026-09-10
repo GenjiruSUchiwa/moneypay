@@ -21,7 +21,6 @@ internal sealed class NotificationProcessor(
     ILogger<NotificationProcessor> logger)
 {
     public const string ChannelNotConfigured = "channel-not-configured";
-    public const string ProviderTimeout = "provider-timeout";
     public const string BodyMissing = "body-missing";
 
     private const string ClaimSql = $$"""
@@ -114,7 +113,7 @@ internal sealed class NotificationProcessor(
         }
         catch (OperationCanceledException) when (!cycleToken.IsCancellationRequested)
         {
-            return new ChannelResult.Retry(ProviderTimeout);
+            return new ChannelResult.Retry(ChannelResult.ProviderTimeout);
         }
     }
 

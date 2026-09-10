@@ -47,7 +47,7 @@ Branch on the status code, then on the error `type` and `code`, never on `messag
 |---|---|
 | `202` with usable `id` | `Accepted(id)` |
 | `202` without usable `id`, or unparsable body | `Retry("provider-protocol")` |
-| `409 E01004` (same key still in flight) | `Retry("provider-retry-key-in-flight")` with the same key |
+| `409 E01004` (same key still in flight) | `Retry("provider-key-in-flight")` with the same key |
 | `429` (`E01003`, `E04010`, `E04015`, `E04017`, `E04067`, `E04070`) | `Retry("provider-rate-limited")`, one attempt, no sleep |
 | `5xx` (`E04008`, `E01033`, others) | `Retry("provider-5xx")` |
 | Transport or DNS or TLS failure | `Retry("provider-transport")` |

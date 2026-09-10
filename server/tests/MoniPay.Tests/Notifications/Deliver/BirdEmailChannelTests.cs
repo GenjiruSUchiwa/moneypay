@@ -25,7 +25,7 @@ public sealed class BirdEmailChannelTests
         StubHandler stub = new(HttpStatusCode.Accepted, """{"id":"em_01test","status":"accepted"}""");
         BirdEmailChannel channel = Channel(stub);
 
-        ChannelResult result = await channel.SendAsync(Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
+        ChannelResult result = await channel.SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(new ChannelResult.Accepted("em_01test"), result);
         HttpRequestMessage request = Assert.Single(stub.Requests);
@@ -34,7 +34,7 @@ public sealed class BirdEmailChannelTests
         Assert.Equal("Bearer", request.Headers.Authorization?.Scheme);
         Assert.Equal(ApiKey, request.Headers.Authorization?.Parameter);
         Assert.Equal([Key], request.Headers.GetValues("Idempotency-Key"));
-        using JsonDocument payload = JsonDocument.Parse(Assert.Single(stub.Bodies));
+        using JsonDocument payload = JsonDocument.Parse(Assert.Single(stub.Snapshots).Body);
         Assert.Equal(Sender, payload.RootElement.GetProperty("from").GetString());
         string[] recipients = payload.RootElement.GetProperty("to").EnumerateArray().Select(item => item.GetString() ?? string.Empty).ToArray();
         Assert.Equal([Recipient], recipients);
@@ -54,8 +54,8 @@ public sealed class BirdEmailChannelTests
         BirdEmailChannel channel = Channel(stub);
         CancellationToken cancellation = TestContext.Current.CancellationToken;
 
-        await channel.SendAsync(Recipient, Subject, Body, Key, cancellation);
-        await channel.SendAsync(Recipient, Subject, Body, Key, cancellation);
+        await channel.SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, cancellation);
+        await channel.SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, cancellation);
 
         Assert.Equal(2, stub.Requests.Count);
         Assert.All(stub.Requests, request => Assert.Equal([Key], request.Headers.GetValues("Idempotency-Key")));
@@ -69,7 +69,7 @@ public sealed class BirdEmailChannelTests
     {
         StubHandler stub = new(HttpStatusCode.Accepted, """{"id":"em_01never","status":"accepted"}""");
 
-        ChannelResult result = await Channel(stub).SendAsync(Recipient, subject, Body, Key, TestContext.Current.CancellationToken);
+        ChannelResult result = await Channel(stub).SendAsync(Guid.NewGuid(), Recipient, subject, Body, Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(new ChannelResult.Rejected(BirdEmailChannel.SubjectMissing), result);
         Assert.Empty(stub.Requests);
@@ -81,7 +81,7 @@ public sealed class BirdEmailChannelTests
         StubHandler stub = new(HttpStatusCode.Accepted, """{"id":"em_01never","status":"accepted"}""");
 
         ChannelResult result = await Channel(stub)
-            .SendAsync(Recipient, new string('s', BirdEmailChannel.SubjectMaxLength + 1), Body, Key, TestContext.Current.CancellationToken);
+            .SendAsync(Guid.NewGuid(), Recipient, new string('s', BirdEmailChannel.SubjectMaxLength + 1), Body, Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(new ChannelResult.Rejected(BirdEmailChannel.SubjectTooLarge), result);
         Assert.Empty(stub.Requests);
@@ -93,7 +93,7 @@ public sealed class BirdEmailChannelTests
         StubHandler stub = new(HttpStatusCode.Accepted, """{"id":"em_01never","status":"accepted"}""");
 
         ChannelResult result = await Channel(stub)
-            .SendAsync(Recipient, Subject, new string('b', BirdEmailChannel.BodyMaxLength + 1), Key, TestContext.Current.CancellationToken);
+            .SendAsync(Guid.NewGuid(), Recipient, Subject, new string('b', BirdEmailChannel.BodyMaxLength + 1), Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(new ChannelResult.Rejected(BirdEmailChannel.BodyTooLarge), result);
         Assert.Empty(stub.Requests);
@@ -104,7 +104,7 @@ public sealed class BirdEmailChannelTests
     {
         StubHandler stub = new(HttpStatusCode.Accepted, """{"id":"em_01never","status":"accepted"}""");
 
-        ChannelResult result = await Channel(stub).SendAsync("not-an-email", Subject, Body, Key, TestContext.Current.CancellationToken);
+        ChannelResult result = await Channel(stub).SendAsync(Guid.NewGuid(), "not-an-email", Subject, Body, Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(new ChannelResult.Rejected(BirdEmailChannel.InvalidRecipient), result);
         Assert.Empty(stub.Requests);
@@ -120,7 +120,7 @@ public sealed class BirdEmailChannelTests
     {
         StubHandler stub = new(HttpStatusCode.Accepted, responseBody);
 
-        ChannelResult result = await Channel(stub).SendAsync(Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
+        ChannelResult result = await Channel(stub).SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(new ChannelResult.Retry(BirdEmailChannel.Protocol), result);
         Assert.Single(stub.Requests);
@@ -131,20 +131,21 @@ public sealed class BirdEmailChannelTests
     {
         StubHandler stub = new(HttpStatusCode.Accepted, $$"""{"id":"{{new string('r', BirdEmailChannel.ReferenceMaxLength + 1)}}","status":"accepted"}""");
 
-        ChannelResult result = await Channel(stub).SendAsync(Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
+        ChannelResult result = await Channel(stub).SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(new ChannelResult.Retry(BirdEmailChannel.Protocol), result);
     }
 
     [Theory]
     [InlineData("""{"error":{"type":"conflict_error","code":"E01004","name":"RequestInProgress"}}""", BirdEmailChannel.KeyInFlight, true)]
-    [InlineData("not json", BirdEmailChannel.KeyInFlight, true)]
     [InlineData("""{"error":{"type":"conflict_error","code":"E01005","name":"IdempotencyKeyReuse"}}""", BirdEmailChannel.KeyConflict, false)]
+    [InlineData("not json", BirdEmailChannel.Protocol, true)]
+    [InlineData("""{"error":{"type":"conflict_error","code":"E09999","name":"Unknown"}}""", BirdEmailChannel.Protocol, true)]
     public async Task A_409_maps_the_key_state_without_minting_a_new_key(string responseBody, string code, bool retry)
     {
         StubHandler stub = new(HttpStatusCode.Conflict, responseBody);
 
-        ChannelResult result = await Channel(stub).SendAsync(Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
+        ChannelResult result = await Channel(stub).SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(retry ? new ChannelResult.Retry(code) : new ChannelResult.Rejected(code), result);
         Assert.Single(stub.Requests);
@@ -172,7 +173,7 @@ public sealed class BirdEmailChannelTests
     {
         StubHandler stub = new(status, responseBody);
 
-        ChannelResult result = await Channel(stub).SendAsync(Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
+        ChannelResult result = await Channel(stub).SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(retry ? new ChannelResult.Retry(code) : new ChannelResult.Rejected(code), result);
         Assert.Single(stub.Requests);
@@ -185,7 +186,7 @@ public sealed class BirdEmailChannelTests
             new HttpClient(new ThrowingHandler(new HttpRequestException("dns"))) { BaseAddress = new Uri(BaseUrl) },
             TestOptions());
 
-        ChannelResult result = await channel.SendAsync(Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
+        ChannelResult result = await channel.SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
 
         Assert.Equal(new ChannelResult.Retry(BirdEmailChannel.Transport), result);
     }
@@ -199,10 +200,30 @@ public sealed class BirdEmailChannelTests
             TestOptions());
         CancellationToken cancellation = TestContext.Current.CancellationToken;
 
-        ChannelResult result = await channel.SendAsync(Recipient, Subject, Body, Key, cancellation);
+        ChannelResult result = await channel.SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, cancellation);
 
-        Assert.Equal(new ChannelResult.Retry(BirdEmailChannel.ClientTimeout), result);
+        Assert.Equal(new ChannelResult.Retry(ChannelResult.ProviderTimeout), result);
         Assert.False(cancellation.IsCancellationRequested);
+    }
+
+    [Fact]
+    public async Task A_202_without_content_is_a_protocol_retry()
+    {
+        BirdEmailChannel channel = Channel(new NullContentHandler(HttpStatusCode.Accepted));
+
+        ChannelResult result = await channel.SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ChannelResult.Retry(BirdEmailChannel.Protocol), result);
+    }
+
+    [Fact]
+    public async Task A_409_without_content_is_a_protocol_retry()
+    {
+        BirdEmailChannel channel = Channel(new NullContentHandler(HttpStatusCode.Conflict));
+
+        ChannelResult result = await channel.SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ChannelResult.Retry(BirdEmailChannel.Protocol), result);
     }
 
     [Fact]
@@ -213,7 +234,7 @@ public sealed class BirdEmailChannelTests
         await cancelled.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => Channel(stub).SendAsync(Recipient, Subject, Body, Key, cancelled.Token));
+            () => Channel(stub).SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, cancelled.Token));
 
         Assert.Empty(stub.Requests);
     }
@@ -223,12 +244,9 @@ public sealed class BirdEmailChannelTests
     {
         DelayHandler delayed = new(TimeSpan.FromSeconds(5), Accepted("em_01never"));
         using CancellationTokenSource cancelled = new();
-        Task<ChannelResult> sending = Channel(delayed).SendAsync(Recipient, Subject, Body, Key, cancelled.Token);
+        Task<ChannelResult> sending = Channel(delayed).SendAsync(Guid.NewGuid(), Recipient, Subject, Body, Key, cancelled.Token);
 
-        for (int i = 0; i < 400 && delayed.Calls == 0; i++)
-        {
-            await Task.Delay(25, TestContext.Current.CancellationToken);
-        }
+        await delayed.Entered.WaitAsync(TestContext.Current.CancellationToken);
 
         await cancelled.CancelAsync();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => sending);
@@ -256,18 +274,24 @@ public sealed class BirdEmailChannelTests
 
     private sealed class DelayHandler(TimeSpan delay, string responseBody) : HttpMessageHandler
     {
-        private int calls;
+        private readonly TaskCompletionSource entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        public int Calls => calls;
+        public Task Entered => entered.Task;
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            Interlocked.Increment(ref calls);
+            entered.TrySetResult();
             await Task.Delay(delay, cancellationToken);
             return new HttpResponseMessage(HttpStatusCode.Accepted)
             {
                 Content = new StringContent(responseBody, Encoding.UTF8, "application/json"),
             };
         }
+    }
+
+    private sealed class NullContentHandler(HttpStatusCode statusCode) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(statusCode));
     }
 }

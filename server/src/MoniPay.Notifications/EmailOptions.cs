@@ -11,9 +11,15 @@ internal sealed class EmailOptions
     public string FromAddress { get; set; } = string.Empty;
 
     public bool HasWorkableEmail() =>
-        IsHttpsBaseUrl(BaseUrl)
-        && IsHeaderSafe(ApiKey)
-        && EmailAddress.TryNormalize(FromAddress, out _);
+        HasValidBaseUrl()
+        && HasValidApiKey()
+        && HasValidFromAddress();
+
+    public bool HasValidBaseUrl() => IsHttpsBaseUrl(BaseUrl);
+
+    public bool HasValidApiKey() => IsHeaderSafe(ApiKey);
+
+    public bool HasValidFromAddress() => EmailAddress.TryNormalize(FromAddress, out _);
 
     private static bool IsHttpsBaseUrl(string value)
     {
@@ -25,7 +31,8 @@ internal sealed class EmailOptions
         return uri.Scheme == Uri.UriSchemeHttps
             && uri.UserInfo.Length == 0
             && uri.Query.Length == 0
-            && uri.Fragment.Length == 0;
+            && uri.Fragment.Length == 0
+            && uri.AbsolutePath == "/";
     }
 
     private static bool IsHeaderSafe(string value) =>

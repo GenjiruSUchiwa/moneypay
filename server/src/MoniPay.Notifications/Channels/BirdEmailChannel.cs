@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using MoniPay.Kernel;
 
@@ -17,7 +18,6 @@ internal sealed class BirdEmailChannel : INotificationChannel
     internal const string RateLimited = "provider-rate-limited";
     internal const string ServerError = "provider-5xx";
     internal const string Transport = "provider-transport";
-    internal const string ClientTimeout = "provider-timeout";
     internal const string Protocol = "provider-protocol";
     internal const string Unauthorized = "provider-unauthorized";
     internal const string ProviderRejected = "provider-rejected";
@@ -54,6 +54,7 @@ internal sealed class BirdEmailChannel : INotificationChannel
     }
 
     public async Task<ChannelResult> SendAsync(
+        Guid notificationId,
         string recipient,
         string? subject,
         string body,
@@ -104,7 +105,7 @@ internal sealed class BirdEmailChannel : INotificationChannel
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return new ChannelResult.Retry(ClientTimeout);
+            return new ChannelResult.Retry(ChannelResult.ProviderTimeout);
         }
 
         using (response)
@@ -138,7 +139,9 @@ internal sealed class BirdEmailChannel : INotificationChannel
 
     private static async Task<ChannelResult> AcceptedAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        string payload = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        string payload = response.Content is null
+            ? string.Empty
+            : await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             using JsonDocument document = JsonDocument.Parse(payload);
@@ -154,7 +157,6 @@ internal sealed class BirdEmailChannel : INotificationChannel
         }
         catch (JsonException)
         {
-            return new ChannelResult.Retry(Protocol);
         }
 
         return new ChannelResult.Retry(Protocol);
@@ -162,10 +164,15 @@ internal sealed class BirdEmailChannel : INotificationChannel
 
     private static async Task<ChannelResult> ConflictAsync(HttpResponseMessage response, CancellationToken cancellationToken)
     {
-        string payload = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        return ErrorCode(payload) == KeyConflictCode
-            ? new ChannelResult.Rejected(KeyConflict)
-            : new ChannelResult.Retry(KeyInFlight);
+        string payload = response.Content is null
+            ? string.Empty
+            : await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        return ErrorCode(payload) switch
+        {
+            KeyConflictCode => new ChannelResult.Rejected(KeyConflict),
+            KeyInFlightCode => new ChannelResult.Retry(KeyInFlight),
+            _ => new ChannelResult.Retry(Protocol),
+        };
     }
 
     private static string? ErrorCode(string payload)
@@ -190,5 +197,10 @@ internal sealed class BirdEmailChannel : INotificationChannel
         }
     }
 
-    private sealed record BirdRequest(string From, string[] To, string Subject, string Text, string Category);
+    private sealed record BirdRequest(
+        [property: JsonPropertyName("from")] string From,
+        [property: JsonPropertyName("to")] string[] To,
+        [property: JsonPropertyName("subject")] string Subject,
+        [property: JsonPropertyName("text")] string Text,
+        [property: JsonPropertyName("category")] string Category);
 }

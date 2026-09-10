@@ -2,6 +2,8 @@ namespace MoniPay.Notifications.Channels;
 
 internal abstract record ChannelResult
 {
+    public const string ProviderTimeout = "provider-timeout";
+
     private ChannelResult()
     {
     }
