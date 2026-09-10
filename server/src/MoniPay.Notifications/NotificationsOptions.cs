@@ -17,7 +17,7 @@ internal sealed class NotificationsOptions
 
     public TimeSpan ProviderTimeout { get; set; } = DefaultProviderTimeout;
 
-    public required SmsOptions Sms { get; set; }
+    public SmsOptions? Sms { get; set; }
 
     public byte[] DataKey => Base64Key.Decode(DataKeyBase64);
 
@@ -28,15 +28,23 @@ internal sealed class NotificationsOptions
         && Worker.PollInterval > TimeSpan.Zero
         && Worker.LeaseDuration > TimeSpan.Zero;
 
-    public bool IsSmsConfigured() => Sms is SmsOptions sms && sms.IsConfigured();
+    public bool IsSmsConfigured() => Sms is { } sms && sms.IsConfigured();
 
     public sealed class SmsOptions
     {
-        public required Uri BaseUrl { get; set; }
+        public Uri? BaseUrl { get; set; }
 
         public string ApiKey { get; set; } = string.Empty;
 
         public string SenderId { get; set; } = string.Empty;
+
+        public Uri? NormalizedBaseUrl =>
+            BaseUrl is { } baseUrl && !baseUrl.AbsolutePath.EndsWith('/')
+                ? new UriBuilder(baseUrl) { Path = baseUrl.AbsolutePath + "/" }.Uri
+                : BaseUrl;
+
+        public bool IsRequested() =>
+            !string.IsNullOrWhiteSpace(ApiKey) || !string.IsNullOrWhiteSpace(SenderId);
 
         public bool IsConfigured() =>
             BaseUrl is { IsAbsoluteUri: true, Scheme: "https", UserInfo: "" }
@@ -58,6 +66,7 @@ internal sealed class NotificationsOptions
 
         private const string Sms = $"{SectionName}:{nameof(Sms)}";
 
+        public const string SmsSection = Sms;
         public const string SmsBaseUrl = $"{Sms}:{nameof(SmsOptions.BaseUrl)}";
         public const string SmsApiKey = $"{Sms}:{nameof(SmsOptions.ApiKey)}";
         public const string SmsSenderId = $"{Sms}:{nameof(SmsOptions.SenderId)}";

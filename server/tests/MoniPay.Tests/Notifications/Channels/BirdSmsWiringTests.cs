@@ -18,13 +18,31 @@ namespace MoniPay.Tests.Notifications.Channels;
 public sealed class BirdSmsWiringTests(MoniPayApi api) : MoniPayApiTest(api)
 {
     [Fact]
+    public void Production_wiring_defers_timeout_to_processor_and_disables_redirects()
+    {
+        using WebApplicationFactory<Program> host = Api.CreateHost(stubSmsChannel: false);
+        host.CreateClient().Dispose();
+
+        using IServiceScope scope = host.Services.CreateScope();
+        BirdSmsChannel channel = scope.ServiceProvider.GetRequiredService<BirdSmsChannel>();
+
+        Assert.Equal(Timeout.InfiniteTimeSpan, channel.Http.Timeout);
+        Assert.Equal(BirdSmsChannel.MaxResponseBufferBytes, channel.Http.MaxResponseContentBufferSize);
+        Assert.Equal(new Uri(TestKeys.SmsBaseUrl), channel.Http.BaseAddress);
+        using SocketsHttpHandler handler = BirdSmsChannel.CreatePrimaryHandler();
+        Assert.False(handler.AllowAutoRedirect);
+    }
+
+    [Fact]
     public async Task A_delivery_cycle_reaches_the_adapter_and_persists_its_result()
     {
         StubHandler stub = new(HttpStatusCode.Accepted, """{"id":"sms_01wiringtest00000000000001","status":"scheduled"}""");
-        using WebApplicationFactory<Program> host = Api.CreateHost(builder => builder.ConfigureServices(services =>
-        {
-            services.AddHttpClient<BirdSmsChannel>().ConfigurePrimaryHttpMessageHandler(() => stub);
-        }));
+        using WebApplicationFactory<Program> host = Api.CreateHost(
+            builder => builder.ConfigureServices(services =>
+            {
+                services.AddHttpClient<BirdSmsChannel>().ConfigurePrimaryHttpMessageHandler(() => stub);
+            }),
+            stubSmsChannel: false);
         host.CreateClient().Dispose();
 
         string key = $"wire-{Guid.CreateVersion7()}";
@@ -44,7 +62,7 @@ public sealed class BirdSmsWiringTests(MoniPayApi api) : MoniPayApiTest(api)
 
         Assert.Equal(1, delivered);
         StubHandler.RequestSnapshot snapshot = Assert.Single(stub.Snapshots);
-        Assert.Equal(TestKeys.SmsBaseUrl + "/v1/sms/messages", snapshot.Uri?.ToString());
+        Assert.Equal(TestKeys.SmsBaseUrl + "/" + BirdSmsRoutes.MessagesRoute, snapshot.Uri?.ToString());
         Assert.Equal("Bearer " + TestKeys.SmsApiKey, snapshot.Authorization);
         Assert.Equal(key, snapshot.IdempotencyKey);
         Assert.Contains("041822", snapshot.Body, StringComparison.Ordinal);
@@ -53,6 +71,41 @@ public sealed class BirdSmsWiringTests(MoniPayApi api) : MoniPayApiTest(api)
         Assert.Equal(NotificationStatus.Sent, row.Status);
         Assert.Equal("sms_01wiringtest00000000000001", row.ProviderReference);
         Assert.Null(row.BodyCiphertext);
+    }
+
+    [Fact]
+    public async Task A_channel_internal_failure_is_recorded_and_the_batch_still_saves()
+    {
+        StubHandler stub = new(HttpStatusCode.Accepted, """{"id":"sms_01wiringtest00000000000002","status":"scheduled"}""");
+        using WebApplicationFactory<Program> host = Api.CreateHost(
+            builder => builder.ConfigureServices(services =>
+            {
+                services.AddHttpClient<BirdSmsChannel>().ConfigurePrimaryHttpMessageHandler(() => stub);
+            }),
+            stubSmsChannel: false);
+        host.CreateClient().Dispose();
+
+        Guid correlation = Guid.CreateVersion7();
+        await EnqueueAsync(host, new OutboundMessage(
+            NotificationChannel.Sms,
+            TestPhones.Next(),
+            null,
+            "Votre code MoniPay est le 041822, valable 5 minutes.",
+            RetrySchedule.VerificationCodeKind,
+            true,
+            "bad\nkey",
+            null,
+            correlation));
+
+        int processed = await DeliverAsync(host);
+
+        Assert.Equal(1, processed);
+        Assert.Empty(stub.Snapshots);
+        Notification row = await RowAsync(host, correlation);
+        Assert.Equal(NotificationStatus.Pending, row.Status);
+        Assert.Equal(BirdSmsCodes.ProtocolError, row.LastErrorCode);
+        Assert.Equal(1, row.Attempts);
+        Assert.Null(row.LeaseUntil);
     }
 
     private async Task EnqueueAsync(WebApplicationFactory<Program> host, OutboundMessage message)

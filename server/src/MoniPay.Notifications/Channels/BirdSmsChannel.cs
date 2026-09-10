@@ -15,6 +15,9 @@ internal sealed class BirdSmsChannel(
     ILogger<BirdSmsChannel> logger) : INotificationChannel
 {
     internal const string IdempotencyKeyHeader = "Idempotency-Key";
+    internal const long MaxResponseBufferBytes = 16 * 1024;
+
+    internal static readonly TimeSpan HttpTimeout = Timeout.InfiniteTimeSpan;
 
     private const string Category = "authentication";
     private const string ReferencePrefix = "sms_";
@@ -29,65 +32,77 @@ internal sealed class BirdSmsChannel(
     private static readonly JsonSerializerOptions BodyOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
     private static readonly JsonSerializerOptions ReadOptions = new() { PropertyNameCaseInsensitive = true };
 
+    internal HttpClient Http => http;
+
+    internal static SocketsHttpHandler CreatePrimaryHandler() => new() { AllowAutoRedirect = false };
+
+    internal static string ToBirdRecipient(string recipient) =>
+        recipient.StartsWith('+') ? recipient : "+" + recipient;
+
     public async Task<ChannelResult> SendAsync(
+        Guid notificationId,
         string recipient,
         string? subject,
         string body,
         string idempotencyKey,
         CancellationToken cancellationToken)
     {
-        NotificationsOptions.SmsOptions sms = options.Value.Sms;
+        if (options.Value.Sms is not { } sms)
+        {
+            return new ChannelResult.Retry(BirdSmsCodes.ProtocolError);
+        }
+
         long started = timeProvider.GetTimestamp();
-        ChannelResult result = await SubmitAsync(sms, recipient, body, idempotencyKey, cancellationToken).ConfigureAwait(false);
+        (ChannelResult result, Exception? failure) = await SubmitAsync(
+            sms, recipient, body, idempotencyKey, cancellationToken).ConfigureAwait(false);
         double elapsed = timeProvider.GetElapsedTime(started).TotalMilliseconds;
         switch (result)
         {
             case ChannelResult.Accepted:
-                NotificationsLog.BirdSmsAccepted(logger, elapsed);
+                NotificationsLog.BirdSmsAccepted(logger, notificationId, elapsed);
                 break;
             case ChannelResult.Retry retry:
-                NotificationsLog.BirdSmsRetried(logger, retry.Code, elapsed);
+                NotificationsLog.BirdSmsRetried(logger, notificationId, retry.Code, elapsed, failure);
                 break;
             case ChannelResult.Rejected rejected:
-                NotificationsLog.BirdSmsRejected(logger, rejected.Code, elapsed);
+                NotificationsLog.BirdSmsRejected(logger, notificationId, rejected.Code, elapsed);
                 break;
         }
 
         return result;
     }
 
-    private async Task<ChannelResult> SubmitAsync(
+    private async Task<(ChannelResult Result, Exception? Failure)> SubmitAsync(
         NotificationsOptions.SmsOptions sms,
         string recipient,
         string body,
         string idempotencyKey,
         CancellationToken cancellationToken)
     {
-        Uri uri = new(sms.BaseUrl, "v1/sms/messages");
-        string payload = JsonSerializer.Serialize(
-            new BirdSmsRequest("+" + recipient, sms.SenderId, body, Category), BodyOptions);
-        using HttpRequestMessage request = new(HttpMethod.Post, uri)
-        {
-            Content = new StringContent(payload, Encoding.UTF8, "application/json"),
-        };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sms.ApiKey);
-        request.Headers.Add(IdempotencyKeyHeader, idempotencyKey);
-
-        HttpStatusCode status;
-        string responseBody;
         try
         {
-            using HttpResponseMessage response = await http.SendAsync(
-                request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-            status = response.StatusCode;
-            responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception exception) when (exception is HttpRequestException or IOException)
-        {
-            return new ChannelResult.Retry("sms-transport-error");
-        }
+            Uri uri = new(BirdSmsRoutes.MessagesRoute, UriKind.Relative);
+            string payload = JsonSerializer.Serialize(
+                new BirdSmsRequest(ToBirdRecipient(recipient), sms.SenderId, body, Category), BodyOptions);
+            using HttpRequestMessage request = new(HttpMethod.Post, uri)
+            {
+                Content = new StringContent(payload, Encoding.UTF8, "application/json"),
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", sms.ApiKey);
+            request.Headers.Add(IdempotencyKeyHeader, idempotencyKey);
 
-        return Map(status, responseBody);
+            using HttpResponseMessage response = await http.SendAsync(
+                request, HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
+            string responseBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            return (Map(response.StatusCode, responseBody), null);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            string code = exception is HttpRequestException or IOException
+                ? BirdSmsCodes.TransportError
+                : BirdSmsCodes.ProtocolError;
+            return (new ChannelResult.Retry(code), exception);
+        }
     }
 
     private static ChannelResult Map(HttpStatusCode status, string responseBody)
@@ -95,14 +110,14 @@ internal sealed class BirdSmsChannel(
         return (int)status switch
         {
             202 => MapAccepted(responseBody),
-            400 => new ChannelResult.Rejected("sms-rejected"),
-            401 or 403 => new ChannelResult.Rejected("sms-unauthorized"),
-            402 => new ChannelResult.Retry("sms-insufficient-balance"),
+            400 => new ChannelResult.Rejected(BirdSmsCodes.Rejected),
+            401 or 403 => new ChannelResult.Retry(BirdSmsCodes.Unauthorized),
+            402 => new ChannelResult.Retry(BirdSmsCodes.InsufficientBalance),
             422 => MapUnprocessable(responseBody),
             409 => MapConflict(responseBody),
-            429 => new ChannelResult.Retry("sms-rate-limited"),
-            >= 500 and < 600 => new ChannelResult.Retry("sms-unavailable"),
-            _ => new ChannelResult.Retry("sms-protocol-error"),
+            429 => new ChannelResult.Retry(BirdSmsCodes.RateLimited),
+            >= 500 and < 600 => new ChannelResult.Retry(BirdSmsCodes.Unavailable),
+            _ => new ChannelResult.Retry(BirdSmsCodes.ProtocolError),
         };
     }
 
@@ -111,24 +126,24 @@ internal sealed class BirdSmsChannel(
         BirdSmsResponse? response = Read<BirdSmsResponse>(responseBody);
         return response?.Id is { Length: > 0 and <= ReferenceMaxLength } id && id.StartsWith(ReferencePrefix, StringComparison.Ordinal)
             ? new ChannelResult.Accepted(id)
-            : new ChannelResult.Retry("sms-protocol-error");
+            : new ChannelResult.Retry(BirdSmsCodes.ProtocolError);
     }
 
     private static ChannelResult MapUnprocessable(string responseBody)
     {
         return Read<BirdError>(responseBody)?.Code switch
         {
-            InvalidRecipient => new ChannelResult.Rejected("sms-invalid-recipient"),
-            SenderNotConfigured or NoEligibleSender or SenderCategoryNotPermitted => new ChannelResult.Rejected("sms-sender-rejected"),
-            _ => new ChannelResult.Rejected("sms-rejected"),
+            InvalidRecipient => new ChannelResult.Rejected(BirdSmsCodes.InvalidRecipient),
+            SenderNotConfigured or NoEligibleSender or SenderCategoryNotPermitted => new ChannelResult.Rejected(BirdSmsCodes.SenderRejected),
+            _ => new ChannelResult.Rejected(BirdSmsCodes.Rejected),
         };
     }
 
     private static ChannelResult MapConflict(string responseBody)
     {
         return Read<BirdError>(responseBody)?.Code == DuplicateInflight
-            ? new ChannelResult.Retry("sms-duplicate-inflight")
-            : new ChannelResult.Retry("sms-protocol-error");
+            ? new ChannelResult.Retry(BirdSmsCodes.DuplicateInflight)
+            : new ChannelResult.Retry(BirdSmsCodes.ProtocolError);
     }
 
     private static T? Read<T>(string responseBody) where T : class

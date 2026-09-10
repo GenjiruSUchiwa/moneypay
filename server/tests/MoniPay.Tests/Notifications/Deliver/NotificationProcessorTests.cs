@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MoniPay.Api;
@@ -241,7 +242,7 @@ public sealed class NotificationProcessorTests(MoniPayApi api) : MoniPayApiTest(
             MoniPayApi.UseNotificationTestSettings(builder);
             builder.ConfigureServices(services =>
             {
-                MoniPayApi.WithoutSmsChannel(services);
+                services.RemoveAllKeyed<INotificationChannel>(NotificationChannel.Sms);
                 services.AddLogging(logging => logging.AddProvider(logs));
             });
         });

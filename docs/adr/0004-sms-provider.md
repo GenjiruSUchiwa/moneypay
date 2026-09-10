@@ -85,7 +85,7 @@ and cannot serve +237 numbers.
 | `400`, generic or unknown `422` | `Rejected(sms-rejected)` |
 | `422 SMSInvalidRecipient` | `Rejected(sms-invalid-recipient)` |
 | `422 SMSSenderNotConfigured`, `SMSNoEligibleSender`, `SenderCategoryNotPermitted` | `Rejected(sms-sender-rejected)` |
-| `401`, `403` | `Rejected(sms-unauthorized)`; authentication failures never retry |
+| `401`, `403` | `Retry(sms-unauthorized)`; a rotated or expired key must not destroy the pending rows, which resume once the key is fixed |
 | `402` insufficient balance | `Retry(sms-insufficient-balance)`; funding is operations-side, the code may expire meanwhile |
 | `409 request_in_progress` | `Retry(sms-duplicate-inflight)`; the attempt lock expires within 30 seconds |
 | Other `409` | `Retry(sms-protocol-error)`; unreachable by construction since the key is the row identity |
@@ -96,7 +96,7 @@ and cannot serve +237 numbers.
 | `3xx` or any undocumented status | `Retry(sms-protocol-error)`; redirects are never followed |
 
 Error codes stay within the 64-character column and never carry provider text.
-The adapter logs only allowlisted codes with elapsed time.
+The adapter logs only allowlisted codes, joined to the notification id, with the elapsed time and, on a transport retry, the failure.
 
 ## Sandbox smoke
 

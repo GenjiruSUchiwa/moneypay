@@ -196,6 +196,7 @@ Several API replicas can run the worker. `SKIP LOCKED` and the lease prevent two
 internal interface INotificationChannel
 {
     Task<ChannelResult> SendAsync(
+        Guid notificationId,
         string recipient,
         string? subject,
         string body,
@@ -208,9 +209,9 @@ internal interface INotificationChannel
 
 A provider that supports an idempotency key receives `idempotencyKey`, so a retry after a lost response does not send twice. Bird replays the retained response for the same key within its idempotency window; see `docs/adr/0004-sms-provider.md`.
 
-Each channel is a typed `HttpClient` registered with `AddHttpClient<BirdSmsChannel>` plus a keyed transient `INotificationChannel` factory for `NotificationChannel.Sms`, with the provider credentials from validated options. The `HttpClient.Timeout` is infinite: the processor deadline from `NotificationsOptions.ProviderTimeout` stays authoritative through the linked token. Retries belong to the worker schedule, so no HTTP resilience package is added. Redirects are disabled so a provider redirect can neither forward credentials nor silently change submission semantics.
+Each channel is a typed `HttpClient` registered with `AddHttpClient<BirdSmsChannel>` plus a keyed transient `INotificationChannel` factory for `NotificationChannel.Sms`, with the provider credentials from validated options. The SMS channel is registered, and its settings validated, only when `MoniPay:Notifications:Sms` supplies an API key or a sender ID; without them no SMS channel exists and the processor's channel-not-configured path keeps the rows waiting. The `HttpClient.Timeout` is infinite: the processor deadline from `NotificationsOptions.ProviderTimeout` stays authoritative through the linked token, and the response body is read through a bounded buffer. Retries belong to the worker schedule, so no HTTP resilience package is added. Redirects are disabled so a provider redirect can neither forward credentials nor silently change submission semantics.
 
-A channel returns, it does not throw: a transport exception, a timeout or a malformed body becomes `Retry` or `Rejected` with a stable code. Caller cancellation propagates as `OperationCanceledException`.
+A channel returns, it does not throw: a transport exception, a timeout, a malformed body or a fault inside the adapter becomes `Retry` or `Rejected` with a stable code. Caller cancellation propagates as `OperationCanceledException`.
 
 The email channel is not registered yet and no placeholder pretends to send. The processor resolves the channel with `GetKeyedService`; when none is registered it records `Retry` with the code `channel-not-configured`, logs one `Warning` per cycle, and the row waits in the outbox until a channel exists.
 

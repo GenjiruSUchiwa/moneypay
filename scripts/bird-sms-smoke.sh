@@ -18,13 +18,16 @@ set -euo pipefail
 response_file="$(mktemp)"
 trap 'rm -f "$response_file"' EXIT
 
+to="+${BIRD_TO#+}"
+
 status="$(curl -sS --max-time 15 -o "$response_file" -w '%{http_code}' \
   -X POST "$BIRD_BASE_URL/v1/sms/messages" \
   -H "Authorization: Bearer $BIRD_API_KEY" \
-  -H 'Content-Type: application/json' \
+  -H 'Content-Type: application/json; charset=utf-8' \
   -H "Idempotency-Key: smoke-$(date -u +%Y%m%dT%H%M%SZ)" \
-  -d "$(jq -n --arg from "$BIRD_SENDER" --arg to "$BIRD_TO" \
+  -d "$(jq -n --arg from "$BIRD_SENDER" --arg to "$to" \
     '{from: $from, to: $to, text: "MoniPay smoke check. Ignore this message.", category: "authentication"}')")"
 
-message_id="$(jq -r '.id // "none"' "$response_file")"
-echo "status=$status id=$message_id"
+echo "status=$status"
+message_id="$(jq -r '.id // "none"' "$response_file" 2>/dev/null || true)"
+echo "id=${message_id:-none}"

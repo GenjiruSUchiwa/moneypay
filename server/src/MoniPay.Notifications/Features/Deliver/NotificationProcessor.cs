@@ -110,7 +110,7 @@ internal sealed class NotificationProcessor(
         using CancellationTokenSource linked = CancellationTokenSource.CreateLinkedTokenSource(cycleToken, timeout.Token);
         try
         {
-            return await channel.SendAsync(recipient, subject, body, notification.IdempotencyKey, linked.Token).ConfigureAwait(false);
+            return await channel.SendAsync(notification.Id, recipient, subject, body, notification.IdempotencyKey, linked.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (!cycleToken.IsCancellationRequested)
         {
