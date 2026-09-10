@@ -17,6 +17,8 @@ internal sealed class NotificationsOptions
 
     public TimeSpan ProviderTimeout { get; set; } = DefaultProviderTimeout;
 
+    public EmailOptions Email { get; set; } = new();
+
     public SmsOptions? Sms { get; set; }
 
     public byte[] DataKey => Base64Key.Decode(DataKeyBase64);
@@ -55,6 +57,7 @@ internal sealed class NotificationsOptions
     public static class Keys
     {
         private const string Worker = $"{SectionName}:Worker";
+        private const string Email = $"{SectionName}:{nameof(Email)}";
 
         public const string DataKeyBase64 = $"{SectionName}:{nameof(DataKeyBase64)}";
         public const string Retention = $"{SectionName}:{nameof(Retention)}";
@@ -63,6 +66,9 @@ internal sealed class NotificationsOptions
         public const string WorkerBatchSize = $"{Worker}:{nameof(WorkerOptions.BatchSize)}";
         public const string WorkerLeaseDuration = $"{Worker}:{nameof(WorkerOptions.LeaseDuration)}";
         public const string ProviderTimeout = $"{SectionName}:{nameof(ProviderTimeout)}";
+        public const string EmailBaseUrl = $"{Email}:{nameof(EmailOptions.BaseUrl)}";
+        public const string EmailApiKey = $"{Email}:{nameof(EmailOptions.ApiKey)}";
+        public const string EmailFromAddress = $"{Email}:{nameof(EmailOptions.FromAddress)}";
 
         private const string Sms = $"{SectionName}:{nameof(Sms)}";
 

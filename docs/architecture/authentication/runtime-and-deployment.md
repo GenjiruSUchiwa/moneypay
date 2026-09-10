@@ -108,9 +108,9 @@ Every value is read through validated options with `ValidateOnStart`. A missing 
 | `MoniPay:Notifications:Sms:BaseUrl` | No | `https://eu1.platform.bird.com` |
 | `MoniPay:Notifications:Sms:ApiKey` | Yes | Required to enable SMS delivery |
 | `MoniPay:Notifications:Sms:SenderId` | No | Required to enable SMS delivery, account-specific sender |
-| `MoniPay:Notifications:Email:BaseUrl` | No | Provider value |
-| `MoniPay:Notifications:Email:ApiKey` | Yes | Required once the provider is selected |
-| `MoniPay:Notifications:Email:FromAddress` | No | Required once the provider is selected |
+| `MoniPay:Notifications:Email:BaseUrl` | No | `https://eu1.platform.bird.com` |
+| `MoniPay:Notifications:Email:ApiKey` | Yes | Required |
+| `MoniPay:Notifications:Email:FromAddress` | No | Required, verified domain |
 
 ### Host keys
 
@@ -142,6 +142,8 @@ for key in Sessions:SigningKeyBase64 Sessions:VerificationCodeKeyBase64 \
 done
 dotnet user-secrets set "MoniPay:Sessions:Issuer" "https://api.monipay.local" --project server/src/MoniPay.Api
 dotnet user-secrets set "MoniPay:Sessions:Audience" "monipay-ios" --project server/src/MoniPay.Api
+dotnet user-secrets set "MoniPay:Notifications:Email:ApiKey" "<bk_eu1_...>" --project server/src/MoniPay.Api
+dotnet user-secrets set "MoniPay:Notifications:Email:FromAddress" "hello@mail.example.com" --project server/src/MoniPay.Api
 ```
 
 ### Key rotation
