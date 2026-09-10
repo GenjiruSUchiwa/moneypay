@@ -15,6 +15,9 @@ public sealed class BirdSmsChannelTests
     private const string Recipient = "237600000001";
     private const string Body = "Votre code MoniPay est le 041822, valable 5 minutes.";
     private const string ApiKey = "test-key-not-a-secret";
+    private const string AcceptedReference = "sms_01krdgeqcxet5s7t44vh8rt9mg";
+
+    private static readonly Guid NotificationId = Guid.CreateVersion7();
 
     private static NotificationsOptions ValidOptions() => new()
     {
@@ -28,14 +31,19 @@ public sealed class BirdSmsChannelTests
 
     private static BirdSmsChannel Channel(
         StubHandler stub,
-        ILogger<BirdSmsChannel>? logger = null,
-        NotificationsOptions? options = null) => new(
-            new HttpClient(stub),
-            Options.Create(options ?? ValidOptions()),
-            TimeProvider.System,
-            logger ?? NullLogger<BirdSmsChannel>.Instance);
+        NotificationsOptions? options = null,
+        ILogger<BirdSmsChannel>? logger = null)
+    {
+        NotificationsOptions resolved = options ?? ValidOptions();
+        HttpClient http = new(stub)
+        {
+            BaseAddress = resolved.Sms?.NormalizedBaseUrl,
+            MaxResponseContentBufferSize = BirdSmsChannel.MaxResponseBufferBytes,
+        };
+        return new(http, Options.Create(resolved), TimeProvider.System, logger ?? NullLogger<BirdSmsChannel>.Instance);
+    }
 
-    private static StubHandler Accepted(string id = "sms_01krdgeqcxet5s7t44vh8rt9mg") =>
+    private static StubHandler Accepted(string id = AcceptedReference) =>
         new(HttpStatusCode.Accepted, "{\"id\":\"" + id + "\",\"status\":\"scheduled\"}");
 
     private static StubHandler Failed(HttpStatusCode status, string code) =>
@@ -47,12 +55,13 @@ public sealed class BirdSmsChannelTests
         StubHandler stub = Accepted();
         BirdSmsChannel channel = Channel(stub);
 
-        ChannelResult result = await channel.SendAsync(Recipient, "unused-subject", Body, "key-1", TestContext.Current.CancellationToken);
+        ChannelResult result = await channel.SendAsync(
+            NotificationId, Recipient, "unused-subject", Body, "key-1", TestContext.Current.CancellationToken);
 
-        Assert.Equal(new ChannelResult.Accepted("sms_01krdgeqcxet5s7t44vh8rt9mg"), result);
+        Assert.Equal(new ChannelResult.Accepted(AcceptedReference), result);
         StubHandler.RequestSnapshot snapshot = Assert.Single(stub.Snapshots);
         Assert.Equal("POST", snapshot.Method);
-        Assert.Equal("https://eu1.platform.bird.com/v1/sms/messages", snapshot.Uri?.ToString());
+        Assert.Equal("https://eu1.platform.bird.com/" + BirdSmsRoutes.MessagesRoute, snapshot.Uri?.ToString());
         Assert.Equal("Bearer " + ApiKey, snapshot.Authorization);
         Assert.Equal("key-1", snapshot.IdempotencyKey);
         Assert.Equal("application/json; charset=utf-8", snapshot.ContentType);
@@ -65,6 +74,47 @@ public sealed class BirdSmsChannelTests
     }
 
     [Theory]
+    [InlineData("237600000001", "+237600000001")]
+    [InlineData("+237600000001", "+237600000001")]
+    public void ToBirdRecipient_prefixes_a_missing_plus(string recipient, string expected)
+    {
+        Assert.Equal(expected, BirdSmsChannel.ToBirdRecipient(recipient));
+    }
+
+    [Fact]
+    public async Task A_base_url_with_a_path_keeps_it_before_the_route()
+    {
+        NotificationsOptions options = new()
+        {
+            Sms = new NotificationsOptions.SmsOptions
+            {
+                BaseUrl = new Uri("https://api.bird.com/workspaces/W123/channels/C456"),
+                ApiKey = ApiKey,
+                SenderId = "MoniPay",
+            },
+        };
+        StubHandler stub = Accepted();
+
+        ChannelResult result = await Channel(stub, options)
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ChannelResult.Accepted(AcceptedReference), result);
+        StubHandler.RequestSnapshot snapshot = Assert.Single(stub.Snapshots);
+        Assert.Equal(
+            "https://api.bird.com/workspaces/W123/channels/C456/" + BirdSmsRoutes.MessagesRoute,
+            snapshot.Uri?.ToString());
+    }
+
+    [Fact]
+    public async Task Missing_sms_settings_retries_as_a_protocol_error()
+    {
+        ChannelResult result = await Channel(Accepted(), new NotificationsOptions())
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ChannelResult.Retry(BirdSmsCodes.ProtocolError), result);
+    }
+
+    [Theory]
     [InlineData("{}")]
     [InlineData("""{"id":""}""")]
     [InlineData("""{"id":"em_01krdgeqcxet5s7t44vh8rt9mg"}""")]
@@ -73,56 +123,66 @@ public sealed class BirdSmsChannelTests
     public async Task Acceptance_without_a_usable_reference_retries(string body)
     {
         ChannelResult result = await Channel(new StubHandler(HttpStatusCode.Accepted, body))
-            .SendAsync(Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
 
-        Assert.Equal(new ChannelResult.Retry("sms-protocol-error"), result);
+        Assert.Equal(new ChannelResult.Retry(BirdSmsCodes.ProtocolError), result);
     }
 
     [Fact]
     public async Task An_overlong_reference_retries_instead_of_failing_the_save()
     {
         ChannelResult result = await Channel(Accepted("sms_" + new string('x', 125)))
-            .SendAsync(Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
 
-        Assert.Equal(new ChannelResult.Retry("sms-protocol-error"), result);
+        Assert.Equal(new ChannelResult.Retry(BirdSmsCodes.ProtocolError), result);
     }
 
     [Theory]
-    [InlineData(HttpStatusCode.BadRequest, "anything", "sms-rejected", false)]
-    [InlineData(HttpStatusCode.Unauthorized, "anything", "sms-unauthorized", false)]
-    [InlineData(HttpStatusCode.Forbidden, "anything", "sms-unauthorized", false)]
-    [InlineData(HttpStatusCode.PaymentRequired, "anything", "sms-insufficient-balance", true)]
-    [InlineData(HttpStatusCode.UnprocessableEntity, "SMSInvalidRecipient", "sms-invalid-recipient", false)]
-    [InlineData(HttpStatusCode.UnprocessableEntity, "SMSSenderNotConfigured", "sms-sender-rejected", false)]
-    [InlineData(HttpStatusCode.UnprocessableEntity, "SMSNoEligibleSender", "sms-sender-rejected", false)]
-    [InlineData(HttpStatusCode.UnprocessableEntity, "SenderCategoryNotPermitted", "sms-sender-rejected", false)]
-    [InlineData(HttpStatusCode.UnprocessableEntity, "SomethingNew", "sms-rejected", false)]
-    [InlineData(HttpStatusCode.Conflict, "request_in_progress", "sms-duplicate-inflight", true)]
-    [InlineData(HttpStatusCode.Conflict, "idempotency_key_reuse", "sms-protocol-error", true)]
-    [InlineData(HttpStatusCode.TooManyRequests, "anything", "sms-rate-limited", true)]
-    [InlineData(HttpStatusCode.InternalServerError, "anything", "sms-unavailable", true)]
-    [InlineData(HttpStatusCode.ServiceUnavailable, "anything", "sms-unavailable", true)]
-    [InlineData(HttpStatusCode.Redirect, "anything", "sms-protocol-error", true)]
-    [InlineData((HttpStatusCode)418, "anything", "sms-protocol-error", true)]
-    public async Task Provider_outcomes_map_to_stable_results(
-        HttpStatusCode status, string code, string expected, bool retry)
+    [InlineData(HttpStatusCode.BadRequest, "anything", BirdSmsCodes.Rejected)]
+    [InlineData(HttpStatusCode.UnprocessableEntity, "SMSInvalidRecipient", BirdSmsCodes.InvalidRecipient)]
+    [InlineData(HttpStatusCode.UnprocessableEntity, "SMSSenderNotConfigured", BirdSmsCodes.SenderRejected)]
+    [InlineData(HttpStatusCode.UnprocessableEntity, "SMSNoEligibleSender", BirdSmsCodes.SenderRejected)]
+    [InlineData(HttpStatusCode.UnprocessableEntity, "SenderCategoryNotPermitted", BirdSmsCodes.SenderRejected)]
+    [InlineData(HttpStatusCode.UnprocessableEntity, "SomethingNew", BirdSmsCodes.Rejected)]
+    public async Task Provider_permanent_outcomes_map_to_rejected(
+        HttpStatusCode status, string code, string expected)
     {
         ChannelResult result = await Channel(Failed(status, code))
-            .SendAsync(Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
 
-        Assert.Equal(retry ? new ChannelResult.Retry(expected) : new ChannelResult.Rejected(expected), result);
+        Assert.Equal(new ChannelResult.Rejected(expected), result);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized, "anything", BirdSmsCodes.Unauthorized)]
+    [InlineData(HttpStatusCode.Forbidden, "anything", BirdSmsCodes.Unauthorized)]
+    [InlineData(HttpStatusCode.PaymentRequired, "anything", BirdSmsCodes.InsufficientBalance)]
+    [InlineData(HttpStatusCode.Conflict, "request_in_progress", BirdSmsCodes.DuplicateInflight)]
+    [InlineData(HttpStatusCode.Conflict, "idempotency_key_reuse", BirdSmsCodes.ProtocolError)]
+    [InlineData(HttpStatusCode.TooManyRequests, "anything", BirdSmsCodes.RateLimited)]
+    [InlineData(HttpStatusCode.InternalServerError, "anything", BirdSmsCodes.Unavailable)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, "anything", BirdSmsCodes.Unavailable)]
+    [InlineData(HttpStatusCode.Redirect, "anything", BirdSmsCodes.ProtocolError)]
+    [InlineData((HttpStatusCode)418, "anything", BirdSmsCodes.ProtocolError)]
+    public async Task Provider_transient_outcomes_map_to_retry(
+        HttpStatusCode status, string code, string expected)
+    {
+        ChannelResult result = await Channel(Failed(status, code))
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ChannelResult.Retry(expected), result);
     }
 
     [Fact]
     public async Task A_malformed_error_body_keeps_its_transient_or_permanent_class()
     {
         ChannelResult retry = await Channel(new StubHandler(HttpStatusCode.ServiceUnavailable, "<html>outage</html>"))
-            .SendAsync(Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
         ChannelResult rejected = await Channel(new StubHandler(HttpStatusCode.UnprocessableEntity, "<html>nope</html>"))
-            .SendAsync(Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
 
-        Assert.Equal(new ChannelResult.Retry("sms-unavailable"), retry);
-        Assert.Equal(new ChannelResult.Rejected("sms-rejected"), rejected);
+        Assert.Equal(new ChannelResult.Retry(BirdSmsCodes.Unavailable), retry);
+        Assert.Equal(new ChannelResult.Rejected(BirdSmsCodes.Rejected), rejected);
     }
 
     [Fact]
@@ -132,8 +192,8 @@ public sealed class BirdSmsChannelTests
         BirdSmsChannel channel = Channel(stub);
         CancellationToken cancellation = TestContext.Current.CancellationToken;
 
-        await channel.SendAsync(Recipient, null, Body, "key-1", cancellation);
-        await channel.SendAsync(Recipient, null, Body, "key-1", cancellation);
+        await channel.SendAsync(NotificationId, Recipient, null, Body, "key-1", cancellation);
+        await channel.SendAsync(NotificationId, Recipient, null, Body, "key-1", cancellation);
 
         Assert.Equal(
             ["key-1", "key-1"],
@@ -147,9 +207,9 @@ public sealed class BirdSmsChannelTests
         stub.Behavior = (_, _) => throw new HttpRequestException("connection reset");
 
         ChannelResult result = await Channel(stub)
-            .SendAsync(Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
 
-        Assert.Equal(new ChannelResult.Retry("sms-transport-error"), result);
+        Assert.Equal(new ChannelResult.Retry(BirdSmsCodes.TransportError), result);
     }
 
     [Fact]
@@ -162,9 +222,32 @@ public sealed class BirdSmsChannelTests
         });
 
         ChannelResult result = await Channel(stub)
-            .SendAsync(Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
 
-        Assert.Equal(new ChannelResult.Retry("sms-transport-error"), result);
+        Assert.Equal(new ChannelResult.Retry(BirdSmsCodes.TransportError), result);
+    }
+
+    [Fact]
+    public async Task A_channel_internal_failure_returns_a_retry()
+    {
+        StubHandler stub = Accepted();
+
+        ChannelResult result = await Channel(stub)
+            .SendAsync(NotificationId, Recipient, null, Body, "bad\nkey", TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ChannelResult.Retry(BirdSmsCodes.ProtocolError), result);
+        Assert.Empty(stub.Snapshots);
+    }
+
+    [Fact]
+    public async Task An_oversized_response_retries_without_buffering_the_whole_body()
+    {
+        StubHandler stub = new(HttpStatusCode.Accepted, new string('x', (int)BirdSmsChannel.MaxResponseBufferBytes + 1));
+
+        ChannelResult result = await Channel(stub)
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ChannelResult.Retry(BirdSmsCodes.TransportError), result);
     }
 
     [Fact]
@@ -174,7 +257,7 @@ public sealed class BirdSmsChannelTests
         canceled.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Channel(Accepted())
-            .SendAsync(Recipient, null, Body, "key-1", canceled.Token));
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", canceled.Token));
     }
 
     [Fact]
@@ -187,7 +270,8 @@ public sealed class BirdSmsChannelTests
             throw new InvalidOperationException("unreached");
         };
         using CancellationTokenSource source = new();
-        Task<ChannelResult> sending = Channel(stub).SendAsync(Recipient, null, Body, "key-1", source.Token);
+        Task<ChannelResult> sending = Channel(stub)
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", source.Token);
         await source.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => sending);
@@ -201,10 +285,10 @@ public sealed class BirdSmsChannelTests
         using ILoggerFactory factory = LoggerFactory.Create(logging => logging.AddProvider(logs));
         StubHandler stub = Accepted();
 
-        await Channel(stub, factory.CreateLogger<BirdSmsChannel>())
-            .SendAsync(Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
-        await Channel(Failed(HttpStatusCode.Unauthorized, "bad_key"), factory.CreateLogger<BirdSmsChannel>())
-            .SendAsync(Recipient, null, Body, "key-2", TestContext.Current.CancellationToken);
+        await Channel(stub, logger: factory.CreateLogger<BirdSmsChannel>())
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+        await Channel(Failed(HttpStatusCode.Unauthorized, "bad_key"), logger: factory.CreateLogger<BirdSmsChannel>())
+            .SendAsync(NotificationId, Recipient, null, Body, "key-2", TestContext.Current.CancellationToken);
 
         Assert.NotEmpty(logs.Entries);
         string[] secrets = ["237600000001", "041822", Body, ApiKey];
@@ -217,6 +301,25 @@ public sealed class BirdSmsChannelTests
                     secret, pair.Value?.ToString() ?? string.Empty, StringComparison.Ordinal));
             }
         }
+    }
+
+    [Fact]
+    public async Task A_transport_retry_logs_the_notification_and_the_failure()
+    {
+        RecordingLoggerProvider logs = new();
+        using ILoggerFactory factory = LoggerFactory.Create(logging => logging.AddProvider(logs));
+        StubHandler stub = Accepted();
+        stub.Behavior = (_, _) => throw new HttpRequestException("connection reset");
+
+        await Channel(stub, logger: factory.CreateLogger<BirdSmsChannel>())
+            .SendAsync(NotificationId, Recipient, null, Body, "key-1", TestContext.Current.CancellationToken);
+
+        RecordingLoggerProvider.LogEntry entry = Assert.Single(
+            logs.Entries,
+            entry => entry.Category == typeof(BirdSmsChannel).FullName && entry.Level == LogLevel.Warning);
+        Assert.Contains(NotificationId.ToString(), entry.Message, StringComparison.Ordinal);
+        Assert.Contains(BirdSmsCodes.TransportError, entry.Message, StringComparison.Ordinal);
+        Assert.Equal("connection reset", entry.Exception?.Message);
     }
 
     private sealed class FailingContent : HttpContent

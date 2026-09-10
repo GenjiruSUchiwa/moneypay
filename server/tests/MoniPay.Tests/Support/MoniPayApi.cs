@@ -71,8 +71,7 @@ public sealed class MoniPayApi : IAsyncLifetime
             {
                 services.RemoveAll<TimeProvider>();
                 services.AddSingleton<TimeProvider>(Time);
-                WithoutSmsChannel(services);
-                services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Sms, Sms);
+                UseStubSmsChannel(services);
                 services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Email, Email);
                 services.AddLogging(logging => logging.AddProvider(Logs));
                 UseSessionQueryCounter(services);
@@ -80,7 +79,9 @@ public sealed class MoniPayApi : IAsyncLifetime
         });
     }
 
-    public WebApplicationFactory<Program> CreateHost(Action<IWebHostBuilder>? customize = null)
+    public WebApplicationFactory<Program> CreateHost(
+        Action<IWebHostBuilder>? customize = null,
+        bool stubSmsChannel = true)
     {
         WebApplicationFactory<Program> secondary = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
@@ -91,7 +92,15 @@ public sealed class MoniPayApi : IAsyncLifetime
             builder.UseSetting(SessionsOptions.Keys.LegalPrivacyVersion, SignUpFlow.PrivacyVersion);
             UseNotificationTestSettings(builder);
             customize?.Invoke(builder);
-            builder.ConfigureServices(UseSessionQueryCounter);
+            builder.ConfigureServices(services =>
+            {
+                if (stubSmsChannel)
+                {
+                    UseStubSmsChannel(services);
+                }
+
+                UseSessionQueryCounter(services);
+            });
         });
         secondaryFactories.Add(secondary);
         return secondary;
@@ -112,18 +121,10 @@ public sealed class MoniPayApi : IAsyncLifetime
         return client;
     }
 
-    public static IServiceCollection WithoutSmsChannel(IServiceCollection services)
+    private void UseStubSmsChannel(IServiceCollection services)
     {
-        ArgumentNullException.ThrowIfNull(services);
-        foreach (ServiceDescriptor descriptor in services
-            .Where(descriptor => descriptor.ServiceType == typeof(INotificationChannel)
-                && Equals(descriptor.ServiceKey, NotificationChannel.Sms))
-            .ToArray())
-        {
-            services.Remove(descriptor);
-        }
-
-        return services;
+        services.RemoveAllKeyed<INotificationChannel>(NotificationChannel.Sms);
+        services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Sms, Sms);
     }
 
     public static IWebHostBuilder UseNotificationTestSettings(IWebHostBuilder builder)
@@ -131,9 +132,6 @@ public sealed class MoniPayApi : IAsyncLifetime
         ArgumentNullException.ThrowIfNull(builder);
         builder.UseSetting(NotificationsOptions.Keys.WorkerEnabled, "false");
         builder.UseSetting(NotificationsOptions.Keys.WorkerBatchSize, "10");
-        builder.UseSetting(NotificationsOptions.Keys.SmsBaseUrl, TestKeys.SmsBaseUrl);
-        builder.UseSetting(NotificationsOptions.Keys.SmsApiKey, TestKeys.SmsApiKey);
-        builder.UseSetting(NotificationsOptions.Keys.SmsSenderId, TestKeys.SmsSenderId);
         return builder;
     }
 

@@ -76,7 +76,7 @@ public sealed class MoniPayApi : IAsyncLifetime
             {
                 services.RemoveAll<TimeProvider>();
                 services.AddSingleton<TimeProvider>(Time);
-                MoniPayApi.WithoutSmsChannel(services);
+                services.RemoveAllKeyed<INotificationChannel>(NotificationChannel.Sms);
                 services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Sms, Sms);
                 services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Email, Email);
             });
@@ -351,7 +351,7 @@ Other parallel cases:
 
 ## Provider adapter tests
 
-The SMS provider is Bird. `Channels/BirdSmsChannelTests.cs` covers one test per documented provider response: accepted, throttled, invalid recipient, sender rejection, authentication failure, insufficient balance, duplicate key, timeout, transport failure, and malformed bodies. Each asserts the `ChannelResult` and that the request carried the documented fields, the `+`-prefixed recipient, the unchanged idempotency key, and no subject. `Channels/BirdSmsWiringTests.cs` resolves the production keyed SMS registration against a stub handler and proves a delivery cycle persists the provider reference. The log test pins that phone, code, body, and API key never reach the logs. The real sandbox is exercised only by the manual `scripts/bird-sms-smoke.sh`, once; see `docs/adr/0004-sms-provider.md`.
+The SMS provider is Bird. `Channels/BirdSmsChannelTests.cs` covers one test per documented provider response: accepted, throttled, invalid recipient, sender rejection, authentication failure, insufficient balance, duplicate key, timeout, transport failure, and malformed bodies. Each asserts the `ChannelResult` and that the request carried the documented fields, the `+`-prefixed recipient, the unchanged idempotency key, and no subject. `Channels/BirdSmsWiringTests.cs` resolves the production keyed SMS registration against a stub handler and proves a delivery cycle persists the provider reference, and that a channel-internal failure is recorded as a retry so the batch still saves. The log test pins that phone, code, body, and API key never reach the logs. The real sandbox is exercised only by the manual `scripts/bird-sms-smoke.sh`, once; see `docs/adr/0004-sms-provider.md`.
 
 ## Migration tests
 

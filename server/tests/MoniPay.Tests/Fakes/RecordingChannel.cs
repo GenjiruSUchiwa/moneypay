@@ -8,15 +8,15 @@ public sealed class RecordingChannel(string providerReference) : INotificationCh
 {
     private readonly ConcurrentQueue<ChannelCall> calls = new();
 
-    public sealed record ChannelCall(string Recipient, string? Subject, string Body, string IdempotencyKey, CancellationToken Token);
+    public sealed record ChannelCall(Guid NotificationId, string Recipient, string? Subject, string Body, string IdempotencyKey, CancellationToken Token);
 
     internal ChannelResult Result { get; set; } = new ChannelResult.Accepted(providerReference);
 
     public string? SlowRecipient { get; set; }
 
-    async Task<ChannelResult> INotificationChannel.SendAsync(string recipient, string? subject, string body, string idempotencyKey, CancellationToken cancellationToken)
+    async Task<ChannelResult> INotificationChannel.SendAsync(Guid notificationId, string recipient, string? subject, string body, string idempotencyKey, CancellationToken cancellationToken)
     {
-        calls.Enqueue(new ChannelCall(recipient, subject, body, idempotencyKey, cancellationToken));
+        calls.Enqueue(new ChannelCall(notificationId, recipient, subject, body, idempotencyKey, cancellationToken));
         if (recipient == SlowRecipient)
         {
             await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);

@@ -106,8 +106,8 @@ Every value is read through validated options with `ValidateOnStart`. A missing 
 | `MoniPay:Notifications:ProviderTimeout` | No | `00:00:10` |
 | `MoniPay:Notifications:Retention` | No | `30.00:00:00` |
 | `MoniPay:Notifications:Sms:BaseUrl` | No | `https://eu1.platform.bird.com` |
-| `MoniPay:Notifications:Sms:ApiKey` | Yes | Required |
-| `MoniPay:Notifications:Sms:SenderId` | No | Required, account-specific sender |
+| `MoniPay:Notifications:Sms:ApiKey` | Yes | Required to enable SMS delivery |
+| `MoniPay:Notifications:Sms:SenderId` | No | Required to enable SMS delivery, account-specific sender |
 | `MoniPay:Notifications:Email:BaseUrl` | No | Provider value |
 | `MoniPay:Notifications:Email:ApiKey` | Yes | Required once the provider is selected |
 | `MoniPay:Notifications:Email:FromAddress` | No | Required once the provider is selected |

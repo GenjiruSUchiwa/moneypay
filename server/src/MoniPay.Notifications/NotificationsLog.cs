@@ -43,14 +43,15 @@ internal static partial class NotificationsLog
     public static partial void Purged(ILogger logger, int count, DateTimeOffset cutoff);
 
     [LoggerMessage(EventId = 10, Level = LogLevel.Information,
-        Message = "Bird SMS submission accepted after {ElapsedMilliseconds}ms")]
-    public static partial void BirdSmsAccepted(ILogger logger, double elapsedMilliseconds);
+        Message = "Bird SMS for notification {NotificationId} accepted after {ElapsedMilliseconds}ms")]
+    public static partial void BirdSmsAccepted(ILogger logger, Guid notificationId, double elapsedMilliseconds);
 
     [LoggerMessage(EventId = 11, Level = LogLevel.Warning,
-        Message = "Bird SMS submission retried after {ElapsedMilliseconds}ms: {Code}")]
-    public static partial void BirdSmsRetried(ILogger logger, string code, double elapsedMilliseconds);
+        Message = "Bird SMS for notification {NotificationId} retried after {ElapsedMilliseconds}ms: {Code}")]
+    public static partial void BirdSmsRetried(
+        ILogger logger, Guid notificationId, string code, double elapsedMilliseconds, Exception? exception);
 
     [LoggerMessage(EventId = 12, Level = LogLevel.Error,
-        Message = "Bird SMS submission rejected after {ElapsedMilliseconds}ms: {Code}")]
-    public static partial void BirdSmsRejected(ILogger logger, string code, double elapsedMilliseconds);
+        Message = "Bird SMS for notification {NotificationId} rejected after {ElapsedMilliseconds}ms: {Code}")]
+    public static partial void BirdSmsRejected(ILogger logger, Guid notificationId, string code, double elapsedMilliseconds);
 }

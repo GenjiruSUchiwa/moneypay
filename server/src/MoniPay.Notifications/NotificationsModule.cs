@@ -21,32 +21,38 @@ public static class NotificationsModule
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        services.AddOptions<NotificationsOptions>()
+        OptionsBuilder<NotificationsOptions> notifications = services.AddOptions<NotificationsOptions>()
             .Bind(configuration.GetSection(NotificationsOptions.SectionName))
             .Validate(
                 options => options.IsWithinBounds(),
                 "The MoniPay:Notifications bounds are invalid: check the retention, the provider "
                 + "timeout and the worker bounds.")
-            .Validate(
-                options => options.IsSmsConfigured(),
-                $"The {NotificationsOptions.Keys.SmsBaseUrl}, {NotificationsOptions.Keys.SmsApiKey} "
-                + $"and {NotificationsOptions.Keys.SmsSenderId} settings are invalid: the base URL must be "
-                + "an absolute https URL without credentials, and the API key and sender ID must be set.")
             .RequireKey(options => options.DataKeyBase64, NotificationsOptions.Keys.DataKeyBase64)
             .ValidateOnStart();
 
-        services.AddHttpClient<BirdSmsChannel>()
-            .ConfigureHttpClient((serviceProvider, client) =>
-            {
-                NotificationsOptions.SmsOptions sms = serviceProvider
-                    .GetRequiredService<IOptions<NotificationsOptions>>().Value.Sms;
-                client.BaseAddress = sms.BaseUrl;
-                client.Timeout = Timeout.InfiniteTimeSpan;
-            })
-            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false });
-        services.AddKeyedTransient<INotificationChannel>(
-            NotificationChannel.Sms,
-            (serviceProvider, _) => serviceProvider.GetRequiredService<BirdSmsChannel>());
+        NotificationsOptions.SmsOptions sms = new();
+        configuration.GetSection(NotificationsOptions.Keys.SmsSection).Bind(sms);
+        if (sms.IsRequested())
+        {
+            notifications.Validate(
+                options => options.IsSmsConfigured(),
+                $"The {NotificationsOptions.Keys.SmsBaseUrl}, {NotificationsOptions.Keys.SmsApiKey} "
+                + $"and {NotificationsOptions.Keys.SmsSenderId} settings are invalid: the base URL must be "
+                + "an absolute https URL without credentials, and the API key and sender ID must be set.");
+
+            services.AddHttpClient<BirdSmsChannel>()
+                .ConfigureHttpClient((serviceProvider, client) =>
+                {
+                    client.BaseAddress = serviceProvider
+                        .GetRequiredService<IOptions<NotificationsOptions>>().Value.Sms?.NormalizedBaseUrl;
+                    client.Timeout = BirdSmsChannel.HttpTimeout;
+                    client.MaxResponseContentBufferSize = BirdSmsChannel.MaxResponseBufferBytes;
+                })
+                .ConfigurePrimaryHttpMessageHandler(BirdSmsChannel.CreatePrimaryHandler);
+            services.AddKeyedTransient<INotificationChannel>(
+                NotificationChannel.Sms,
+                (serviceProvider, _) => serviceProvider.GetRequiredService<BirdSmsChannel>());
+        }
 
         services.AddSingleton<DeliverySignal>();
         services.AddSingleton<RecipientProtector>();
