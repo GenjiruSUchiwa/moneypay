@@ -7,9 +7,12 @@ namespace MoniPay.Tests.Fakes;
 
 public sealed class StubHandler(HttpStatusCode statusCode, string body) : HttpMessageHandler
 {
+    private readonly ConcurrentQueue<HttpRequestMessage> requests = new();
     private readonly ConcurrentQueue<RequestSnapshot> snapshots = new();
 
     public IReadOnlyList<RequestSnapshot> Snapshots => snapshots.ToArray();
+
+    public IReadOnlyList<HttpRequestMessage> Requests => requests.ToArray();
 
     public Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>? Behavior { get; set; }
 
@@ -25,6 +28,7 @@ public sealed class StubHandler(HttpStatusCode statusCode, string body) : HttpMe
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
+        requests.Enqueue(request);
         string bodyText = request.Content is null
             ? string.Empty
             : await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);

@@ -32,6 +32,35 @@ public sealed class NotificationsStartupTests(MoniPayApi api)
     }
 
     [Fact]
+    public void The_host_refuses_to_start_without_a_valid_email_base_url() =>
+        AssertEmailSettingFails(NotificationsOptions.Keys.EmailBaseUrl, "not-a-url", NotificationsOptions.Keys.EmailBaseUrl);
+
+    [Fact]
+    public void The_host_refuses_to_start_without_a_safe_email_api_key() =>
+        AssertEmailSettingFails(NotificationsOptions.Keys.EmailApiKey, "", NotificationsOptions.Keys.EmailApiKey);
+
+    [Fact]
+    public void The_host_refuses_to_start_without_a_valid_email_sender() =>
+        AssertEmailSettingFails(NotificationsOptions.Keys.EmailFromAddress, "not-an-email", NotificationsOptions.Keys.EmailFromAddress);
+
+    private void AssertEmailSettingFails(string setting, string value, string expectedKey)
+    {
+        using WebApplicationFactory<Program> factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment(MoniPayEnvironments.Testing);
+                builder.UseSetting("ConnectionStrings:MoniPay", api.ConnectionString);
+                builder.UseTestKeys();
+                builder.UseSetting(NotificationsOptions.Keys.WorkerEnabled, "false");
+                builder.UseSetting(setting, value);
+            });
+
+        OptionsValidationException exception = Assert.Throws<OptionsValidationException>(factory.CreateClient);
+
+        Assert.Contains(expectedKey, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void The_host_refuses_to_start_without_sms_settings()
     {
         using WebApplicationFactory<Program> factory = HostWithSmsOverride(

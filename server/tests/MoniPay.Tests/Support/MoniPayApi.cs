@@ -72,6 +72,7 @@ public sealed class MoniPayApi : IAsyncLifetime
                 services.RemoveAll<TimeProvider>();
                 services.AddSingleton<TimeProvider>(Time);
                 UseStubSmsChannel(services);
+                services.RemoveAllKeyed<INotificationChannel>(NotificationChannel.Email);
                 services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Email, Email);
                 services.AddLogging(logging => logging.AddProvider(Logs));
                 UseSessionQueryCounter(services);

@@ -24,6 +24,12 @@ public static class TestKeys
 
     public static readonly string NotificationsData = Encode("NotificationsDataKeyForTests0000");
 
+    public const string EmailBaseUrl = "https://email.tests";
+
+    public const string EmailApiKey = "monipay-tests-email-api-key";
+
+    public const string EmailFromAddress = "no-reply@tests.monipay.example";
+
     public const string SmsBaseUrl = "https://sms-tests.monipay.example";
 
     public const string SmsApiKey = "sms-tests-inert";
@@ -41,6 +47,9 @@ public static class TestKeys
         builder.UseSetting(SessionsOptions.Keys.LegalTermsVersion, SignUpFlow.TermsVersion);
         builder.UseSetting(SessionsOptions.Keys.LegalPrivacyVersion, SignUpFlow.PrivacyVersion);
         builder.UseSetting(NotificationsOptions.Keys.DataKeyBase64, NotificationsData);
+        builder.UseSetting(NotificationsOptions.Keys.EmailBaseUrl, EmailBaseUrl);
+        builder.UseSetting(NotificationsOptions.Keys.EmailApiKey, EmailApiKey);
+        builder.UseSetting(NotificationsOptions.Keys.EmailFromAddress, EmailFromAddress);
         builder.UseSetting(NotificationsOptions.Keys.SmsBaseUrl, SmsBaseUrl);
         builder.UseSetting(NotificationsOptions.Keys.SmsApiKey, SmsApiKey);
         builder.UseSetting(NotificationsOptions.Keys.SmsSenderId, SmsSenderId);

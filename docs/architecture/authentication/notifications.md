@@ -29,7 +29,7 @@ The client learns the delivery result from `GET /signups/{signUpId}`, through th
 | Channel | First use | Provider | Status |
 |---|---|---|---|
 | SMS | Verification code | Bird | Selected, see `docs/adr/0004-sms-provider.md` |
-| Email | Welcome message, security alerts | Not selected | Blocked by the provider decision |
+| Email | Welcome message, security alerts | Bird ([ADR 0005](../../adr/0005-email-provider.md)) | Selected; needs an API key and a verified sender |
 | Push | Later: session alerts, transaction receipts | APNs through a provider or direct | Out of scope: needs device-token registration |
 | In-app | Later: the iOS `AppNotification` feed | MoniPay API | Out of scope: needs a notifications read route |
 
@@ -68,12 +68,12 @@ flowchart LR
         Enqueue[NotificationOutbox.Enqueue] --> Table[(notifications)]
         Table --> Worker[NotificationWorker]
         Worker --> Sms[BirdSmsChannel]
-        Worker --> Email[IEmailChannel]
+        Worker --> Email[BirdEmailChannel]
     end
 
     Port --> Adapter --> Enqueue
-    Sms --> Bird[Bird SMS API]
-    Email --> EmailProvider[Email provider]
+    Sms --> BirdSms[Bird SMS API]
+    Email --> BirdEmail[Bird Email API]
 ```
 
 `MoniPay.Sessions` declares the port `IVerificationCodeSender`. `MoniPay.Api` implements it with `VerificationCodeDeliveryAdapter`, which calls the public `NotificationOutbox` of `MoniPay.Notifications`. Neither module references the other.
@@ -115,10 +115,10 @@ server/src/MoniPay.Notifications/
     INotificationChannel.cs
     ChannelResult.cs
     BirdSmsChannel.cs
-    <SelectedEmailProvider>EmailChannel.cs
+    BirdEmailChannel.cs
 ```
 
-Do not create the email channel before its provider is selected. The test suite uses `RecordingChannel` from `MoniPay.Tests/Fakes/`.
+The test suite uses two `RecordingChannel` instances from `MoniPay.Tests/Fakes/`, one keyed `Sms` and one keyed `Email`.
 
 ## Public interface
 
@@ -209,11 +209,11 @@ internal interface INotificationChannel
 
 A provider that supports an idempotency key receives `idempotencyKey`, so a retry after a lost response does not send twice. Bird replays the retained response for the same key within its idempotency window; see `docs/adr/0004-sms-provider.md`.
 
-Each channel is a typed `HttpClient` registered with `AddHttpClient<BirdSmsChannel>` plus a keyed transient `INotificationChannel` factory for `NotificationChannel.Sms`, with the provider credentials from validated options. The SMS channel is registered, and its settings validated, only when `MoniPay:Notifications:Sms` supplies an API key or a sender ID; without them no SMS channel exists and the processor's channel-not-configured path keeps the rows waiting. The `HttpClient.Timeout` is infinite: the processor deadline from `NotificationsOptions.ProviderTimeout` stays authoritative through the linked token, and the response body is read through a bounded buffer. Retries belong to the worker schedule, so no HTTP resilience package is added. Redirects are disabled so a provider redirect can neither forward credentials nor silently change submission semantics.
+Each channel is a typed `HttpClient` registered with `AddHttpClient<BirdSmsChannel>` / `AddHttpClient<BirdEmailChannel>` plus a keyed `INotificationChannel` factory for `NotificationChannel.Sms` / `NotificationChannel.Email`, with the provider credentials from validated options. The SMS channel is registered, and its settings validated, only when `MoniPay:Notifications:Sms` supplies an API key or a sender ID; without them no SMS channel exists and the processor's channel-not-configured path keeps the rows waiting. The email settings are always validated at startup. The SMS `HttpClient.Timeout` is infinite: the processor deadline from `NotificationsOptions.ProviderTimeout` stays authoritative through the linked token, and the response body is read through a bounded buffer. Retries belong to the worker schedule, so no HTTP resilience package is added. Redirects are disabled so a provider redirect can neither forward credentials nor silently change submission semantics.
 
 A channel returns, it does not throw: a transport exception, a timeout, a malformed body or a fault inside the adapter becomes `Retry` or `Rejected` with a stable code. Caller cancellation propagates as `OperationCanceledException`.
 
-The email channel is not registered yet and no placeholder pretends to send. The processor resolves the channel with `GetKeyedService`; when none is registered it records `Retry` with the code `channel-not-configured`, logs one `Warning` per cycle, and the row waits in the outbox until a channel exists.
+No placeholder channel pretends to send. The processor resolves the channel with `GetKeyedService`; when none is registered it records `Retry` with the code `channel-not-configured`, logs one `Warning` per cycle, and the row waits in the outbox until a channel exists.
 
 ## Persistence
 
@@ -321,9 +321,9 @@ Sign-up tests use the real outbox through the host `VerificationCodeDeliveryAdap
 
 ## Provider decision gate
 
-The SMS provider is Bird, decided in `docs/adr/0004-sms-provider.md`. The email provider is still open; the gate in [Security and operations](security-and-operations.md#provider-decision-gate) lists what that decision must record.
+Both providers are Bird: SMS is decided in `docs/adr/0004-sms-provider.md`, email in [ADR 0005](../../adr/0005-email-provider.md), which records the sandbox, the response mapping, and the operational notes.
 
-For email, the decision must also cover the sending domain, DKIM and SPF setup, bounce handling, and a suppression list.
+The gate in [Security and operations](security-and-operations.md#provider-decision-gate) lists what a provider decision must record. For email, that additionally covered the sending domain, DKIM and SPF setup, bounce handling, and a suppression list.
 
 ## Deliberate omissions
 

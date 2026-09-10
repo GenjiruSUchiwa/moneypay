@@ -28,6 +28,13 @@ public static class NotificationsModule
                 "The MoniPay:Notifications bounds are invalid: check the retention, the provider "
                 + "timeout and the worker bounds.")
             .RequireKey(options => options.DataKeyBase64, NotificationsOptions.Keys.DataKeyBase64)
+            .Validate(
+                options => options.ProviderTimeout <= TimeSpan.FromMilliseconds(int.MaxValue),
+                $"The {NotificationsOptions.Keys.ProviderTimeout} value is invalid: it must fit the HttpClient timeout.")
+            .Validate(
+                options => options.Email.HasWorkableEmail(),
+                $"The email settings are invalid: check {NotificationsOptions.Keys.EmailBaseUrl}, "
+                + $"{NotificationsOptions.Keys.EmailApiKey} and {NotificationsOptions.Keys.EmailFromAddress}.")
             .ValidateOnStart();
 
         NotificationsOptions.SmsOptions sms = new();
@@ -69,6 +76,19 @@ public static class NotificationsModule
         services.AddHostedService<NotificationWorker>();
         services.AddScoped<NotificationPurger>();
         services.AddHostedService<NotificationPurgeWorker>();
+
+        services.AddHttpClient<BirdEmailChannel>()
+            .ConfigureHttpClient((serviceProvider, client) =>
+            {
+                NotificationsOptions options = serviceProvider.GetRequiredService<IOptions<NotificationsOptions>>().Value;
+                client.BaseAddress = new Uri(options.Email.BaseUrl, UriKind.Absolute);
+                client.Timeout = options.ProviderTimeout;
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false })
+            .RedactLoggedHeaders(["Authorization"]);
+        services.AddKeyedScoped<INotificationChannel>(
+            NotificationChannel.Email,
+            (serviceProvider, _) => serviceProvider.GetRequiredService<BirdEmailChannel>());
 
         return services;
     }
