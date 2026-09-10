@@ -312,7 +312,7 @@ Log events carry `NotificationId`, `Kind`, `Channel`, `CorrelationId`, `Attempts
 
 ## Test doubles
 
-`MoniPay.Tests/Fakes/RecordingChannel.cs` implements `INotificationChannel`, records every call, and returns a configurable `ChannelResult`. The test host registers one instance for SMS and one for email. A sign-up test runs a delivery cycle and reads the verification code from the recorded SMS body.
+`MoniPay.Tests/Fakes/RecordingChannel.cs` implements `INotificationChannel`, records every call, and returns a configurable `ChannelResult`. The test host registers one instance for SMS and one for email, after removing the production keyed SMS registration. A sign-up test runs a delivery cycle and reads the verification code from the recorded SMS body.
 
 The test host sets `MoniPay:Notifications:Worker:Enabled` to `false`. A test calls `Api.RunNotificationCycleAsync()` to deliver. See [Testing strategy](testing-strategy.md#the-test-host).
 
