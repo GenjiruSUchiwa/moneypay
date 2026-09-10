@@ -48,9 +48,9 @@ public sealed class MoniPayApi : IAsyncLifetime
 
     public TestTimeProvider Time { get; } = new();
 
-    public RecordingSmsChannel Sms { get; } = new();
+    public RecordingChannel Sms { get; } = new("sms-ref");
 
-    public RecordingEmailChannel Email { get; } = new();
+    public RecordingChannel Email { get; } = new("email-ref");
 
     public async ValueTask InitializeAsync()
     {
@@ -76,10 +76,9 @@ public sealed class MoniPayApi : IAsyncLifetime
             {
                 services.RemoveAll<TimeProvider>();
                 services.AddSingleton<TimeProvider>(Time);
-                services.RemoveAll<ISmsChannel>();
-                services.AddSingleton<ISmsChannel>(Sms);
-                services.RemoveAll<IEmailChannel>();
-                services.AddSingleton<IEmailChannel>(Email);
+                MoniPayApi.WithoutSmsChannel(services);
+                services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Sms, Sms);
+                services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Email, Email);
             });
         });
     }
@@ -106,7 +105,7 @@ Isolation comes from data, not from containers. Each test starts its own sign-up
 |---|---|---|---|
 | `RecordingChannel` | `INotificationChannel` | Recipient, subject, body, idempotency key | Next `ChannelResult` |
 | `TestTimeProvider` | `TimeProvider` | Nothing | `Advance`, `Set`, `Reset` |
-| `StubHandler` | `HttpMessageHandler` | Requests | Canned status and body |
+| `StubHandler` | `HttpMessageHandler` | Request snapshots | Canned status and body, injectable behavior |
 
 `Support/DatabaseAssertions.cs` reads every table through Npgsql and returns the columns holding a given plaintext, for the "no personal data in a row" assertions.
 
@@ -147,8 +146,7 @@ server/tests/MoniPay.Tests/
     TestPhones.cs
     TestTimeProvider.cs
   Fakes/
-    RecordingSmsChannel.cs
-    RecordingEmailChannel.cs
+    RecordingChannel.cs
     RecordingVerificationCodeSender.cs
     StubRegisteredPhoneLookup.cs
     StubHandler.cs
@@ -185,8 +183,9 @@ server/tests/MoniPay.Tests/
     Registration/RegisterUserTests.cs
     CurrentUser/GetCurrentUserTests.cs
   Notifications/
-    Deliver/NotificationWorkerTests.cs
-    Channels/<SelectedSmsProvider>SmsChannelTests.cs
+    Deliver/NotificationProcessorTests.cs
+    Channels/BirdSmsChannelTests.cs
+    Channels/BirdSmsWiringTests.cs
   Migrations/
     SchemaTests.cs
 ```
@@ -352,7 +351,7 @@ Other parallel cases:
 
 ## Provider adapter tests
 
-Once a provider is selected, its channel gets one test per documented provider response: accepted, throttled, invalid recipient, authentication failure, timeout, malformed body. Each asserts the `ChannelResult` and that the request carried the idempotency key and no extra personal data.
+The SMS provider is Bird. `Channels/BirdSmsChannelTests.cs` covers one test per documented provider response: accepted, throttled, invalid recipient, sender rejection, authentication failure, insufficient balance, duplicate key, timeout, transport failure, and malformed bodies. Each asserts the `ChannelResult` and that the request carried the documented fields, the `+`-prefixed recipient, the unchanged idempotency key, and no subject. `Channels/BirdSmsWiringTests.cs` resolves the production keyed SMS registration against a stub handler and proves a delivery cycle persists the provider reference. The log test pins that phone, code, body, and API key never reach the logs. The real sandbox is exercised only by the manual `scripts/bird-sms-smoke.sh`, once; see `docs/adr/0004-sms-provider.md`.
 
 ## Migration tests
 

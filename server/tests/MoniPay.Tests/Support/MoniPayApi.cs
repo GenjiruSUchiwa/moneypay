@@ -71,6 +71,7 @@ public sealed class MoniPayApi : IAsyncLifetime
             {
                 services.RemoveAll<TimeProvider>();
                 services.AddSingleton<TimeProvider>(Time);
+                WithoutSmsChannel(services);
                 services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Sms, Sms);
                 services.AddKeyedSingleton<INotificationChannel>(NotificationChannel.Email, Email);
                 services.AddLogging(logging => logging.AddProvider(Logs));
@@ -88,6 +89,7 @@ public sealed class MoniPayApi : IAsyncLifetime
             builder.UseTestKeys();
             builder.UseSetting(SessionsOptions.Keys.LegalTermsVersion, SignUpFlow.TermsVersion);
             builder.UseSetting(SessionsOptions.Keys.LegalPrivacyVersion, SignUpFlow.PrivacyVersion);
+            UseNotificationTestSettings(builder);
             customize?.Invoke(builder);
             builder.ConfigureServices(UseSessionQueryCounter);
         });
@@ -110,11 +112,28 @@ public sealed class MoniPayApi : IAsyncLifetime
         return client;
     }
 
+    public static IServiceCollection WithoutSmsChannel(IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        foreach (ServiceDescriptor descriptor in services
+            .Where(descriptor => descriptor.ServiceType == typeof(INotificationChannel)
+                && Equals(descriptor.ServiceKey, NotificationChannel.Sms))
+            .ToArray())
+        {
+            services.Remove(descriptor);
+        }
+
+        return services;
+    }
+
     public static IWebHostBuilder UseNotificationTestSettings(IWebHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         builder.UseSetting(NotificationsOptions.Keys.WorkerEnabled, "false");
         builder.UseSetting(NotificationsOptions.Keys.WorkerBatchSize, "10");
+        builder.UseSetting(NotificationsOptions.Keys.SmsBaseUrl, TestKeys.SmsBaseUrl);
+        builder.UseSetting(NotificationsOptions.Keys.SmsApiKey, TestKeys.SmsApiKey);
+        builder.UseSetting(NotificationsOptions.Keys.SmsSenderId, TestKeys.SmsSenderId);
         return builder;
     }
 
