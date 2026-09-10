@@ -188,7 +188,7 @@ public sealed class NotificationProcessorTests(MoniPayApi api) : MoniPayApiTest(
         Notification row = await RowAsync(id);
         Assert.Equal(NotificationStatus.Pending, row.Status);
         Assert.Equal(1, row.Attempts);
-        Assert.Equal(NotificationProcessor.ProviderTimeout, row.LastErrorCode);
+        Assert.Equal(ChannelResult.ProviderTimeout, row.LastErrorCode);
     }
 
     [Fact]
