@@ -130,8 +130,8 @@ PostgreSQL container for the whole run, so **a Docker daemon must be running**.
 finds no test and still reports success.
 
 - `dotnet test server/MoniPay.slnx` — the whole suite
-- `dotnet test server/MoniPay.slnx --filter "FullyQualifiedName~WalletTests"` — one class
-- `dotnet test server/MoniPay.slnx --filter "FullyQualifiedName~WalletTests.HoldReleasesOnVoid"` — one test
+- `dotnet test server/MoniPay.slnx -- --filter-class '*WalletEndpointsTests'` — one class
+- `dotnet test server/MoniPay.slnx -- --filter-method '*WalletEndpointsTests.The_wallet_module_maps_its_own_route_without_the_host'` — one test
 - `dotnet test server/MoniPay.slnx --no-build` — reuse the last build
 
 ### Format and analyze

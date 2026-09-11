@@ -38,23 +38,32 @@ public static class TestKeys
 
     public static IWebHostBuilder UseTestKeys(this IWebHostBuilder builder)
     {
-        builder.UseSetting(UsersOptions.Keys.PersonalDataKeyBase64, UsersPersonalData);
-        builder.UseSetting(SessionsOptions.Keys.VerificationCodeKeyBase64, VerificationCode);
-        builder.UseSetting(SessionsOptions.Keys.PersonalDataKeyBase64, SessionsPersonalData);
-        builder.UseSetting(SessionsOptions.Keys.SigningKeyBase64, Signing);
-        builder.UseSetting(SessionsOptions.Keys.Issuer, Issuer);
-        builder.UseSetting(SessionsOptions.Keys.Audience, Audience);
-        builder.UseSetting(SessionsOptions.Keys.LegalTermsVersion, SignUpFlow.TermsVersion);
-        builder.UseSetting(SessionsOptions.Keys.LegalPrivacyVersion, SignUpFlow.PrivacyVersion);
-        builder.UseSetting(NotificationsOptions.Keys.DataKeyBase64, NotificationsData);
-        builder.UseSetting(NotificationsOptions.Keys.EmailBaseUrl, EmailBaseUrl);
-        builder.UseSetting(NotificationsOptions.Keys.EmailApiKey, EmailApiKey);
-        builder.UseSetting(NotificationsOptions.Keys.EmailFromAddress, EmailFromAddress);
-        builder.UseSetting(NotificationsOptions.Keys.SmsBaseUrl, SmsBaseUrl);
-        builder.UseSetting(NotificationsOptions.Keys.SmsApiKey, SmsApiKey);
-        builder.UseSetting(NotificationsOptions.Keys.SmsSenderId, SmsSenderId);
+        foreach ((string key, string value) in Keys)
+        {
+            builder.UseSetting(key, value);
+        }
+
         return builder;
     }
+
+    private static readonly (string Key, string Value)[] Keys =
+    [
+        (UsersOptions.Keys.PersonalDataKeyBase64, UsersPersonalData),
+        (SessionsOptions.Keys.VerificationCodeKeyBase64, VerificationCode),
+        (SessionsOptions.Keys.PersonalDataKeyBase64, SessionsPersonalData),
+        (SessionsOptions.Keys.SigningKeyBase64, Signing),
+        (SessionsOptions.Keys.Issuer, Issuer),
+        (SessionsOptions.Keys.Audience, Audience),
+        (SessionsOptions.Keys.LegalTermsVersion, SignUpFlow.TermsVersion),
+        (SessionsOptions.Keys.LegalPrivacyVersion, SignUpFlow.PrivacyVersion),
+        (NotificationsOptions.Keys.DataKeyBase64, NotificationsData),
+        (NotificationsOptions.Keys.EmailBaseUrl, EmailBaseUrl),
+        (NotificationsOptions.Keys.EmailApiKey, EmailApiKey),
+        (NotificationsOptions.Keys.EmailFromAddress, EmailFromAddress),
+        (NotificationsOptions.Keys.SmsBaseUrl, SmsBaseUrl),
+        (NotificationsOptions.Keys.SmsApiKey, SmsApiKey),
+        (NotificationsOptions.Keys.SmsSenderId, SmsSenderId),
+    ];
 
     private static string Encode(string value) =>
         Convert.ToBase64String(Encoding.ASCII.GetBytes(value));

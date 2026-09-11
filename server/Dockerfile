@@ -20,8 +20,9 @@ RUN dotnet publish src/MoniPay.Api/MoniPay.Api.csproj -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 WORKDIR /app
 # Alpine ships no IANA database, and a CEMAC timestamp is stored and rendered in Africa/Douala.
-RUN apk add --no-cache tzdata \
+RUN apk add --no-cache tzdata icu-libs \
     && addgroup -S monipay && adduser -S monipay -G monipay
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 COPY --from=build /app/publish .
 USER monipay
 

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using MoniPay.Api;
 using MoniPay.Notifications;
+using MoniPay.Notifications.Channels;
 using MoniPay.Tests.Support;
 using Xunit;
 
@@ -75,10 +77,6 @@ public sealed class NotificationsStartupTests(MoniPayApi api)
     [InlineData(NotificationsOptions.Keys.SmsBaseUrl, "http://sms-tests.monipay.example")]
     [InlineData(NotificationsOptions.Keys.SmsBaseUrl, "sms-tests.monipay.example")]
     [InlineData(NotificationsOptions.Keys.SmsBaseUrl, "https://user:secret@sms-tests.monipay.example")]
-    [InlineData(NotificationsOptions.Keys.SmsApiKey, "")]
-    [InlineData(NotificationsOptions.Keys.SmsApiKey, "   ")]
-    [InlineData(NotificationsOptions.Keys.SmsSenderId, "")]
-    [InlineData(NotificationsOptions.Keys.SmsSenderId, "   ")]
     public void The_host_refuses_to_start_with_invalid_sms_settings(string key, string value)
     {
         using WebApplicationFactory<Program> factory = HostWithSmsOverride(api, key, value);
@@ -86,6 +84,17 @@ public sealed class NotificationsStartupTests(MoniPayApi api)
         OptionsValidationException exception = Assert.Throws<OptionsValidationException>(factory.CreateClient);
 
         Assert.Contains(key, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(NotificationsOptions.Keys.SmsApiKey)]
+    [InlineData(NotificationsOptions.Keys.SmsSenderId)]
+    public void The_host_starts_without_sms_when_only_one_credential_is_set(string key)
+    {
+        using WebApplicationFactory<Program> factory = HostWithSmsOverride(api, key, string.Empty);
+        _ = factory.CreateClient();
+
+        Assert.Null(factory.Services.GetKeyedService<INotificationChannel>(NotificationChannel.Sms));
     }
 
     [Fact]
@@ -105,6 +114,7 @@ public sealed class NotificationsStartupTests(MoniPayApi api)
         {
             builder.UseEnvironment(MoniPayEnvironments.Testing);
             builder.UseSetting("ConnectionStrings:MoniPay", api.ConnectionString);
+            builder.UseSetting(NotificationsOptions.Keys.WorkerEnabled, "false");
             builder.UseTestKeys();
             builder.UseSetting(key, value);
         });

@@ -33,20 +33,19 @@ The in-process rate limiter counts per replica. The persistent per-phone limits 
 
 ## Container image
 
-`server/Dockerfile` already builds a multi-stage Alpine image, runs as a non-root user, and exposes `8080` with a liveness `HEALTHCHECK`.
+`server/Dockerfile` builds a multi-stage Alpine image, runs as a non-root user, and exposes `8080`
+with a liveness `HEALTHCHECK`.
 
-Required changes:
-
-| Change | Reason |
-|---|---|
-| Add a `COPY` line for each new project file before `dotnet restore`, in the pull request that creates the project | The restore layer must see every project: the image does not build without the line, and the cache misses on every build without the ordering |
-| Add `icu-libs` next to `tzdata` in the runtime stage | `fr-CM` resolves to the invariant culture without ICU, and every `.resx` lookup falls back to English |
-| Keep `InvariantGlobalization` unset or `false` | Same reason |
-| Add `HEALTHCHECK` unchanged | `/health` stays the liveness route |
-
-`icu-libs` is a gap today, not only for sign-up: the Wallet localization tests pass on the SDK image because it has ICU, and the runtime image does not. Fix it in its own change before the first localized SMS ships.
-
-The image does not contain `appsettings.Development.json`, user secrets, or any key. `server/.dockerignore` already excludes `bin/`, `obj/`, and `.git/`.
+- The runtime stage installs `tzdata` and `icu-libs`, then sets
+  `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false`. Without ICU, `fr-CM` resolves to the invariant
+  culture and every `.resx` lookup falls back to English.
+- `dotnet publish` excludes `appsettings.Development.json` (`CopyToPublishDirectory="Never"` in
+  `MoniPay.Api.csproj`), so the image carries no development settings, no user secrets and no
+  credentials. `InvariantGlobalization` is not set anywhere.
+- `server/.dockerignore` excludes `bin/`, `obj/`, and `.git/`.
+- A new module adds its own `COPY …csproj` line before `dotnet restore`, in the pull request that
+  creates the project.
+- The container writes nothing outside `/tmp`; it runs with `--read-only --tmpfs /tmp`.
 
 ## Configuration
 
@@ -68,16 +67,18 @@ Every value is read through validated options with `ValidateOnStart`. A missing 
 | `MoniPay:Sessions:Issuer` | No | Required |
 | `MoniPay:Sessions:Audience` | No | Required |
 | `MoniPay:Sessions:SigningKeyBase64` | Yes | Required, 32 bytes |
-| `MoniPay:Sessions:PreviousSigningKeyBase64` | Yes | Empty; set during rotation |
+| `MoniPay:Sessions:PreviousSigningKeyBase64` | Yes | Empty, accepted as unset; set during rotation |
 | `MoniPay:Sessions:VerificationCodeKeyBase64` | Yes | Required, 32 bytes |
 | `MoniPay:Sessions:PersonalDataKeyBase64` | Yes | Required, 32 bytes |
-| `MoniPay:Sessions:SupportedCountries` | No | The iOS `Country` list |
+| `MoniPay:Sessions:SupportedCountries` | No | The six countries the iOS `Country` list ships |
 | `MoniPay:Sessions:VerificationCodeLength` | No | `6` |
 | `MoniPay:Sessions:VerificationCodeLifetime` | No | `00:05:00` |
 | `MoniPay:Sessions:ResendCooldown` | No | `00:01:00` |
 | `MoniPay:Sessions:MaximumResends` | No | `3` |
 | `MoniPay:Sessions:MaximumVerificationAttempts` | No | `5` |
 | `MoniPay:Sessions:SignUpLifetime` | No | `00:15:00` |
+| `MoniPay:Sessions:StartWindow` | No | `01:00:00` |
+| `MoniPay:Sessions:MaximumStartsPerWindow` | No | `5` |
 | `MoniPay:Sessions:AccessTokenLifetime` | No | `00:10:00` |
 | `MoniPay:Sessions:RefreshTokenLifetime` | No | `30.00:00:00` |
 | `MoniPay:Sessions:ClockSkew` | No | `00:00:30` |
@@ -86,7 +87,6 @@ Every value is read through validated options with `ValidateOnStart`. A missing 
 | `MoniPay:Sessions:Cleanup:BatchSize` | No | `500` |
 | `MoniPay:Sessions:Legal:TermsVersion` | No | Required |
 | `MoniPay:Sessions:Legal:PrivacyVersion` | No | Required |
-| `MoniPay:Sessions:LegacyVerificationProblemTypes` | No | `false`; `true` only during the sign-in rename rollout, then removed |
 
 ### Users keys
 
@@ -121,7 +121,11 @@ Every value is read through validated options with `ValidateOnStart`. A missing 
 
 Environment variables replace `:` with `__`: `MoniPay__Sessions__SigningKeyBase64`.
 
-`appsettings.json` declares every non-secret key with its default and every secret key with an empty value. No environment file ever fills a secret in.
+`appsettings.json` declares every active key: non-secret values with their default, secrets with an
+empty value, and `SupportedCountries` with the six contract entries. `AllowedHosts` stays `*` there;
+production sets it to the API host name, for example `AllowedHosts="api.example.com"`.
+`MoniPay:ForwardedHeaders:KnownProxies` is an empty array until the edge addresses are known. No
+environment file ever fills a secret in.
 
 ## Secrets
 
@@ -132,19 +136,10 @@ Environment variables replace `:` with `__`: `MoniPay__Sessions__SigningKeyBase6
 | CI | GitHub environment secrets, never echoed |
 | Staging and production | Environment variables injected by the platform's secret store |
 
-Local setup for the new keys:
-
-```bash
-for key in Sessions:SigningKeyBase64 Sessions:VerificationCodeKeyBase64 \
-           Sessions:PersonalDataKeyBase64 Users:PersonalDataKeyBase64 \
-           Notifications:DataKeyBase64; do
-  dotnet user-secrets set "MoniPay:$key" "$(openssl rand -base64 32)" --project server/src/MoniPay.Api
-done
-dotnet user-secrets set "MoniPay:Sessions:Issuer" "https://api.monipay.local" --project server/src/MoniPay.Api
-dotnet user-secrets set "MoniPay:Sessions:Audience" "monipay-ios" --project server/src/MoniPay.Api
-dotnet user-secrets set "MoniPay:Notifications:Email:ApiKey" "<bk_eu1_...>" --project server/src/MoniPay.Api
-dotnet user-secrets set "MoniPay:Notifications:Email:FromAddress" "hello@mail.example.com" --project server/src/MoniPay.Api
-```
+The five cryptographic keys are distinct and each decodes to 32 bytes. `PreviousSigningKeyBase64`
+stays empty until a rotation. SMS enables only when both its API key and sender ID are set; a single
+credential leaves it off without blocking startup. The bootstrap commands live in
+`agents/rules/reference-dotnet-local-dev.md`.
 
 ### Key rotation
 
@@ -159,48 +154,37 @@ A leaked key is revoked at its source first, then replaced, then removed from hi
 
 ## Local development
 
-The existing setup uses Homebrew PostgreSQL and `dotnet run`. It stays valid.
+`server/compose.yaml` starts PostgreSQL 17 and Seq; the API still runs with `dotnet run`, so
+debugging and hot reload work. Running the API itself inside Compose is not needed.
 
-Add `server/compose.yaml` for a one-command environment:
-
-```yaml
-services:
-  postgres:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_DB: monipay
-      POSTGRES_USER: monipay
-      POSTGRES_PASSWORD: monipay
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U monipay"]
-      interval: 5s
-
-  seq:
-    image: datalust/seq:latest
-    environment:
-      ACCEPT_EULA: "Y"
-    ports:
-      - "5341:80"
-
-volumes:
-  postgres:
+```bash
+export MONIPAY_POSTGRES_PASSWORD="$(openssl rand -base64 24)"
+docker compose -f server/compose.yaml up -d --wait
+docker compose -f server/compose.yaml ps
 ```
 
-`docker compose -f server/compose.yaml up -d` starts the database and the log viewer. The API still runs with `dotnet run`, so debugging and hot reload work. Running the API itself inside Compose is not needed for development.
+Ports bind to loopback and the database password arrives through `MONIPAY_POSTGRES_PASSWORD`; no
+credential is committed. `docker compose -f server/compose.yaml down` stops both services and keeps
+the named volume, so PostgreSQL data survives a restart; adding `-v` deletes the local data. Seq
+runs without authentication for local viewing at <http://localhost:5341>.
 
-The Compose password is a local development value for an unexposed container. Nothing in the file is a production secret.
+The Homebrew option stays valid: `brew install postgresql@17 && brew services start postgresql@17`,
+then `createuser --pwprompt monipay` and `createdb --owner monipay monipay`. Because both servers
+bind `5432`, stop one before starting the other.
 
-Adding `server/compose.yaml` changes the `server/` root and needs approval under the repository's ask-first rule.
+The connection string, the five keys, the issuer, the audience, the legal versions and the email
+sender go into `dotnet user-secrets` as shown above. `MoniPay:ApplyMigrationsOnStartup` is `false`
+in `appsettings.json`; initialize the schema with `dotnet ef database update`, or set the flag in
+user secrets for a throwaway database. `agents/rules/reference-dotnet-local-dev.md` carries the
+full sequence.
 
 ## Database
 
 ### Migrations
 
-`MoniPay:ApplyMigrationsOnStartup` is `false` outside development and tests. A replica that migrates on boot races the other replicas during a rolling deploy.
+`MoniPay:ApplyMigrationsOnStartup` is `false` in `appsettings.json`, development included. A
+replica that migrates on boot races the other replicas during a rolling deploy; locally, run
+`dotnet ef database update` or opt in through user secrets for a throwaway database.
 
 Production migrations run as a separate step before the new image starts:
 
@@ -247,7 +231,8 @@ Provider reachability is not a readiness check. A provider outage must not remov
 
 ## Observability
 
-Serilog is configured with console output and a Seq sink package. The request log is on.
+Serilog writes to the console, and the development profile adds a Seq sink on
+<http://localhost:5341>. The request log is on.
 
 Sign-up adds:
 
@@ -262,10 +247,10 @@ Log output in production is JSON on stdout, collected by the platform. Seq is a 
 ## Security hardening
 
 - The container runs as `monipay`, not root.
-- The file system is read-only except `/tmp`.
+- The file system is read-only except `/tmp`; the host writes nothing outside it.
 - No shell is needed at runtime; `wget` from BusyBox serves the health check.
 - Kestrel serves HTTP only, behind the TLS edge. `UseHsts` runs outside development so the header reaches clients through the proxy.
-- Request body size is capped on sign-up and session groups.
+- Kestrel caps every request body at `JsonApiTransport.MaximumBodyBytes` (`8 * 1024` = `8192` bytes). The JSON:API transport enforces the same limit on sign-up and session groups and answers a Problem Details `413`; there is no endpoint override.
 - `AllowedHosts` is set to the API host name in production, not `*`.
 - Outbound calls go to the provider base URLs from configuration only.
 

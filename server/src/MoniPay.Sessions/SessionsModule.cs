@@ -41,6 +41,7 @@ public static class SessionsModule
 
         services.AddOptions<SessionsOptions>()
             .Bind(configuration.GetSection(SessionsOptions.SectionName))
+            .PostConfigure(options => options.MapCountryRules())
             .Validate(
                 options => options.IsWithinBounds(),
                 "The MoniPay:Sessions bounds are invalid: check the country rules, the code length, "
@@ -53,7 +54,7 @@ public static class SessionsModule
             .RequireKey(options => options.PersonalDataKeyBase64, SessionsOptions.Keys.PersonalDataKeyBase64)
             .RequireKey(options => options.SigningKeyBase64, SessionsOptions.Keys.SigningKeyBase64)
             .Validate(
-                options => options.PreviousSigningKeyBase64 is null
+                options => string.IsNullOrEmpty(options.PreviousSigningKeyBase64)
                     || Base64Key.IsValid(options.PreviousSigningKeyBase64),
                 $"{SessionsOptions.Keys.PreviousSigningKeyBase64} must be empty or a base64-encoded 32-byte key.")
             .ValidateOnStart();

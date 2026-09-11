@@ -13,6 +13,9 @@ public static class MoniPayHostExtensions
 
         builder.AddMoniPayObservability();
 
+        builder.WebHost.ConfigureKestrel(options =>
+            options.Limits.MaxRequestBodySize = MoniPayRequestLimits.MaximumBodyBytes);
+
         builder.Services
             .AddTransient<IConfigureOptions<ForwardedHeadersOptions>, ForwardedHeadersOptionsSetup>();
 
