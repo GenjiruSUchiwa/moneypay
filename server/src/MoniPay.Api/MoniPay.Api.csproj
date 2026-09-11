@@ -27,6 +27,10 @@
     <ProjectReference Include="../MoniPay.Wallet/MoniPay.Wallet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
   <!-- The OpenAPI document is a build artefact only when scripts/update-openapi.sh asks for
        it: generating it on every build would run the host at compile time. -->
   <PropertyGroup>

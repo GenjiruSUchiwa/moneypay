@@ -45,8 +45,8 @@ internal sealed class NotificationsOptions
                 ? new UriBuilder(baseUrl) { Path = baseUrl.AbsolutePath + "/" }.Uri
                 : BaseUrl;
 
-        public bool IsRequested() =>
-            !string.IsNullOrWhiteSpace(ApiKey) || !string.IsNullOrWhiteSpace(SenderId);
+        public bool HasCredentials() =>
+            !string.IsNullOrWhiteSpace(ApiKey) && !string.IsNullOrWhiteSpace(SenderId);
 
         public bool IsConfigured() =>
             BaseUrl is { IsAbsoluteUri: true, Scheme: "https", UserInfo: "" }

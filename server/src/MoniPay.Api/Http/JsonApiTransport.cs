@@ -12,8 +12,6 @@ namespace MoniPay.Api.Http;
 
 internal static class JsonApiTransport
 {
-    internal const int MaximumBodyBytes = 8 * 1024;
-
     private const string ApplicationWildcard = "application/*";
     private const string AnyWildcard = "*/*";
     private const string ExtensionParameter = "ext";
@@ -69,7 +67,7 @@ internal static class JsonApiTransport
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (request.ContentLength is { } declared && declared > MaximumBodyBytes)
+        if (request.ContentLength is { } declared && declared > MoniPayRequestLimits.MaximumBodyBytes)
         {
             throw Refusal(MoniPayErrorTypes.ContentTooLarge);
         }
@@ -83,7 +81,7 @@ internal static class JsonApiTransport
             while ((read = await request.Body.ReadAsync(chunk, cancellationToken)) > 0)
             {
                 buffer.Write(chunk, 0, read);
-                if (buffer.Length > MaximumBodyBytes)
+                if (buffer.Length > MoniPayRequestLimits.MaximumBodyBytes)
                 {
                     throw Refusal(MoniPayErrorTypes.ContentTooLarge);
                 }

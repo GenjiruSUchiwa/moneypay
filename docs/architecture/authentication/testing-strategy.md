@@ -386,15 +386,14 @@ These use reflection only. No architecture-test package is added.
 
 Not tested: EF Core, `Microsoft.Extensions.*`, the JSON:API record constructors, OpenAPI generation internals.
 
-Coverage is measured with the built-in `dotnet test --coverage` of Microsoft.Testing.Platform. The number is a signal for review, not a gate.
+Coverage needs the `Microsoft.Testing.Extensions.CodeCoverage` extension, which the test project does not reference yet. The number is a signal for review, not a gate.
 
 ## Commands
 
 ```bash
 dotnet test server/MoniPay.slnx                                            # whole suite, needs Docker
-dotnet test server/MoniPay.slnx --filter-class '*CreatePhoneVerificationTests'
-dotnet test server/MoniPay.slnx --filter-namespace 'MoniPay.Tests.Sessions'
-dotnet test server/MoniPay.slnx --coverage
+dotnet test server/MoniPay.slnx -- --filter-class '*CreatePhoneVerificationTests'
+dotnet test server/MoniPay.slnx -- --filter-namespace 'MoniPay.Tests.Sessions'
 ```
 
 CI runs `dotnet test server/MoniPay.slnx --no-build --configuration Release` on an Ubuntu runner with a Docker daemon. Nothing runs in CI that does not run locally.

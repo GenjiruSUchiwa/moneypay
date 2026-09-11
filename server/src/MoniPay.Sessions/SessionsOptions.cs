@@ -19,15 +19,9 @@ internal sealed class SessionsOptions
     public const int MinimumCodeLength = 4;
     public const int MaximumCodeLength = 8;
 
-    public IReadOnlyList<CountryPhoneRule> SupportedCountries { get; set; } =
-    [
-        CountryPhoneRules.Cameroon,
-        CountryPhoneRules.IvoryCoast,
-        CountryPhoneRules.Senegal,
-        CountryPhoneRules.Gabon,
-        CountryPhoneRules.DrCongo,
-        CountryPhoneRules.Benin,
-    ];
+    public List<CountryConfiguration> SupportedCountries { get; set; } = [];
+
+    public IReadOnlyList<CountryPhoneRule> CountryRules { get; private set; } = [];
 
     public int VerificationCodeLength { get; set; } = DefaultCodeLength;
 
@@ -74,7 +68,15 @@ internal sealed class SessionsOptions
     public byte[] SigningKey => Base64Key.Decode(SigningKeyBase64);
 
     public byte[]? PreviousSigningKey =>
-        PreviousSigningKeyBase64 is null ? null : Base64Key.Decode(PreviousSigningKeyBase64);
+        string.IsNullOrEmpty(PreviousSigningKeyBase64) ? null : Base64Key.Decode(PreviousSigningKeyBase64);
+
+    public void MapCountryRules() =>
+        CountryRules =
+        [
+            .. SupportedCountries
+                .Where(country => country.IsWellFormed)
+                .Select(country => country.ToRule()),
+        ];
 
     public bool IsWithinBounds() =>
         HasWorkableVerificationBounds()
@@ -85,6 +87,7 @@ internal sealed class SessionsOptions
 
     private bool HasWorkableVerificationBounds() =>
         SupportedCountries.Count > 0
+        && SupportedCountries.All(country => country.IsWellFormed)
         && VerificationCodeLength is >= MinimumCodeLength and <= MaximumCodeLength
         && VerificationCodeLifetime > TimeSpan.Zero
         && ResendCooldown >= TimeSpan.Zero

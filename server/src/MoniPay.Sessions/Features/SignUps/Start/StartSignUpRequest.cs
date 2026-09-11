@@ -27,7 +27,7 @@ internal sealed record StartSignUpAttributes
         ArgumentNullException.ThrowIfNull(options);
 
         ValidationFailures failures = new();
-        if (!PhoneNumber.TryNormalize(Phone, options.SupportedCountries, out PhoneNumber phone, out PhoneFailure failure))
+        if (!PhoneNumber.TryNormalize(Phone, options.CountryRules, out PhoneNumber phone, out PhoneFailure failure))
         {
             failures.Require(false, StartSignUpPointers.Phone, failure == PhoneFailure.CountryUnsupported
                 ? ValidationCodes.PhoneCountryUnsupported

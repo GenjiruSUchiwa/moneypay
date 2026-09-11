@@ -69,7 +69,7 @@ public static class NotificationsModule
     {
         NotificationsOptions.SmsOptions sms = new();
         configuration.GetSection(NotificationsOptions.Keys.SmsSection).Bind(sms);
-        if (sms.IsRequested())
+        if (sms.HasCredentials())
         {
             notifications.Validate(
                 options => options.IsSmsConfigured(),

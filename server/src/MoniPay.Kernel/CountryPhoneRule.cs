@@ -6,15 +6,17 @@ public readonly record struct CountryPhoneRule(string CallingCode, int LocalLeng
 
     public int LocalLength { get; } = ValidateLocalLength(LocalLength);
 
+    public static bool IsWellFormed(string? callingCode, int localLength) =>
+        callingCode is { Length: > 0 } value
+        && value.All(char.IsAsciiDigit)
+        && localLength > 0;
+
     private static string ValidateCallingCode(string callingCode)
     {
         ArgumentException.ThrowIfNullOrEmpty(callingCode);
-        foreach (char character in callingCode)
+        if (!callingCode.All(char.IsAsciiDigit))
         {
-            if (character is < '0' or > '9')
-            {
-                throw new ArgumentException("Calling code must be ASCII digits.", nameof(callingCode));
-            }
+            throw new ArgumentException("Calling code must be ASCII digits.", nameof(callingCode));
         }
 
         return callingCode;
