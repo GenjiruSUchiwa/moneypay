@@ -1,9 +1,25 @@
 using System.Net;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+using MoniPay.Api.Composition;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
 using MoniPay.Kernel.Http;
+using MoniPay.Notifications;
+using MoniPay.Notifications.Domain;
+using MoniPay.Notifications.Persistence;
+using MoniPay.Notifications.Security;
+using MoniPay.Persistence;
+using MoniPay.Sessions.Domain;
 using MoniPay.Sessions.Features.Sessions;
+using MoniPay.Sessions.Persistence;
+using MoniPay.Sessions.Providers;
+using MoniPay.Tests.Fakes;
 using MoniPay.Tests.Support;
+using MoniPay.Users.Features.Registration;
 using Xunit;
 
 namespace MoniPay.Tests.Sessions.Sessions.RevokeCurrent;
@@ -116,6 +132,98 @@ public sealed class DeleteCurrentSessionTests(MoniPayApi api) : MoniPayApiTest(a
         Assert.Equal(MoniPayErrorTypes.SessionInvalid.Urn, problem.Type);
         Assert.Equal(title, problem.Title);
     }
+
+    [Fact]
+    public async Task Revoking_enqueues_one_optional_email()
+    {
+        PhoneNumber phone = new(TestPhones.Next());
+        EmailAddress email = new($"revoke{Guid.NewGuid():N}@example.com");
+
+        try
+        {
+            RegisteredUser user = await Api.RegisterUserAsync(phone, email.Value);
+            OpenedSession issued = await Api.CreateSessionAsync(user.Id);
+
+            using HttpResponseMessage response = await SignUpFlow.RevokeCurrentSessionAsync(
+                Client,
+                AccessToken(issued));
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+            await using AsyncServiceScope scope = Api.Services.CreateAsyncScope();
+            MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
+            Notification row = await database.Notifications
+                .AsNoTracking()
+                .SingleAsync(candidate => candidate.CorrelationId == user.Id.Value
+                    && candidate.Kind == SecurityAlertDeliveryAdapter.SessionRevokedKind, Cancellation);
+
+            Assert.Equal(NotificationChannel.Email, row.Channel);
+            Assert.False(row.Required);
+            Assert.Null(row.ExpiresAt);
+            Assert.Equal(NotificationStatus.Pending, row.Status);
+            Assert.Equal($"session-revoked:{issued.Session.SessionId}:email", row.IdempotencyKey);
+
+            RecipientProtector protector = Api.Services.GetRequiredService<RecipientProtector>();
+            Assert.Equal(email.Value, protector.Unprotect(row.RecipientCiphertext));
+        }
+        finally
+        {
+            await Api.CleanUsersAsync();
+        }
+    }
+
+    [Fact]
+    public async Task A_failing_alert_port_leaves_the_revocation_committed_and_warns()
+    {
+        PhoneNumber phone = new(TestPhones.Next());
+        EmailAddress email = new($"revoke{Guid.NewGuid():N}@example.com");
+
+        try
+        {
+            RegisteredUser user = await Api.RegisterUserAsync(phone, email.Value);
+            OpenedSession issued = await Api.CreateSessionAsync(user.Id);
+            RecordingLoggerProvider logs = new();
+
+            using WebApplicationFactory<Program> host = HostWithAlertSender(new FailingSecurityAlertSender(), logs);
+            using HttpClient client = host.CreateClient();
+            using HttpResponseMessage response = await SignUpFlow.RevokeCurrentSessionAsync(
+                client,
+                TestTokens.Bearer(user.Id, issued.Session.SessionId));
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+            Assert.False(await SessionIsActiveAsync(issued.Session.SessionId));
+            Assert.Contains(logs.Entries, entry => IsAlertWarningFor(entry, user.Id));
+        }
+        finally
+        {
+            await Api.CleanUsersAsync();
+        }
+    }
+
+    private WebApplicationFactory<Program> HostWithAlertSender(
+        ISecurityAlertSender sender,
+        RecordingLoggerProvider logs) =>
+        Api.CreateHost(builder => builder.ConfigureServices(services =>
+        {
+            services.RemoveAll<ISecurityAlertSender>();
+            services.AddScoped(_ => sender);
+            services.AddLogging(logging => logging.AddProvider(logs));
+        }));
+
+    private async Task<bool> SessionIsActiveAsync(Guid sessionId)
+    {
+        await using AsyncServiceScope scope = Api.Services.CreateAsyncScope();
+        MoniPayDbContext database = scope.ServiceProvider.GetRequiredService<MoniPayDbContext>();
+        Session session = await database.Sessions
+            .AsNoTracking()
+            .SingleAsync(row => row.Id == sessionId, Cancellation);
+
+        return session.IsActive;
+    }
+
+    private static bool IsAlertWarningFor(RecordingLoggerProvider.LogEntry entry, UserId userId) =>
+        entry.Level == LogLevel.Warning
+        && entry.Category == typeof(SessionTokenService).FullName
+        && entry.Message.Contains(userId.ToString(), StringComparison.Ordinal);
 
     private static string AccessToken(OpenedSession session) =>
         TestTokens.Bearer(session.Session.UserId, session.Session.SessionId);
