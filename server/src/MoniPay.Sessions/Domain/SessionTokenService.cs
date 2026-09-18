@@ -6,6 +6,7 @@ using MoniPay.Kernel;
 using MoniPay.Kernel.Errors;
 using MoniPay.Persistence;
 using MoniPay.Sessions.Persistence;
+using MoniPay.Sessions.Providers;
 using MoniPay.Sessions.Security;
 
 namespace MoniPay.Sessions.Domain;
@@ -14,6 +15,7 @@ internal sealed class SessionTokenService(
     MoniPayDbContext database,
     AccessTokenIssuer accessTokens,
     RefreshTokenFactory refreshTokens,
+    ISecurityAlertSender alerts,
     TimeProvider timeProvider,
     IOptions<SessionsOptions> options,
     ILogger<SessionTokenService> logger)
@@ -83,9 +85,20 @@ internal sealed class SessionTokenService(
         Session session = await LockSessionAsync(token.SessionId, cancellationToken).ConfigureAwait(false);
         if (token.IsConsumed)
         {
-            await RevokeFamilyAsync(session.TokenFamilyId, now, cancellationToken).ConfigureAwait(false);
+            bool revoked = await RevokeFamilyAsync(session.TokenFamilyId, now, cancellationToken).ConfigureAwait(false);
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             SessionsLog.FamilyRevoked(logger, session.TokenFamilyId);
+
+            if (revoked)
+            {
+                await TryEnqueueAlertAsync(
+                    session.UserId,
+                    SecurityAlertKind.RefreshTokenReuseDetected,
+                    now,
+                    FormattableString.Invariant($"refresh-reuse:{session.TokenFamilyId}"),
+                    cancellationToken).ConfigureAwait(false);
+            }
+
             throw new RefusalException(MoniPayErrorTypes.RefreshTokenReused);
         }
 
@@ -120,12 +133,20 @@ internal sealed class SessionTokenService(
             return;
         }
 
-        session.Revoke(SessionRevokeReason.UserRequest, timeProvider.GetUtcNow());
+        DateTimeOffset now = timeProvider.GetUtcNow();
+        session.Revoke(SessionRevokeReason.UserRequest, now);
         await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         if (transaction is not null)
         {
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         }
+
+        await TryEnqueueAlertAsync(
+            session.UserId,
+            SecurityAlertKind.SessionRevoked,
+            now,
+            FormattableString.Invariant($"session-revoked:{session.Id}"),
+            cancellationToken).ConfigureAwait(false);
     }
 
     private async Task RefuseAsync(
@@ -137,7 +158,7 @@ internal sealed class SessionTokenService(
         SessionsLog.RefreshRefused(logger, reason);
     }
 
-    private async Task RevokeFamilyAsync(Guid tokenFamilyId, DateTimeOffset now, CancellationToken cancellationToken)
+    private async Task<bool> RevokeFamilyAsync(Guid tokenFamilyId, DateTimeOffset now, CancellationToken cancellationToken)
     {
         List<Session> family = await database.Sessions
             .Where(candidate => candidate.TokenFamilyId == tokenFamilyId && candidate.RevokedAt == null)
@@ -149,6 +170,27 @@ internal sealed class SessionTokenService(
         }
 
         await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return family.Count > 0;
+    }
+
+    private async Task TryEnqueueAlertAsync(
+        UserId userId,
+        SecurityAlertKind kind,
+        DateTimeOffset occurredAt,
+        string idempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await alerts.EnqueueAsync(
+                new SecurityAlert(userId, kind, occurredAt, idempotencyKey),
+                cancellationToken).ConfigureAwait(false);
+            await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            SessionsLog.SecurityAlertEnqueueFailed(logger, kind, userId);
+        }
     }
 
     private static readonly string LockTokenSql =

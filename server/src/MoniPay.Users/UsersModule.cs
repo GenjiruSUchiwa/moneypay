@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using MoniPay.Kernel;
 using MoniPay.Kernel.Security;
 using MoniPay.Persistence;
+using MoniPay.Users.Features.Contact;
 using MoniPay.Users.Features.CurrentUser;
 using MoniPay.Users.Features.Registration;
 using MoniPay.Users.Providers;
@@ -42,6 +43,10 @@ public static class UsersModule
         services.AddScoped(provider => new PhoneRegistrationLookup(
             provider.GetRequiredService<MoniPayDbContext>(),
             provider.GetRequiredService<UserLookupDigest>()));
+
+        services.AddScoped(provider => new UserContactLookup(
+            provider.GetRequiredService<MoniPayDbContext>(),
+            provider.GetRequiredService<UserPersonalDataProtector>()));
 
         services.AddScoped<GetCurrentUserHandler>();
 

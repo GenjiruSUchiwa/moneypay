@@ -37,7 +37,8 @@ internal static class MoniPayModules
             .AddScoped<IUserProvisioning, UserProvisioningAdapter>()
             .AddScoped<IRegisteredPhoneLookup, RegisteredPhoneLookupAdapter>()
             .AddScoped<IVerificationCodeSender, VerificationCodeDeliveryAdapter>()
-            .AddScoped<IWelcomeMessageSender, WelcomeMessageDeliveryAdapter>();
+            .AddScoped<IWelcomeMessageSender, WelcomeMessageDeliveryAdapter>()
+            .AddScoped<ISecurityAlertSender, SecurityAlertDeliveryAdapter>();
     public static WebApplication MapMoniPayModules(this WebApplication app)
     {
         ArgumentNullException.ThrowIfNull(app);

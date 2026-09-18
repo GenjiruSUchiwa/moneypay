@@ -7,6 +7,7 @@ using MoniPay.Sessions.Ports;
 using MoniPay.Sessions.Providers;
 using MoniPay.Sessions.Security;
 using MoniPay.Users;
+using MoniPay.Users.Features.Contact;
 using MoniPay.Users.Features.Registration;
 using MoniPay.Users.Providers;
 using Xunit;
@@ -26,6 +27,9 @@ public sealed class PublicSurfaceTests
                 typeof(IVerificationCodeSender),
                 typeof(VerificationCodeMessage),
                 typeof(CodeDeliveryState),
+                typeof(ISecurityAlertSender),
+                typeof(SecurityAlert),
+                typeof(SecurityAlertKind),
                 typeof(IRegisteredPhoneLookup),
                 typeof(SessionsSchemes),
                 typeof(SignUpRateLimitPolicies),
@@ -45,6 +49,8 @@ public sealed class PublicSurfaceTests
                 typeof(PhoneRegistrationLookup),
                 typeof(IWelcomeMessageSender),
                 typeof(WelcomeMessage),
+                typeof(UserContactLookup),
+                typeof(UserContact),
             ]
         },
         {

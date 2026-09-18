@@ -62,6 +62,26 @@
     <value>MoniPay : votre code de vérification est {0}. Il expire dans {1} minutes.</value>
     <comment>Verification SMS. {0} is the numeric code with leading zeroes preserved. {1} is its lifetime in whole minutes. Contains the product name and nothing personal.</comment>
   </data>
+  <data name="SessionRevokedEmailSubject" xml:space="preserve">
+    <value>Votre session MoniPay a été fermée</value>
+    <comment>Session-revoked email subject. Names the product only.</comment>
+  </data>
+  <data name="SessionRevokedEmailBody" xml:space="preserve">
+    <value>Votre session MoniPay a été fermée le {0}.</value>
+    <comment>Session-revoked email body. {0} is the revocation time formatted for the recipient's locale. Names the time and the product only.</comment>
+  </data>
+  <data name="RefreshTokenReuseDetectedSms" xml:space="preserve">
+    <value>MoniPay : pour votre sécurité, nous avons fermé vos sessions le {0} après la réutilisation d'un jeton de connexion.</value>
+    <comment>Refresh-token reuse SMS. {0} is the detection time formatted for the recipient's locale. Names the time and the product only.</comment>
+  </data>
+  <data name="RefreshTokenReuseDetectedEmailSubject" xml:space="preserve">
+    <value>Alerte de sécurité MoniPay : jeton de connexion réutilisé</value>
+    <comment>Refresh-token reuse email subject. Names the product only.</comment>
+  </data>
+  <data name="RefreshTokenReuseDetectedEmailBody" xml:space="preserve">
+    <value>Pour votre sécurité, nous avons fermé vos sessions MoniPay actives le {0} après la réutilisation d'un jeton de connexion.</value>
+    <comment>Refresh-token reuse email body. {0} is the detection time formatted for the recipient's locale. Names the time and the product only.</comment>
+  </data>
   <data name="signup-token-invalid" xml:space="preserve">
     <value>Le jeton d'inscription est invalide ou expiré.</value>
     <comment>Title of the 401 problem the Sign-up scheme challenges with.</comment>
