@@ -26,6 +26,7 @@ let package = Package(
             dependencies: [
                 "ApiClient",
             ],
+            resources: [.copy("Fixtures")],
             swiftSettings: [
                 .defaultIsolation(MainActor.self),
                 .treatAllWarnings(as: .error),

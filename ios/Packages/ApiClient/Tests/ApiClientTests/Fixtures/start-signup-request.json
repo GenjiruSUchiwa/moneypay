@@ -1,0 +1,10 @@
+{
+  "data": {
+    "type": "signups",
+    "attributes": {
+      "phone": "237699123456",
+      "termsVersion": "terms-2026-08",
+      "privacyVersion": "privacy-2026-08"
+    }
+  }
+}
