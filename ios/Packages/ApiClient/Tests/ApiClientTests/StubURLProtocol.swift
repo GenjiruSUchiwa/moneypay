@@ -11,10 +11,21 @@ nonisolated final class StubURLProtocol: URLProtocol {
         var receivedBody: Data?
     }
 
-    static let exchange = Mutex(Exchange())
+    static let defaultHost = "api.test"
+    static let exchanges = Mutex([String: Exchange]())
 
-    static func reset(status: Int = 200, headers: [String: String] = [:], body: Data = Data(), fails: Bool = false) {
-        exchange.withLock { $0 = Exchange(status: status, headers: headers, body: body, fails: fails) }
+    static func reset(
+        host: String = defaultHost,
+        status: Int = 200,
+        headers: [String: String] = [:],
+        body: Data = Data(),
+        fails: Bool = false
+    ) {
+        exchanges.withLock { $0[host] = Exchange(status: status, headers: headers, body: body, fails: fails) }
+    }
+
+    static func exchange(on host: String) -> Exchange? {
+        exchanges.withLock { $0[host] }
     }
 
     static func session() -> URLSession {
@@ -23,8 +34,8 @@ nonisolated final class StubURLProtocol: URLProtocol {
         return URLSession(configuration: configuration)
     }
 
-    static var received: URLRequest? { exchange.withLock { $0.received } }
-    static var receivedBody: Data? { exchange.withLock { $0.receivedBody } }
+    static var received: URLRequest? { exchange(on: defaultHost)?.received }
+    static var receivedBody: Data? { exchange(on: defaultHost)?.receivedBody }
 
     override static func canInit(with request: URLRequest) -> Bool { true }
     override static func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -32,10 +43,13 @@ nonisolated final class StubURLProtocol: URLProtocol {
     override func startLoading() {
         let request = self.request
         let body = request.httpBody ?? request.httpBodyStream.map(Self.drain)
-        let exchange = Self.exchange.withLock {
-            $0.received = request
-            $0.receivedBody = body
-            return $0
+        let host = request.url?.host() ?? Self.defaultHost
+        let exchange = Self.exchanges.withLock {
+            var exchange = $0[host] ?? Exchange()
+            exchange.received = request
+            exchange.receivedBody = body
+            $0[host] = exchange
+            return exchange
         }
         guard !exchange.fails, let url = request.url,
               let response = HTTPURLResponse(url: url, statusCode: exchange.status, httpVersion: nil, headerFields: exchange.headers)

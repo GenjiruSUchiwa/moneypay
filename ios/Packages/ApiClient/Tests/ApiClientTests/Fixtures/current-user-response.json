@@ -1,0 +1,20 @@
+{
+  "jsonapi": {
+    "version": "1.1"
+  },
+  "data": {
+    "type": "users",
+    "id": "22961289-422c-4b91-a5eb-1365b1e7c67b",
+    "attributes": {
+      "firstName": "Aristide",
+      "lastName": "Mbassi",
+      "phone": "237699123456",
+      "email": "aristide@example.cm",
+      "locale": "fr-CM",
+      "createdAt": "2026-08-29T19:02:00Z"
+    },
+    "links": {
+      "self": "/users/me"
+    }
+  }
+}

@@ -19,14 +19,17 @@ extension ApiClient: SignUpRegistering {
 
     public func state(of signUp: SignUpStarted) async throws(SignUpError) -> SignUpState {
         let response: JsonApiResponse<SignUpStateAttributes> = try await send(
-            .get, "signups/\(signUp.signUpId)", signUpToken: signUp.signUpToken, failing: SignUpError.self
+            .get, "signups/\(signUp.signUpId)", credential: .signUp(signUp.signUpToken), failing: SignUpError.self
         )
         return SignUpState(response.data)
     }
 
     public func resendCode(for signUp: SignUpStarted) async throws(SignUpError) -> SignUpState {
         let response: JsonApiResponse<SignUpStateAttributes> = try await send(
-            .post, "signups/\(signUp.signUpId)/verification-code-deliveries", signUpToken: signUp.signUpToken, failing: SignUpError.self
+            .post,
+            "signups/\(signUp.signUpId)/verification-code-deliveries",
+            credential: .signUp(signUp.signUpToken),
+            failing: SignUpError.self
         )
         return SignUpState(response.data)
     }
@@ -40,7 +43,11 @@ extension ApiClient: SignUpRegistering {
             ]
         )
         let response: JsonApiResponse<PhoneVerifiedAttributes> = try await send(
-            .post, "signups/\(signUp.signUpId)/phone-verifications", signUpToken: signUp.signUpToken, body: body, failing: SignUpError.self
+            .post,
+            "signups/\(signUp.signUpId)/phone-verifications",
+            credential: .signUp(signUp.signUpToken),
+            body: body,
+            failing: SignUpError.self
         )
         return PhoneVerified(response.data)
     }
