@@ -11,11 +11,14 @@ let package = Package(
         .library(name: "ApiClient", targets: ["ApiClient"]),
     ],
     dependencies: [
-
+        .package(path: "../Platform"),
     ],
     targets: [
         .target(
             name: "ApiClient",
+            dependencies: [
+                .product(name: "Platform", package: "Platform"),
+            ],
             swiftSettings: [
                 .defaultIsolation(MainActor.self),
                 .treatAllWarnings(as: .error),
@@ -25,6 +28,7 @@ let package = Package(
             name: "ApiClientTests",
             dependencies: [
                 "ApiClient",
+                .product(name: "PlatformTestSupport", package: "Platform"),
             ],
             resources: [.copy("Fixtures")],
             swiftSettings: [
