@@ -134,11 +134,17 @@ internal sealed class SessionTokenService(
         }
 
         DateTimeOffset now = timeProvider.GetUtcNow();
+        bool revoked = session.IsActive;
         session.Revoke(SessionRevokeReason.UserRequest, now);
         await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         if (transaction is not null)
         {
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        if (!revoked)
+        {
+            return;
         }
 
         await TryEnqueueAlertAsync(
@@ -187,9 +193,9 @@ internal sealed class SessionTokenService(
                 cancellationToken).ConfigureAwait(false);
             await database.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
         {
-            SessionsLog.SecurityAlertEnqueueFailed(logger, kind, userId);
+            SessionsLog.SecurityAlertEnqueueFailed(logger, kind, userId, exception);
         }
     }
 

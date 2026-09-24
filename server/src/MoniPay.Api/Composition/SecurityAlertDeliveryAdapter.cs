@@ -16,7 +16,12 @@ internal sealed class SecurityAlertDeliveryAdapter(
 
     internal const string RefreshTokenReuseDetectedKind = "RefreshTokenReuseDetected";
 
-    private static readonly TimeZoneInfo RecipientTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Africa/Douala");
+    private const string RecipientTimeZoneId = "Africa/Douala";
+
+    private static readonly TimeZoneInfo RecipientTimeZone =
+        TimeZoneInfo.TryFindSystemTimeZoneById(RecipientTimeZoneId, out TimeZoneInfo? zone)
+            ? zone
+            : TimeZoneInfo.CreateCustomTimeZone(RecipientTimeZoneId, TimeSpan.FromHours(1), RecipientTimeZoneId, "WAT");
 
     public async Task EnqueueAsync(SecurityAlert alert, CancellationToken cancellationToken)
     {
