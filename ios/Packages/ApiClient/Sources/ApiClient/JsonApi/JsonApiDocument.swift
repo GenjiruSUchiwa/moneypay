@@ -22,6 +22,11 @@ nonisolated struct JsonApiResource<Attributes: Codable & Sendable & Hashable>: C
     let type: String
     let id: String
     let attributes: Attributes
+    let relationships: [String: JsonApiRelationship]?
+
+    func relatedId(_ name: String) -> String? {
+        relationships?[name]?.data.id
+    }
 }
 
 nonisolated struct JsonApiRelationship: Codable, Sendable, Hashable {

@@ -1,0 +1,9 @@
+{
+  "data": {
+    "type": "session-refreshes",
+    "attributes": {
+      "refreshToken": "<opaque-random-token>",
+      "deviceId": "1207158c-15fc-446d-a28a-702c564332ef"
+    }
+  }
+}
