@@ -1,0 +1,13 @@
+{
+  "type": "urn:monipay:error:verification-code-invalid",
+  "title": "The verification code is invalid.",
+  "status": 422,
+  "instance": "/signups/1f7d854a-3996-4a6b-8cc8-1fe3e83bc205/phone-verifications",
+  "traceId": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+  "errors": [
+    {
+      "detail": "The verification code does not match.",
+      "pointer": "/data/attributes/verificationCode"
+    }
+  ]
+}

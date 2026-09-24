@@ -1,0 +1,16 @@
+{
+  "data": {
+    "type": "phone-verifications",
+    "attributes": {
+      "verificationCode": "123456"
+    },
+    "relationships": {
+      "signUp": {
+        "data": {
+          "type": "signups",
+          "id": "1f7d854a-3996-4a6b-8cc8-1fe3e83bc205"
+        }
+      }
+    }
+  }
+}

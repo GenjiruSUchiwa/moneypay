@@ -1,0 +1,20 @@
+{
+  "jsonapi": {
+    "version": "1.1"
+  },
+  "data": {
+    "type": "signups",
+    "id": "1f7d854a-3996-4a6b-8cc8-1fe3e83bc205",
+    "attributes": {
+      "status": "codePending",
+      "codeDelivery": "queued",
+      "signUpToken": "<opaque-random-token>",
+      "codeExpiresAt": "2026-08-29T19:05:00Z",
+      "canResendAt": "2026-08-29T19:01:00Z",
+      "signUpExpiresAt": "2026-08-29T19:15:00Z"
+    },
+    "links": {
+      "self": "/signups/1f7d854a-3996-4a6b-8cc8-1fe3e83bc205"
+    }
+  }
+}
