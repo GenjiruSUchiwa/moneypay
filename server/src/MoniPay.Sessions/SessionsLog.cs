@@ -31,5 +31,6 @@ internal static partial class SessionsLog
 
     [LoggerMessage(EventId = 7, Level = LogLevel.Warning,
         Message = "The {Kind} security alert for user {UserId} could not be enqueued; the session change is unaffected")]
-    public static partial void SecurityAlertEnqueueFailed(ILogger logger, SecurityAlertKind kind, UserId userId);
+    public static partial void SecurityAlertEnqueueFailed(
+        ILogger logger, SecurityAlertKind kind, UserId userId, Exception exception);
 }
