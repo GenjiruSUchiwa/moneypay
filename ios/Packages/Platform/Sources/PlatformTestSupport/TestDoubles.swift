@@ -1,7 +1,9 @@
 import Foundation
 import Platform
+import Security
+import Synchronization
 
-public struct FixedClock: Clocking {
+nonisolated public struct FixedClock: Clocking {
     public var now: Date
 
     public init(now: Date = Date(timeIntervalSince1970: 0)) {
@@ -30,6 +32,40 @@ public final class InMemoryKeyValueStoring: KeyValueStoring, @unchecked Sendable
     public func set(_ value: Bool, forKey key: String) {
         lock.withLock { storage[key] = value }
     }
+}
+
+nonisolated public final class InMemoryCredentialStore: CredentialStoring {
+    private let items: Mutex<[CredentialKey: Data]>
+
+    public init(_ initial: [CredentialKey: Data] = [:]) {
+        items = Mutex(initial)
+    }
+
+    public var contents: [CredentialKey: Data] { items.withLock { $0 } }
+
+    public func read(_ key: CredentialKey) throws(CredentialStoreError) -> Data? {
+        items.withLock { $0[key] }
+    }
+
+    public func write(_ data: Data, for key: CredentialKey) throws(CredentialStoreError) {
+        items.withLock { $0[key] = data }
+    }
+
+    public func delete(_ key: CredentialKey) throws(CredentialStoreError) {
+        _ = items.withLock { $0.removeValue(forKey: key) }
+    }
+}
+
+nonisolated public struct FailingCredentialStore: CredentialStoring {
+    private let error: CredentialStoreError
+
+    public init(_ error: CredentialStoreError = .keychain(errSecInteractionNotAllowed)) {
+        self.error = error
+    }
+
+    public func read(_ key: CredentialKey) throws(CredentialStoreError) -> Data? { throw error }
+    public func write(_ data: Data, for key: CredentialKey) throws(CredentialStoreError) { throw error }
+    public func delete(_ key: CredentialKey) throws(CredentialStoreError) { throw error }
 }
 
 public final class RecordingLogging: Logging, @unchecked Sendable {
