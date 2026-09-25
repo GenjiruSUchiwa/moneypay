@@ -53,4 +53,6 @@ nonisolated public struct ProblemType: Sendable, Hashable {
     public static let verificationCodeExpired = ProblemType(code: "verification-code-expired")
     public static let verificationDeliveryUnavailable = ProblemType(code: "verification-delivery-unavailable")
     public static let phoneAlreadyRegistered = ProblemType(code: "phone-already-registered")
+    public static let sessionInvalid = ProblemType(code: "session-invalid")
+    public static let refreshTokenReused = ProblemType(code: "refresh-token-reused")
 }

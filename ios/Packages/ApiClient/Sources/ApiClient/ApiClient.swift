@@ -4,6 +4,27 @@ public struct ApiClient: Sendable {
     enum Method: String {
         case get = "GET"
         case post = "POST"
+        case delete = "DELETE"
+    }
+
+    enum Header {
+        static let accept = "Accept"
+        static let authorization = "Authorization"
+        static let client = "X-MoniPay-Client"
+        static let contentType = "Content-Type"
+        static let retryAfter = "Retry-After"
+    }
+
+    enum Credential {
+        case signUp(String)
+        case bearer(String)
+
+        var header: String {
+            switch self {
+            case .signUp(let token): "SignUp \(token)"
+            case .bearer(let token): "Bearer \(token)"
+            }
+        }
     }
 
     private let baseURL: URL
@@ -29,29 +50,38 @@ public struct ApiClient: Sendable {
     func send<Response: Decodable, Failure: JsonApiFailure>(
         _ method: Method,
         _ path: String,
-        signUpToken: String? = nil,
+        credential: Credential? = nil,
         body: (some Encodable & Sendable)? = Data?.none,
         failing: Failure.Type
     ) async throws(Failure) -> Response {
+        let data = try await exchange(method, path, credential: credential, body: body, failing: failing)
+        do {
+            return try JsonApiCoding.decoder.decode(Response.self, from: data)
+        } catch {
+            throw Failure.decoding
+        }
+    }
+
+    @discardableResult
+    func exchange<Failure: JsonApiFailure>(
+        _ method: Method,
+        _ path: String,
+        credential: Credential? = nil,
+        body: (some Encodable & Sendable)? = Data?.none,
+        failing: Failure.Type
+    ) async throws(Failure) -> Data {
         var request = URLRequest(url: baseURL.appending(path: path))
         request.httpMethod = method.rawValue
-        request.setValue(JsonApiCoding.accept, forHTTPHeaderField: "Accept")
-        request.setValue(clientVersion, forHTTPHeaderField: "X-MoniPay-Client")
-        if let signUpToken {
-            request.setValue("SignUp \(signUpToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(JsonApiCoding.accept, forHTTPHeaderField: Header.accept)
+        request.setValue(clientVersion, forHTTPHeaderField: Header.client)
+        if let credential {
+            request.setValue(credential.header, forHTTPHeaderField: Header.authorization)
         }
         if let body {
             guard let encoded = try? JsonApiCoding.encoder.encode(body) else { throw Failure.decoding }
-            request.setValue(JsonApiCoding.mediaType, forHTTPHeaderField: "Content-Type")
+            request.setValue(JsonApiCoding.mediaType, forHTTPHeaderField: Header.contentType)
             request.httpBody = encoded
         }
-        return try await exchange(request, failing: failing)
-    }
-
-    private func exchange<Response: Decodable, Failure: JsonApiFailure>(
-        _ request: URLRequest,
-        failing: Failure.Type
-    ) async throws(Failure) -> Response {
         let data: Data
         let response: URLResponse
         do {
@@ -62,11 +92,7 @@ public struct ApiClient: Sendable {
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             throw Failure(try? JsonApiCoding.decoder.decode(ProblemDetails.self, from: data), retryAfter: http.retryAfter)
         }
-        do {
-            return try JsonApiCoding.decoder.decode(Response.self, from: data)
-        } catch {
-            throw Failure.decoding
-        }
+        return data
     }
 
     public func signUp(_ body: SignupRequest) async throws -> UserStateDTO {
@@ -91,7 +117,7 @@ public struct ApiClient: Sendable {
     private func post<Body: Encodable>(_ path: String, _ body: Body) async throws -> UserStateDTO {
         var request = URLRequest(url: baseURL.appending(path: path))
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: Header.contentType)
         request.httpBody = try JSONEncoder().encode(body)
         return try await send(request)
     }
@@ -117,6 +143,6 @@ public struct ApiClient: Sendable {
 
 private extension HTTPURLResponse {
     var retryAfter: Duration? {
-        value(forHTTPHeaderField: "Retry-After").flatMap(Int.init).map { .seconds($0) }
+        value(forHTTPHeaderField: ApiClient.Header.retryAfter).flatMap(Int.init).map { .seconds($0) }
     }
 }
